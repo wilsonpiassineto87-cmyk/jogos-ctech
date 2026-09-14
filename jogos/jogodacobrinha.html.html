@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>🐍 Jogo da Cobrinha - Ranking Automático</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  h1 { margin-bottom: 10px; color: #4ade80; text-shadow: 0 0 10px #4ade80; }
+  .info {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+    font-size: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .info span { color: #fbbf24; font-weight: bold; }
+  .nivel-badge { padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 14px; }
+  .player-name {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 14px;
+    background: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+    cursor: pointer;
+    border: 1px solid #4ade80;
+  }
+  .player-name:hover { background: rgba(74, 222, 128, 0.3); }
+  canvas {
+    background: #0f172a;
+    border: 3px solid #4ade80;
+    border-radius: 8px;
+    box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);
+  }
+  .controls { margin-top: 15px; font-size: 14px; color: #94a3b8; text-align: center; }
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 10;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .overlay h2 { font-size: 38px; margin-bottom: 15px; }
+  .overlay p { font-size: 18px; margin-bottom: 20px; }
+  
+  .top-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
+  .top-btn {
+    padding: 8px 18px;
+    background: rgba(251, 191, 36, 0.15);
+    border: 2px solid #fbbf24;
+    color: #fbbf24;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  .top-btn:hover { background: rgba(251, 191, 36, 0.3); transform: translateY(-2px); }
+  
+  #selectScreen h2 { color: #4ade80; text-shadow: 0 0 15px #4ade80; }
+  .nivel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-width: 500px; }
+  .nivel-btn {
+    padding: 20px;
+    border: 2px solid;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    background: rgba(0,0,0,0.4);
+    color: #fff;
+    transition: all 0.2s;
+    min-width: 200px;
+  }
+  .nivel-btn:hover { transform: scale(1.05); }
+  .nivel-btn .titulo { font-size: 22px; margin-bottom: 8px; }
+  .nivel-btn .desc { font-size: 12px; opacity: 0.8; font-weight: normal; }
+  
+  .btn-facil { border-color: #4ade80; color: #4ade80; }
+  .btn-facil:hover { background: rgba(74, 222, 128, 0.2); box-shadow: 0 0 20px #4ade80; }
+  .btn-normal { border-color: #fbbf24; color: #fbbf24; }
+  .btn-normal:hover { background: rgba(251, 191, 36, 0.2); box-shadow: 0 0 20px #fbbf24; }
+  .btn-dificil { border-color: #f97316; color: #f97316; }
+  .btn-dificil:hover { background: rgba(249, 115, 22, 0.2); box-shadow: 0 0 20px #f97316; }
+  .btn-extremo { border-color: #ef4444; color: #ef4444; }
+  .btn-extremo:hover { background: rgba(239, 68, 68, 0.2); box-shadow: 0 0 20px #ef4444; }
+  
+  #gameOver h2 { color: #ef4444; }
+  #gameOver button, .voltar-btn, .primary-btn {
+    padding: 12px 30px;
+    font-size: 16px;
+    background: #4ade80;
+    color: #0f172a;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin: 5px;
+    transition: all 0.2s;
+  }
+  #gameOver button:hover, .voltar-btn:hover, .primary-btn:hover { background: #22c55e; transform: translateY(-2px); }
+  .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  
+  /* Notificação de salvamento */
+  .toast {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    color: #0f172a;
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-weight: bold;
+    box-shadow: 0 5px 20px rgba(74, 222, 128, 0.4);
+    z-index: 100;
+    transform: translateX(400px);
+    transition: transform 0.4s ease;
+  }
+  .toast.show { transform: translateX(0); }
+  .toast.top10 {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    box-shadow: 0 5px 20px rgba(251, 191, 36, 0.5);
+    animation: pulse 1s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  
+  /* Ranking */
+  #rankingScreen h2 { color: #fbbf24; text-shadow: 0 0 15px #fbbf24; }
+  .ranking-container {
+    background: rgba(15, 23, 42, 0.9);
+    border: 2px solid #fbbf24;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .ranking-filters { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center; }
+  .filter-btn {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid #64748b;
+    color: #94a3b8;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover { border-color: #fbbf24; color: #fbbf24; }
+  .filter-btn.active { background: #fbbf24; color: #0f172a; border-color: #fbbf24; font-weight: bold; }
+  
+  .ranking-table { width: 100%; border-collapse: collapse; }
+  .ranking-table th {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    padding: 10px;
+    text-align: left;
+    font-size: 14px;
+    border-bottom: 2px solid #fbbf24;
+  }
+  .ranking-table td {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 14px;
+  }
+  .ranking-table tr:hover { background: rgba(255,255,255,0.05); }
+  .ranking-table tr.destaque {
+    background: rgba(74, 222, 128, 0.2);
+    border-left: 3px solid #4ade80;
+    font-weight: bold;
+  }
+  .posicao { font-weight: bold; font-size: 18px; width: 40px; }
+  .pos-1 { color: #fbbf24; }
+  .pos-2 { color: #cbd5e1; }
+  .pos-3 { color: #cd7f32; }
+  .nivel-tag { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+  .empty-ranking { text-align: center; padding: 40px; color: #64748b; font-style: italic; }
+  .ranking-actions { display: flex; gap: 10px; margin-top: 15px; justify-content: center; flex-wrap: wrap; }
+  .clear-btn {
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .clear-btn:hover { background: rgba(239, 68, 68, 0.2); }
+  
+  /* Modal de nome */
+  #nomeModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+  }
+  .modal-content {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border: 2px solid #4ade80;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    max-width: 400px;
+  }
+  .modal-content h3 { color: #4ade80; margin-bottom: 15px; font-size: 22px; }
+  .modal-content p { margin-bottom: 20px; color: #cbd5e1; }
+  .nome-input {
+    padding: 10px 15px;
+    font-size: 16px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 2px solid #fbbf24;
+    color: #fff;
+    border-radius: 8px;
+    text-align: center;
+    width: 250px;
+    margin-bottom: 15px;
+  }
+  .nome-input:focus { outline: none; box-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
+  
+  /* Posição no ranking ao morrer */
+  .posicao-ranking {
+    background: rgba(251, 191, 36, 0.15);
+    border: 2px solid #fbbf24;
+    border-radius: 12px;
+    padding: 15px 25px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .posicao-ranking .pos-num {
+    font-size: 48px;
+    font-weight: bold;
+    color: #fbbf24;
+    text-shadow: 0 0 15px #fbbf24;
+  }
+  .posicao-ranking .pos-label {
+    font-size: 14px;
+    color: #cbd5e1;
+  }
+</style>
+</head>
+<body>
+  <h1>🐍 Jogo da Cobrinha</h1>
+  
+  <div class="top-buttons">
+    <button class="top-btn" onclick="abrirRanking()">🏆 Ranking</button>
+    <button class="top-btn" onclick="abrirModalNome()">👤 <span id="nomeDisplay">Anônimo</span></button>
+  </div>
+  
+  <div class="info">
+    <div>Nível: <span id="nivelAtual" class="nivel-badge">-</span></div>
+    <div>Pontos: <span id="score">0</span></div>
+    <div>Recorde: <span id="highscore">0</span></div>
+    <div>Tamanho: <span id="size">3</span></div>
+    <div>Comidas: <span id="foodCount">0</span></div>
+  </div>
+  <canvas id="game" width="600" height="600"></canvas>
+  <div class="controls">
+    Use as <b>setas ← ↑ → ↓</b> • <b>P</b> pausar • <b>M</b> mutar
+  </div>
+
+  <!-- Toast de notificação -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Modal de nome -->
+  <div id="nomeModal">
+    <div class="modal-content">
+      <h3>👤 Seu Nome</h3>
+      <p>Escolha como aparecer no ranking:</p>
+      <input type="text" id="novoNome" class="nome-input" placeholder="Seu nome" maxlength="15">
+      <div class="btn-group">
+        <button onclick="salvarNome()">✅ Salvar</button>
+        <button class="voltar-btn" onclick="fecharModalNome()">✖ Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tela de seleção -->
+  <div id="selectScreen" class="overlay">
+    <h2>🎮 Escolha a Dificuldade</h2>
+    <p>Quão corajoso você é?</p>
+    <div class="nivel-grid">
+      <button class="nivel-btn btn-facil" onclick="iniciarJogo('facil')">
+        <div class="titulo">🌱 FÁCIL</div>
+        <div class="desc">1 inimiga • Lento • 7 comidas<br>Para iniciantes</div>
+      </button>
+      <button class="nivel-btn btn-normal" onclick="iniciarJogo('normal')">
+        <div class="titulo">⚡ NORMAL</div>
+        <div class="desc">2 inimigas • Médio • 5 comidas<br>Equilibrado</div>
+      </button>
+      <button class="nivel-btn btn-dificil" onclick="iniciarJogo('dificil')">
+        <div class="titulo">🔥 DIFÍCIL</div>
+        <div class="desc">3 inimigas • Rápido • 3 comidas<br>Desafiador</div>
+      </button>
+      <button class="nivel-btn btn-extremo" onclick="iniciarJogo('extremo')">
+        <div class="titulo">💀 EXTREMO</div>
+        <div class="desc">5 inimigas • Muito rápido • 2 comidas<br>Só para lendas</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tela de Game Over -->
+  <div id="gameOver" class="overlay" style="display:none;">
+    <h2>💀 GAME OVER</h2>
+    <div class="posicao-ranking">
+      <div class="pos-label">Você ficou em</div>
+      <div class="pos-num" id="posicaoFinal">#-</div>
+      <div class="pos-label" id="posicaoLabel">no ranking</div>
+    </div>
+    <p>Pontuação final: <span id="finalScore" style="color:#fbbf24; font-size:28px; font-weight:bold;">0</span></p>
+    <div id="top10Msg" style="display:none; color:#fbbf24; font-size:20px; margin-bottom:15px; font-weight:bold;">
+      🏆 TOP 10! Parabéns! 🏆
+    </div>
+    <div class="btn-group">
+      <button onclick="abrirRanking()">🏆 Ver Ranking</button>
+      <button onclick="reiniciarMesmoNivel()">🔄 Jogar Novamente</button>
+      <button class="voltar-btn" onclick="voltarMenu()">🏠 Trocar Nível</button>
+    </div>
+  </div>
+
+  <!-- Tela de Ranking -->
+  <div id="rankingScreen" class="overlay" style="display:none;">
+    <h2>🏆 Ranking dos Melhores</h2>
+    <div class="ranking-container">
+      <div class="ranking-filters">
+        <button class="filter-btn active" data-filtro="todos" onclick="filtrarRanking('todos')">📊 Todos</button>
+        <button class="filter-btn" data-filtro="facil" onclick="filtrarRanking('facil')">🌱 Fácil</button>
+        <button class="filter-btn" data-filtro="normal" onclick="filtrarRanking('normal')">⚡ Normal</button>
+        <button class="filter-btn" data-filtro="dificil" onclick="filtrarRanking('dificil')">🔥 Difícil</button>
+        <button class="filter-btn" data-filtro="extremo" onclick="filtrarRanking('extremo')">💀 Extremo</button>
+      </div>
+      <div id="rankingContent"></div>
+      <div class="ranking-actions">
+        <button class="primary-btn" onclick="fecharRanking()">✖ Fechar</button>
+        <button class="clear-btn" onclick="limparRanking()">🗑️ Limpar Tudo</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ============ CONFIGURAÇÃO ============
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const TILE = 20;
+const COLS = canvas.width / TILE;
+const ROWS = canvas.height / TILE;
+
+// ============ NÍVEIS ============
+const NIVEIS = {
+  facil: { nome: 'FÁCIL', cor: '#4ade80', velocidade: 280, numInimigos: 1, numComidas: 7, iaPrecisao: 0.5, tamanhoInicialInimigo: 3, inimigasCrescem: false },
+  normal: { nome: 'NORMAL', cor: '#fbbf24', velocidade: 200, numInimigos: 2, numComidas: 5, iaPrecisao: 0.7, tamanhoInicialInimigo: 4, inimigasCrescem: true },
+  dificil: { nome: 'DIFÍCIL', cor: '#f97316', velocidade: 140, numInimigos: 3, numComidas: 3, iaPrecisao: 0.85, tamanhoInicialInimigo: 5, inimigasCrescem: true },
+  extremo: { nome: 'EXTREMO', cor: '#ef4444', velocidade: 90, numInimigos: 5, numComidas: 2, iaPrecisao: 0.95, tamanhoInicialInimigo: 6, inimigasCrescem: true }
+};
+
+let nivelAtual = null;
+let nivelAtualKey = null;
+
+// ============ ÁUDIO ============
+let audioCtx = null;
+let muted = false;
+
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playSound(type) {
+  if (muted || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  if (type === 'eat') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(600, now);
+    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    osc.start(now); osc.stop(now + 0.15);
+  } else if (type === 'die') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.6);
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+    osc.start(now); osc.stop(now + 0.6);
+  } else if (type === 'rank') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(523, now);
+    osc.frequency.setValueAtTime(659, now + 0.15);
+    osc.frequency.setValueAtTime(784, now + 0.3);
+    osc.frequency.setValueAtTime(1047, now + 0.45);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+    osc.start(now); osc.stop(now + 0.7);
+  } else if (type === 'save') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.setValueAtTime(1200, now + 0.08);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    osc.start(now); osc.stop(now + 0.15);
+  } else if (type === 'move') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, now);
+    gain.gain.setValueAtTime(0.03, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+    osc.start(now); osc.stop(now + 0.05);
+  }
+}
+
+// ============ ESTADO DO JOGO ============
+let player, enemies, foods, direction, nextDirection, score, highScore, gameLoop, paused, gameOver;
+let ultimoScore = 0;
+let ultimoTamanho = 3;
+let ultimoIdRanking = null;
+
+// ============ NOME DO JOGADOR (persistente) ============
+let nomeJogador = localStorage.getItem('snakePlayerName') || 'Anônimo';
+document.getElementById('nomeDisplay').textContent = nomeJogador;
+
+function abrirModalNome() {
+  document.getElementById('novoNome').value = nomeJogador === 'Anônimo' ? '' : nomeJogador;
+  document.getElementById('nomeModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('novoNome').focus(), 100);
+}
+
+function fecharModalNome() {
+  document.getElementById('nomeModal').style.display = 'none';
+}
+
+function salvarNome() {
+  const novo = document.getElementById('novoNome').value.trim();
+  if (novo) {
+    nomeJogador = novo.substring(0, 15);
+    localStorage.setItem('snakePlayerName', nomeJogador);
+    document.getElementById('nomeDisplay').textContent = nomeJogador;
+    mostrarToast(`✅ Nome salvo: ${nomeJogador}`);
+  }
+  fecharModalNome();
+}
+
+document.getElementById('novoNome').addEventListener('keydown', e => {
+  if (e.key === 'Enter') salvarNome();
+  if (e.key === 'Escape') fecharModalNome();
+});
+
+highScore = parseInt(localStorage.getItem('snakeHighScore') || '0');
+document.getElementById('highscore').textContent = highScore;
+
+// ============ RANKING ============
+function carregarRanking() {
+  try { return JSON.parse(localStorage.getItem('snakeRanking') || '[]'); }
+  catch { return []; }
+}
+
+function salvarRanking(ranking) {
+  localStorage.setItem('snakeRanking', JSON.stringify(ranking));
+}
+
+function adicionarAoRanking(nome, pontos, nivel, tamanho) {
+  const ranking = carregarRanking();
+  const novo = {
+    nome: nome || 'Anônimo',
+    score: pontos,
+    nivel: nivel,
+    tamanho: tamanho,
+    data: new Date().toLocaleDateString('pt-BR'),
+    hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+    id: Date.now()
+  };
+  ranking.push(novo);
+  ranking.sort((a, b) => b.score - a.score);
+  const top = ranking.slice(0, 50);
+  salvarRanking(top);
+  
+  // Retorna a posição (1-indexed)
+  const posicao = top.findIndex(r => r.id === novo.id) + 1;
+  return { ranking: top, posicao };
+}
+
+function estaNoTop10(pontos) {
+  const ranking = carregarRanking();
+  if (ranking.length < 10) return true;
+  return pontos > ranking[9].score;
+}
+
+let filtroAtual = 'todos';
+let ultimoIdDestaque = null;
+
+function abrirRanking() {
+  document.getElementById('rankingScreen').style.display = 'flex';
+  renderizarRanking();
+}
+
+function fecharRanking() {
+  document.getElementById('rankingScreen').style.display = 'none';
+  ultimoIdDestaque = null;
+}
+
+function filtrarRanking(filtro) {
+  filtroAtual = filtro;
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filtro === filtro);
+  });
+  renderizarRanking();
+}
+
+function renderizarRanking() {
+  const ranking = carregarRanking();
+  const content = document.getElementById('rankingContent');
+  
+  const filtrado = filtroAtual === 'todos' ? ranking : ranking.filter(r => r.nivel === filtroAtual);
+  
+  if (filtrado.length === 0) {
+    content.innerHTML = '<div class="empty-ranking">🏆 Nenhum recorde ainda!<br>Seja o primeiro a entrar no ranking!</div>';
+    return;
+  }
+  
+  let html = '<table class="ranking-table"><thead><tr>';
+  html += '<th>#</th><th>Jogador</th><th>Pontos</th><th>Nível</th><th>Tamanho</th><th>Data</th>';
+  html += '</tr></thead><tbody>';
+  
+  filtrado.slice(0, 20).forEach((r, i) => {
+    const posicao = i + 1;
+    let posClass = '';
+    let medalha = posicao;
+    if (posicao === 1) { posClass = 'pos-1'; medalha = '🥇'; }
+    else if (posicao === 2) { posClass = 'pos-2'; medalha = '🥈'; }
+    else if (posicao === 3) { posClass = 'pos-3'; medalha = '🥉'; }
+    
+    const nivelInfo = NIVEIS[r.nivel];
+    const destaque = (ultimoIdDestaque && r.id === ultimoIdDestaque) ? 'destaque' : '';
+    
+    html += `<tr class="${destaque}">`;
+    html += `<td class="posicao ${posClass}">${medalha}</td>`;
+    html += `<td><b>${escapeHtml(r.nome)}</b></td>`;
+    html += `<td style="color:#fbbf24; font-weight:bold;">${r.score}</td>`;
+    html += `<td><span class="nivel-tag" style="background:${nivelInfo.cor}; color:#0f172a;">${nivelInfo.nome}</span></td>`;
+    html += `<td>${r.tamanho}</td>`;
+    html += `<td style="color:#94a3b8; font-size:12px;">${r.data}<br>${r.hora || ''}</td>`;
+    html += `</tr>`;
+  });
+  
+  html += '</tbody></table>';
+  if (filtrado.length > 20) {
+    html += `<div style="text-align:center; padding:10px; color:#64748b; font-size:12px;">Mostrando 20 de ${filtrado.length} registros</div>`;
+  }
+  content.innerHTML = html;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function limparRanking() {
+  if (confirm('⚠️ Tem certeza que deseja apagar TODO o ranking? Esta ação não pode ser desfeita!')) {
+    localStorage.removeItem('snakeRanking');
+    renderizarRanking();
+  }
+}
+
+// ============ TOAST DE NOTIFICAÇÃO ============
+function mostrarToast(msg, top10 = false) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.toggle('top10', top10);
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ============ LÓGICA DO JOGO ============
+function criarCobra(x, y, cor, corOlho, tamanho=3) {
+  const corpo = [];
+  for (let i = 0; i < tamanho; i++) corpo.push({x: x - i, y: y});
+  return { corpo, dir: {x:1, y:0}, cor, corOlho, vivo: true, crescendo: 0 };
+}
+
+function posicaoLivre() {
+  let tentativas = 0;
+  while (tentativas < 1000) {
+    tentativas++;
+    const pos = { x: Math.floor(Math.random()*COLS), y: Math.floor(Math.random()*ROWS) };
+    let ocupado = false;
+    if (player && player.corpo.some(s => s.x===pos.x && s.y===pos.y)) ocupado = true;
+    if (enemies) enemies.forEach(e => { 
+      if (e.vivo && e.corpo.some(s => s.x===pos.x && s.y===pos.y)) ocupado = true; 
+    });
+    if (foods && foods.some(f => f.x===pos.x && f.y===pos.y)) ocupado = true;
+    if (!ocupado) return pos;
+  }
+  return { x: 0, y: 0 };
+}
+
+function gerarComidas() {
+  const novas = [];
+  for (let i = 0; i < nivelAtual.numComidas; i++) novas.push(posicaoLivre());
+  return novas;
+}
+
+function criarInimigos() {
+  const cores = ['#ef4444', '#3b82f6', '#f59e0b', '#a855f7', '#ec4899'];
+  const posicoes = [{x: COLS-10, y: 5}, {x: 5, y: ROWS-10}, {x: COLS-10, y: ROWS-10}, {x: COLS/2, y: 5}, {x: 5, y: ROWS/2}];
+  const dirs = [{x:-1, y:0}, {x:1, y:0}, {x:-1, y:0}, {x:0, y:1}, {x:0, y:-1}];
+  const inimigos = [];
+  for (let i = 0; i < nivelAtual.numInimigos; i++) {
+    const inimigo = criarCobra(posicoes[i].x, posicoes[i].y, cores[i], '#fff', nivelAtual.tamanhoInicialInimigo);
+    inimigo.dir = dirs[i];
+    inimigos.push(inimigo);
+  }
+  return inimigos;
+}
+
+function iniciarJogo(nivel) {
+  initAudio();
+  nivelAtual = NIVEIS[nivel];
+  nivelAtualKey = nivel;
+  
+  const badge = document.getElementById('nivelAtual');
+  badge.textContent = nivelAtual.nome;
+  badge.style.background = nivelAtual.cor;
+  badge.style.color = '#0f172a';
+  canvas.style.borderColor = nivelAtual.cor;
+  
+  reiniciarMesmoNivel();
+}
+
+function reiniciarMesmoNivel() {
+  player = criarCobra(5, 5, '#4ade80', '#fff');
+  enemies = criarInimigos();
+  foods = gerarComidas();
+  direction = {x:1, y:0};
+  nextDirection = {x:1, y:0};
+  score = 0;
+  paused = false;
+  gameOver = false;
+  document.getElementById('score').textContent = 0;
+  document.getElementById('size').textContent = 3;
+  document.getElementById('foodCount').textContent = nivelAtual.numComidas;
+  document.getElementById('gameOver').style.display = 'none';
+  document.getElementById('selectScreen').style.display = 'none';
+  if (gameLoop) clearInterval(gameLoop);
+  gameLoop = setInterval(tick, nivelAtual.velocidade);
+}
+
+function voltarMenu() {
+  if (gameLoop) clearInterval(gameLoop);
+  document.getElementById('gameOver').style.display = 'none';
+  document.getElementById('selectScreen').style.display = 'flex';
+  canvas.style.borderColor = '#4ade80';
+}
+
+// ============ IA ============
+function iaInimigo(inimigo) {
+  if (!inimigo.vivo) return;
+  const cabeca = inimigo.corpo[0];
+  let comidaAlvo = null;
+  let menorDistancia = Infinity;
+  foods.forEach(f => {
+    const dist = Math.abs(f.x - cabeca.x) + Math.abs(f.y - cabeca.y);
+    if (dist < menorDistancia) { menorDistancia = dist; comidaAlvo = f; }
+  });
+  if (!comidaAlvo) return;
+
+  const opcoes = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}].filter(d => {
+    if (d.x === -inimigo.dir.x && d.y === -inimigo.dir.y) return false;
+    const nx = cabeca.x + d.x, ny = cabeca.y + d.y;
+    if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) return false;
+    if (inimigo.corpo.some((s,i) => i>0 && s.x===nx && s.y===ny)) return false;
+    if (player.vivo && player.corpo.some(s => s.x===nx && s.y===ny)) return false;
+    if (enemies.some(e => e !== inimigo && e.vivo && e.corpo.some(s => s.x===nx && s.y===ny))) return false;
+    return true;
+  });
+
+  if (opcoes.length === 0) return;
+  opcoes.sort((a,b) => {
+    const da = Math.abs(comidaAlvo.x - (cabeca.x+a.x)) + Math.abs(comidaAlvo.y - (cabeca.y+a.y));
+    const db = Math.abs(comidaAlvo.x - (cabeca.x+b.x)) + Math.abs(comidaAlvo.y - (cabeca.y+b.y));
+    return da - db;
+  });
+  if (Math.random() < nivelAtual.iaPrecisao) inimigo.dir = opcoes[0];
+  else inimigo.dir = opcoes[Math.floor(Math.random()*opcoes.length)];
+}
+
+// ============ LÓGICA ============
+function moverCobra(cobra, dir) {
+  const novaCabeca = { x: cobra.corpo[0].x + dir.x, y: cobra.corpo[0].y + dir.y };
+  cobra.corpo.unshift(novaCabeca);
+  if (cobra.crescendo > 0) cobra.crescendo--;
+  else cobra.corpo.pop();
+}
+
+function verificarColisao(cobra) {
+  const cabeca = cobra.corpo[0];
+  if (cabeca.x < 0 || cabeca.x >= COLS || cabeca.y < 0 || cabeca.y >= ROWS) return true;
+  if (cobra.corpo.some((s,i) => i>0 && s.x===cabeca.x && s.y===cabeca.y)) return true;
+  if (cobra !== player && player.vivo) {
+    if (player.corpo.some(s => s.x===cabeca.x && s.y===cabeca.y)) return true;
+  }
+  if (cobra !== player) {
+    enemies.forEach(e => {
+      if (e !== cobra && e.vivo && e.corpo.some(s => s.x===cabeca.x && s.y===cabeca.y)) cobra.vivo = false;
+    });
+  }
+  return false;
+}
+
+function tick() {
+  if (paused || gameOver) return;
+  direction = nextDirection;
+  enemies.forEach(iaInimigo);
+  moverCobra(player, direction);
+  enemies.forEach(e => { if (e.vivo) moverCobra(e, e.dir); });
+
+  if (verificarColisao(player)) {
+    player.vivo = false;
+    playSound('die');
+    fimDeJogo();
+    return;
+  }
+
+  enemies.forEach(e => {
+    if (e.vivo && verificarColisao(e)) {
+      e.vivo = false;
+      const cabeca = e.corpo[0];
+      if (player.corpo.some(s => s.x===cabeca.x && s.y===cabeca.y)) {
+        player.vivo = false;
+        playSound('die');
+        fimDeJogo();
+      }
+    }
+  });
+
+  const cabecaP = player.corpo[0];
+  const comidaComida = foods.findIndex(f => f.x === cabecaP.x && f.y === cabecaP.y);
+  if (comidaComida !== -1) {
+    player.crescendo += 2;
+    score += 10;
+    document.getElementById('score').textContent = score;
+    document.getElementById('size').textContent = player.corpo.length;
+    foods.splice(comidaComida, 1);
+    foods.push(posicaoLivre());
+    playSound('eat');
+  }
+
+  enemies.forEach(e => {
+    if (e.vivo) {
+      const cabecaE = e.corpo[0];
+      const cc = foods.findIndex(f => f.x === cabecaE.x && f.y === cabecaE.y);
+      if (cc !== -1) {
+        if (nivelAtual.inimigasCrescem) e.crescendo += 2;
+        foods.splice(cc, 1);
+        foods.push(posicaoLivre());
+      }
+    }
+  });
+
+  document.getElementById('foodCount').textContent = foods.length;
+  playSound('move');
+  desenhar();
+}
+
+// ============ GAME OVER + SALVAMENTO AUTOMÁTICO ============
+function fimDeJogo() {
+  gameOver = true;
+  clearInterval(gameLoop);
+  ultimoScore = score;
+  ultimoTamanho = player.corpo.length;
+  
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem('snakeHighScore', highScore);
+    document.getElementById('highscore').textContent = highScore;
+  }
+  
+  // 🏆 SALVA AUTOMATICAMENTE NO RANKING
+  const top10 = estaNoTop10(score);
+  const resultado = adicionarAoRanking(nomeJogador, score, nivelAtualKey, ultimoTamanho);
+  ultimoIdRanking = resultado.ranking.find(r => 
+    r.nome === nomeJogador && r.score === score && r.nivel === nivelAtualKey && r.tamanho === ultimoTamanho
+  )?.id;
+  ultimoIdDestaque = ultimoIdRanking;
+  
+  playSound('save');
+  
+  // Mostra toast de salvamento
+  if (score > 0) {
+    if (top10) {
+      mostrarToast(`🏆 TOP 10! Posição #${resultado.posicao}`, true);
+      playSound('rank');
+    } else {
+      mostrarToast(`💾 Salvou! Posição #${resultado.posicao} • ${score} pts`);
+    }
+  }
+  
+  // Atualiza tela de Game Over
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('posicaoFinal').textContent = `#${resultado.posicao}`;
+  
+  if (resultado.posicao === 1) {
+    document.getElementById('posicaoLabel').textContent = '🏆 1º LUGAR! LENDÁRIO! 🏆';
+  } else if (resultado.posicao <= 3) {
+    document.getElementById('posicaoLabel').textContent = '🎉 PÓDIO! Excelente!';
+  } else if (top10) {
+    document.getElementById('posicaoLabel').textContent = '🔥 No TOP 10!';
+  } else {
+    document.getElementById('posicaoLabel').textContent = 'no ranking';
+  }
+  
+  document.getElementById('top10Msg').style.display = top10 ? 'block' : 'none';
+  
+  setTimeout(() => {
+    document.getElementById('gameOver').style.display = 'flex';
+  }, 500);
+}
+
+// ============ DESENHO ============
+function desenharQuadrado(x, y, cor, tamanho=TILE-2) {
+  ctx.fillStyle = cor;
+  ctx.fillRect(x*TILE+1, y*TILE+1, tamanho, tamanho);
+}
+
+function desenhar() {
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  for (let i = 0; i <= COLS; i++) {
+    ctx.beginPath(); ctx.moveTo(i*TILE, 0); ctx.lineTo(i*TILE, canvas.height); ctx.stroke();
+  }
+  for (let i = 0; i <= ROWS; i++) {
+    ctx.beginPath(); ctx.moveTo(0, i*TILE); ctx.lineTo(canvas.width, i*TILE); ctx.stroke();
+  }
+
+  const pulse = Math.sin(Date.now()/200) * 2;
+  foods.forEach(food => {
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.arc(food.x*TILE + TILE/2, food.y*TILE + TILE/2, TILE/2 - 2 + pulse, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  enemies.forEach(e => {
+    if (!e.vivo) return;
+    e.corpo.forEach((s, i) => {
+      desenharQuadrado(s.x, s.y, i === 0 ? e.cor : shadeColor(e.cor, -20));
+      if (i === 0) {
+        ctx.fillStyle = e.corOlho;
+        ctx.fillRect(s.x*TILE+5, s.y*TILE+5, 3, 3);
+        ctx.fillRect(s.x*TILE+12, s.y*TILE+5, 3, 3);
+      }
+    });
+  });
+
+  if (player.vivo) {
+    player.corpo.forEach((s, i) => {
+      const shade = i === 0 ? player.cor : shadeColor(player.cor, -i*3);
+      desenharQuadrado(s.x, s.y, shade);
+      if (i === 0) {
+        ctx.fillStyle = player.corOlho;
+        const ox = direction.x === 1 ? 12 : direction.x === -1 ? 5 : 5;
+        const oy = direction.y === 1 ? 12 : direction.y === -1 ? 5 : 5;
+        ctx.fillRect(s.x*TILE+ox, s.y*TILE+oy, 3, 3);
+        ctx.fillRect(s.x*TILE+(direction.x===0?12:ox), s.y*TILE+(direction.y===0?12:oy), 3, 3);
+      }
+    });
+  }
+
+  if (paused) {
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 48px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⏸ PAUSADO', canvas.width/2, canvas.height/2);
+  }
+}
+
+function shadeColor(color, percent) {
+  const num = parseInt(color.replace('#',''), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = Math.max(0, Math.min(255, (num >> 16) + amt));
+  const G = Math.max(0, Math.min(255, (num >> 8 & 0x00FF) + amt));
+  const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
+  return '#' + (0x1000000 + R*0x10000 + G*0x100 + B).toString(16).slice(1);
+}
+
+// ============ CONTROLES ============
+document.addEventListener('keydown', e => {
+  initAudio();
+  const k = e.key;
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(k)) e.preventDefault();
+  if (k === 'ArrowUp' && direction.y !== 1) nextDirection = {x:0, y:-1};
+  else if (k === 'ArrowDown' && direction.y !== -1) nextDirection = {x:0, y:1};
+  else if (k === 'ArrowLeft' && direction.x !== 1) nextDirection = {x:-1, y:0};
+  else if (k === 'ArrowRight' && direction.x !== -1) nextDirection = {x:1, y:0};
+  else if (k === 'p' || k === 'P') paused = !paused;
+  else if (k === 'm' || k === 'M') muted = !muted;
+  else if (k === 'Escape') {
+    if (document.getElementById('rankingScreen').style.display === 'flex') fecharRanking();
+    else if (document.getElementById('nomeModal').style.display === 'flex') fecharModalNome();
+  }
+});
+
+document.addEventListener('click', initAudio);
+</script>
+</body>
+</html>

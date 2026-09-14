@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOGOS CTECH</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#0a0a0f;color:#fff;min-height:100vh}
+header{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);padding:20px 40px;position:sticky;top:0;z-index:1000;box-shadow:0 4px 30px rgba(0,123,255,.3);border-bottom:2px solid #00d4ff}
+.header-content{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px}
+.logo{display:flex;align-items:center;gap:15px}
+.logo-icon{width:50px;height:50px;background:linear-gradient(135deg,#00d4ff,#7b2ff7);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold;box-shadow:0 0 20px rgba(0,212,255,.5)}
+.logo h1{font-size:2rem;font-weight:900;background:linear-gradient(90deg,#00d4ff,#7b2ff7,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px}
+.search-bar{display:flex;align-items:center;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:10px 20px;width:350px;transition:.3s}
+.search-bar:focus-within{border-color:#00d4ff;box-shadow:0 0 15px rgba(0,212,255,.3)}
+.search-bar input{background:none;border:none;outline:none;color:#fff;font-size:.95rem;width:100%;margin-left:10px}
+.search-bar input::placeholder{color:rgba(255,255,255,.5)}
+.search-bar i{color:#00d4ff;font-size:1.2rem}
+.nav-bar{background:rgba(15,15,25,.95);padding:15px 40px;border-bottom:1px solid rgba(255,255,255,.1)}
+.nav-content{max-width:1400px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap}
+.nav-btn{padding:8px 20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#ccc;border-radius:25px;cursor:pointer;font-size:.85rem;transition:.3s;text-transform:uppercase;letter-spacing:1px}
+.nav-btn:hover,.nav-btn.active{background:linear-gradient(135deg,#00d4ff,#7b2ff7);border-color:transparent;color:#fff;transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,212,255,.3)}
+.main-content{max-width:1400px;margin:0 auto;padding:40px 20px}
+.section-title{font-size:1.5rem;margin-bottom:30px;padding-left:15px;border-left:4px solid #00d4ff;display:flex;align-items:center;gap:10px}
+.section-title span{color:#00d4ff}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:25px;padding-bottom:40px}
+.game-card{background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:16px;overflow:hidden;transition:.4s cubic-bezier(.175,.885,.32,1.275);cursor:pointer;border:1px solid rgba(255,255,255,.08);position:relative}
+.game-card:hover{transform:translateY(-10px) scale(1.02);box-shadow:0 20px 60px rgba(0,212,255,.2);border-color:#00d4ff}
+.game-card:hover .game-overlay{opacity:1}
+.game-image{width:100%;height:180px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.game-image i{font-size:3.5rem;opacity:.8;z-index:1}
+.game-overlay{position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s;backdrop-filter:blur(3px)}
+.play-btn{width:60px;height:60px;background:linear-gradient(135deg,#00d4ff,#7b2ff7);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 0 30px rgba(0,212,255,.5)}
+.game-info{padding:18px}
+.game-title{font-size:1rem;font-weight:700;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game-meta{display:flex;justify-content:space-between;align-items:center}
+.game-category{font-size:.75rem;color:#00d4ff;background:rgba(0,212,255,.1);padding:4px 10px;border-radius:12px;text-transform:uppercase;letter-spacing:.5px}
+.game-rating{display:flex;align-items:center;gap:4px;font-size:.85rem;color:#ffd700}
+.game-badge{position:absolute;top:12px;right:12px;padding:4px 10px;border-radius:8px;font-size:.7rem;font-weight:700;text-transform:uppercase;z-index:2}
+.badge-new{background:linear-gradient(135deg,#ff6b6b,#ee5a24)}
+.badge-hot{background:linear-gradient(135deg,#f7971e,#ffd200);color:#000}
+.badge-free{background:linear-gradient(135deg,#00b894,#00cec9)}
+.badge-exclusive{background:linear-gradient(135deg,#7b2ff7,#ff2d7e);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 10px rgba(123,47,247,.5)}50%{box-shadow:0 0 25px rgba(255,45,126,.9)}}
+.playable-tag{position:absolute;top:12px;left:12px;background:linear-gradient(135deg,#00ff88,#00d4ff);color:#000;padding:4px 10px;border-radius:8px;font-size:.7rem;font-weight:700;text-transform:uppercase;z-index:2;animation:pulse2 2s infinite}
+@keyframes pulse2{0%,100%{box-shadow:0 0 10px rgba(0,255,136,.5)}50%{box-shadow:0 0 20px rgba(0,212,255,.8)}}
+footer{background:linear-gradient(135deg,#1a1a2e,#0a0a0f);border-top:1px solid rgba(255,255,255,.1);padding:40px;text-align:center;margin-top:60px}
+footer p{color:#666;font-size:.9rem}
+footer .footer-brand{font-size:1.2rem;font-weight:700;background:linear-gradient(90deg,#00d4ff,#7b2ff7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
+.game-modal{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;display:none;flex-direction:column;animation:fadeIn .3s ease}
+.game-modal.active{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.game-modal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:linear-gradient(135deg,#1a1a2e,#0f3460);border-bottom:2px solid #00d4ff;flex-shrink:0}
+.game-modal-title{display:flex;align-items:center;gap:12px;font-size:1.2rem;font-weight:700}
+.game-modal-title .title-icon{width:36px;height:36px;background:linear-gradient(135deg,#00d4ff,#7b2ff7);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.game-modal-title span{background:linear-gradient(90deg,#00d4ff,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.game-modal-controls{display:flex;gap:10px}
+.modal-btn{padding:8px 16px;border:2px solid #00d4ff;background:rgba(0,212,255,.1);color:#00d4ff;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:700;transition:.2s;display:flex;align-items:center;gap:6px}
+.modal-btn:hover{background:#00d4ff;color:#000;transform:translateY(-2px)}
+.modal-btn.close-btn{border-color:#ff5349;color:#ff5349;background:rgba(255,83,73,.1)}
+.modal-btn.close-btn:hover{background:#ff5349;color:#fff}
+.game-modal-body{flex:1;position:relative;overflow:hidden}
+.game-modal-body iframe{width:100%;height:100%;border:none;background:#000}
+.loading-overlay{position:absolute;inset:0;background:#0a0a0f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:10;transition:opacity .4s}
+.loading-overlay.hidden{opacity:0;pointer-events:none}
+.loader{width:60px;height:60px;border:4px solid rgba(0,212,255,.2);border-top-color:#00d4ff;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:#00d4ff;font-weight:700;letter-spacing:2px}
+.error-msg{color:#ff5349;text-align:center;padding:20px;font-weight:700}
+@media(max-width:768px){
+.header-content{flex-direction:column;text-align:center}
+.search-bar{width:100%}
+.logo h1{font-size:1.5rem}
+.games-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:15px}
+.game-image{height:130px}
+.nav-content{justify-content:center}
+.game-modal-header{padding:10px 16px}
+.game-modal-title{font-size:1rem}
+.modal-btn{padding:6px 12px;font-size:.75rem}
+.modal-btn .btn-label{display:none}
+}
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:#0a0a0f}
+::-webkit-scrollbar-thumb{background:linear-gradient(135deg,#00d4ff,#7b2ff7);border-radius:4px}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.game-card{animation:fadeInUp .6s ease forwards;opacity:0}
+</style>
+</head>
+<body>
+
+<header>
+<div class="header-content">
+<div class="logo">
+<div class="logo-icon"><i class="bi bi-controller"></i></div>
+<h1>JOGOS CTECH</h1>
+</div>
+<div class="search-bar">
+<i class="bi bi-search"></i>
+<input type="text" id="searchInput" placeholder="Buscar jogos..." oninput="filterGames()">
+</div>
+</div>
+</header>
+
+<nav class="nav-bar">
+<div class="nav-content">
+<button class="nav-btn active" onclick="filterCategory('all',this)">Todos</button>
+<button class="nav-btn" onclick="filterCategory('ação',this)">Ação</button>
+<button class="nav-btn" onclick="filterCategory('aventura',this)">Aventura</button>
+<button class="nav-btn" onclick="filterCategory('corrida',this)">Corrida</button>
+<button class="nav-btn" onclick="filterCategory('esporte',this)">Esporte</button>
+<button class="nav-btn" onclick="filterCategory('rpg',this)">RPG</button>
+<button class="nav-btn" onclick="filterCategory('puzzle',this)">Puzzle</button>
+<button class="nav-btn" onclick="filterCategory('terror',this)">Terror</button>
+<button class="nav-btn" onclick="filterCategory('estratégia',this)">Estratégia</button>
+<button class="nav-btn" onclick="filterCategory('fps',this)">FPS</button>
+</div>
+</nav>
+
+<main class="main-content">
+<h2 class="section-title"><span>🎮</span> Catálogo de Jogos</h2>
+<div class="games-grid" id="gamesGrid"></div>
+</main>
+
+<footer>
+<p class="footer-brand">JOGOS CTECH</p>
+<p>&copy; 2026 CTECH - Todos os direitos reservados</p>
+</footer>
+
+<div class="game-modal" id="gameModal">
+<div class="game-modal-header">
+<div class="game-modal-title">
+<div class="title-icon" id="modalIcon">🎮</div>
+<span id="modalGameTitle">JOGO</span>
+</div>
+<div class="game-modal-controls">
+<button class="modal-btn" onclick="toggleFullscreen()"><i class="bi bi-arrows-fullscreen"></i><span class="btn-label">TELA CHEIA</span></button>
+<button class="modal-btn close-btn" onclick="closeGame()"><i class="bi bi-x-lg"></i><span class="btn-label">FECHAR</span></button>
+</div>
+</div>
+<div class="game-modal-body" id="gameModalBody">
+<div class="loading-overlay" id="loadingOverlay">
+<div class="loader"></div>
+<div class="loading-text">CARREGANDO JOGO...</div>
+</div>
+<iframe id="gameFrame" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-pointer-lock" allow="autoplay; fullscreen; gamepad"></iframe>
+</div>
+</div>
+
+<script>
+/* ============================================================
+   📋 LISTA DE JOGOS
+   ============================================================
+   ⚠️ IMPORTANTE: Para adicionar um novo jogo, basta:
+   1. Criar o arquivo HTML do jogo na pasta /jogos/
+   2. Adicionar uma entrada aqui no array
+   3. Pronto! O sistema carrega automaticamente
+   
+   Campos:
+   - title: nome do jogo
+   - category: categoria (ação, aventura, corrida, etc)
+   - rating: nota (0 a 5)
+   - icon: ícone Bootstrap (bi-xxx)
+   - gradient: gradiente de fundo
+   - badge: 'new', 'hot', 'free', 'exclusive' ou null
+   - playable: true/false
+   - file: nome do arquivo HTML na pasta /jogos/ (ex: "pipa.html")
+   - emoji: emoji do jogo
+   ============================================================ */
+const games=[
+  // 🪁 JOGO 1: PIPA COMBATE 2D
+  {title:"PIPA COMBATE 2D",category:"ação",rating:5.0,icon:"bi-wind",
+   gradient:"linear-gradient(135deg,#6cc0ff,#d8f2ff)",badge:"exclusive",
+   playable:true,file:"pipa-combate.html",emoji:"🪁"},
+  
+  // 🐍 JOGO 2: SNAKE
+  {title:"SNAKE CLÁSSICO",category:"puzzle",rating:4.5,icon:"bi-hurricane",
+   gradient:"linear-gradient(135deg,#00ff88,#00b894)",badge:"new",
+   playable:true,file:"snake.html",emoji:"🐍"},
+  
+  // 🎯 JOGO 3: ALVO
+  {title:"ALVO CERTERO",category:"fps",rating:4.3,icon:"bi-bullseye",
+   gradient:"linear-gradient(135deg,#ff5349,#c9302c)",badge:"hot",
+   playable:true,file:"alvo.html",emoji:"🎯"},
+  
+  // Jogos em breve (sem arquivo ainda)
+  {title:"Shadow Warriors",category:"ação",rating:4.8,icon:"bi-lightning-charge",
+   gradient:"linear-gradient(135deg,#e74c3c,#c0392b)",badge:"hot",playable:false},
+  {title:"Speed Racer X",category:"corrida",rating:4.5,icon:"bi-speedometer2",
+   gradient:"linear-gradient(135deg,#3498db,#2980b9)",badge:"new",playable:false},
+  {title:"Galaxy Defender",category:"fps",rating:4.7,icon:"bi-rocket-takeoff",
+   gradient:"linear-gradient(135deg,#2c3e50,#3498db)",badge:null,playable:false},
+  {title:"Mystic Temple",category:"aventura",rating:4.6,icon:"bi-gem",
+   gradient:"linear-gradient(135deg,#27ae60,#2ecc71)",badge:null,playable:false},
+  {title:"Goal Master 2026",category:"esporte",rating:4.4,icon:"bi-trophy",
+   gradient:"linear-gradient(135deg,#f39c12,#e67e22)",badge:"new",playable:false},
+  {title:"Zombie Apocalypse",category:"terror",rating:4.9,icon:"bi-bug",
+   gradient:"linear-gradient(135deg,#1a1a2e,#e74c3c)",badge:"hot",playable:false},
+  {title:"Dragon Quest Online",category:"rpg",rating:4.8,icon:"bi-fire",
+   gradient:"linear-gradient(135deg,#8e44ad,#9b59b6)",badge:"hot",playable:false},
+  {title:"Brain Teaser Pro",category:"puzzle",rating:4.3,icon:"bi-puzzle",
+   gradient:"linear-gradient(135deg,#1abc9c,#16a085)",badge:null,playable:false},
+  {title:"Empire Builder",category:"estratégia",rating:4.6,icon:"bi-buildings",
+   gradient:"linear-gradient(135deg,#d35400,#e67e22)",badge:null,playable:false},
+  {title:"Ninja Blade",category:"ação",rating:4.5,icon:"bi-lightning",
+   gradient:"linear-gradient(135deg,#2c3e50,#e74c3c)",badge:"new",playable:false},
+  {title:"Ocean Explorer",category:"aventura",rating:4.2,icon:"bi-water",
+   gradient:"linear-gradient(135deg,#0984e3,#74b9ff)",badge:null,playable:false},
+  {title:"Drift Kings",category:"corrida",rating:4.7,icon:"bi-car-front",
+   gradient:"linear-gradient(135deg,#6c5ce7,#a29bfe)",badge:"free",playable:false},
+  {title:"Space Command",category:"estratégia",rating:4.4,icon:"bi-globe-americas",
+   gradient:"linear-gradient(135deg,#0c2461,#1e3799)",badge:null,playable:false},
+  {title:"Dark Forest",category:"terror",rating:4.6,icon:"bi-tree",
+   gradient:"linear-gradient(135deg,#0a3d0a,#2d6a2d)",badge:null,playable:false},
+  {title:"Basketball Pro",category:"esporte",rating:4.3,icon:"bi-circle",
+   gradient:"linear-gradient(135deg,#e17055,#fdcb6e)",badge:null,playable:false},
+  {title:"Cyber Attack",category:"fps",rating:4.8,icon:"bi-crosshair",
+   gradient:"linear-gradient(135deg,#00cec9,#0984e3)",badge:"hot",playable:false},
+  {title:"Magic Academy",category:"rpg",rating:4.5,icon:"bi-stars",
+   gradient:"linear-gradient(135deg,#6c5ce7,#fd79a8)",badge:"new",playable:false},
+  {title:"Color Match",category:"puzzle",rating:4.1,icon:"bi-palette",
+   gradient:"linear-gradient(135deg,#fd79a8,#fdcb6e)",badge:"free",playable:false},
+  {title:"Street Fighter Z",category:"ação",rating:4.7,icon:"bi-hand-index",
+   gradient:"linear-gradient(135deg,#d63031,#e17055)",badge:null,playable:false},
+  {title:"Mountain Climb",category:"aventura",rating:4.4,icon:"bi-triangle",
+   gradient:"linear-gradient(135deg,#636e72,#b2bec3)",badge:null,playable:false},
+  {title:"Tank Wars",category:"estratégia",rating:4.3,icon:"bi-shield",
+   gradient:"linear-gradient(135deg,#2d3436,#636e72)",badge:null,playable:false},
+  {title:"Fury Roads",category:"corrida",rating:4.6,icon:"bi-ev-front",
+   gradient:"linear-gradient(135deg,#e84393,#fd79a8)",badge:"new",playable:false},
+  {title:"Haunted Mansion",category:"terror",rating:4.8,icon:"bi-house",
+   gradient:"linear-gradient(135deg,#2d3436,#636e72)",badge:"hot",playable:false},
+  {title:"Tennis Champion",category:"esporte",rating:4.2,icon:"bi-circle-fill",
+   gradient:"linear-gradient(135deg,#00b894,#55efc4)",badge:null,playable:false},
+  {title:"Sniper Elite",category:"fps",rating:4.9,icon:"bi-bullseye",
+   gradient:"linear-gradient(135deg,#2c3e50,#34495e)",badge:"hot",playable:false},
+  {title:"Knight's Legacy",category:"rpg",rating:4.6,icon:"bi-shield-check",
+   gradient:"linear-gradient(135deg,#b8860b,#daa520)",badge:null,playable:false},
+  {title:"Logic Master",category:"puzzle",rating:4.4,icon:"bi-lightbulb",
+   gradient:"linear-gradient(135deg,#f9ca24,#f0932b)",badge:"free",playable:false},
+  {title:"Pirate Seas",category:"aventura",rating:4.5,icon:"bi-anchor",
+   gradient:"linear-gradient(135deg,#0652dd,#1e90ff)",badge:null,playable:false},
+  {title:"Boxing Ring",category:"esporte",rating:4.3,icon:"bi-lightning",
+   gradient:"linear-gradient(135deg,#eb2f06,#ff6348)",badge:null,playable:false}
+];
+
+/* ============================================================
+   🎮 RENDERIZAÇÃO DOS CARDS
+   ============================================================ */
+function renderGames(list){
+  const grid=document.getElementById('gamesGrid');
+  grid.innerHTML='';
+  list.forEach((g,i)=>{
+    let bl='';
+    if(g.badge==='new')bl='NOVO';
+    else if(g.badge==='hot')bl='🔥 HOT';
+    else if(g.badge==='free')bl='GRÁTIS';
+    else if(g.badge==='exclusive')bl='⭐ EXCLUSIVO';
+    const bh=g.badge?`<div class="game-badge badge-${g.badge}">${bl}</div>`:'';
+    const pt=g.playable?'<div class="playable-tag">▶ JOGÁVEL</div>':'';
+    const c=document.createElement('div');
+    c.className='game-card';
+    c.style.animationDelay=i*.05+'s';
+    c.innerHTML=`${pt}${bh}<div class="game-image" style="background:${g.gradient}"><i class="bi ${g.icon}"></i><div class="game-overlay"><div class="play-btn"><i class="bi bi-play-fill"></i></div></div></div><div class="game-info"><div class="game-title">${g.title}</div><div class="game-meta"><span class="game-category">${g.category}</span><span class="game-rating"><i class="bi bi-star-fill"></i>${g.rating}</span></div></div>`;
+    c.addEventListener('click',()=>g.playable?openGame(g):alert('🎮 "'+g.title+'"\n\nEm breve disponível!\nFique ligado nas atualizações da CTECH.'));
+    grid.appendChild(c);
+  });
+}
+
+/* ============================================================
+   🚀 CARREGAR JOGO DO ARQUIVO EXTERNO
+   ============================================================ */
+async function openGame(game){
+  const modal=document.getElementById('gameModal');
+  const frame=document.getElementById('gameFrame');
+  const loading=document.getElementById('loadingOverlay');
+  const body=document.getElementById('gameModalBody');
+  
+  document.getElementById('modalGameTitle').textContent=game.title;
+  document.getElementById('modalIcon').textContent=game.emoji||'🎮';
+  loading.classList.remove('hidden');
+  modal.classList.add('active');
+  document.body.style.overflow='hidden';
+  
+  // Remove mensagens de erro anteriores
+  const oldErr=body.querySelector('.error-msg');
+  if(oldErr)oldErr.remove();
+  
+  try{
+    // Carrega o arquivo HTML da pasta /jogos/
+    const response=await fetch('jogos/'+game.file);
+    if(!response.ok)throw new Error('Arquivo não encontrado: jogos/'+game.file);
+    const html=await response.text();
+    
+    frame.onload=()=>setTimeout(()=>loading.classList.add('hidden'),400);
+    frame.srcdoc=html;
+    setTimeout(()=>frame.focus(),500);
+  }catch(err){
+    loading.classList.add('hidden');
+    const errDiv=document.createElement('div');
+    errDiv.className='error-msg';
+    errDiv.innerHTML=`
+      <div style="font-size:64px;margin-bottom:20px">⚠️</div>
+      <h2 style="color:#ff5349;margin-bottom:10px">Erro ao carregar jogo</h2>
+      <p style="color:#fff;margin-bottom:10px">${err.message}</p>
+      <p style="color:#aaa;font-size:14px;margin-bottom:20px">
+        Verifique se o arquivo <b style="color:#00d4ff">jogos/${game.file}</b> existe na pasta.
+      </p>
+      <button onclick="closeGame()" style="padding:10px 24px;background:#00d4ff;color:#000;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:14px">VOLTAR</button>
+    `;
+    body.appendChild(errDiv);
+  }
+}
+
+function closeGame(){
+  document.getElementById('gameModal').classList.remove('active');
+  document.getElementById('gameFrame').srcdoc='';
+  document.body.style.overflow='';
+  const err=document.getElementById('gameModalBody').querySelector('.error-msg');
+  if(err)err.remove();
+  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+}
+
+function toggleFullscreen(){
+  const b=document.getElementById('gameModalBody');
+  if(!document.fullscreenElement)b.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen();
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    const m=document.getElementById('gameModal');
+    if(m.classList.contains('active')&&!document.fullscreenElement)closeGame();
+  }
+});
+
+function filterCategory(cat,btn){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGames(cat==='all'?games:games.filter(g=>g.category===cat));
+}
+
+function filterGames(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  renderGames(games.filter(g=>g.title.toLowerCase().includes(q)||g.category.includes(q)));
+}
+
+renderGames(games);
+</script>
+</body>
+</html>

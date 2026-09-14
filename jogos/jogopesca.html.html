@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Fisch 2D - Aventura de Pesca</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+  body {
+    font-family: 'Trebuchet MS', sans-serif;
+    background: #0a1929;
+    color: #fff;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #game {
+    width: 900px;
+    height: 600px;
+    position: relative;
+    background: linear-gradient(180deg, #87ceeb 0%, #4a90c2 40%, #1e5a8a 40%, #0a3d62 100%);
+    border: 4px solid #2c3e50;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(0,0,0,0.6);
+  }
+  .sky { position: absolute; top: 0; left: 0; width: 100%; height: 40%; }
+  .sun {
+    position: absolute; top: 40px; right: 80px;
+    width: 70px; height: 70px; border-radius: 50%;
+    background: radial-gradient(circle, #fff59d, #ffb300);
+    box-shadow: 0 0 40px #ffb300;
+    animation: float 6s ease-in-out infinite;
+  }
+  .cloud {
+    position: absolute; background: rgba(255,255,255,0.85);
+    border-radius: 50px; height: 25px;
+    animation: drift 40s linear infinite;
+  }
+  .cloud::before, .cloud::after {
+    content: ''; position: absolute; background: rgba(255,255,255,0.85); border-radius: 50%;
+  }
+  .c1 { top: 60px; width: 80px; }
+  .c1::before { width: 40px; height: 40px; top: -20px; left: 15px; }
+  .c1::after { width: 30px; height: 30px; top: -10px; right: 10px; }
+  .c2 { top: 100px; width: 100px; animation-delay: -20s; }
+  .c2::before { width: 50px; height: 50px; top: -25px; left: 20px; }
+  .c2::after { width: 35px; height: 35px; top: -15px; right: 15px; }
+  @keyframes drift { from { left: -150px; } to { left: 1000px; } }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+  .water {
+    position: absolute; bottom: 0; width: 100%; height: 60%;
+    background: linear-gradient(180deg, #1e5a8a 0%, #0a3d62 50%, #062238 100%);
+    overflow: hidden;
+  }
+  .wave {
+    position: absolute; top: -10px; width: 200%; height: 20px;
+    background: repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.15) 40px, rgba(255,255,255,0.15) 80px);
+    animation: wave 8s linear infinite;
+  }
+  @keyframes wave { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  .boat {
+    position: absolute; bottom: 45%; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 80px; z-index: 5;
+    animation: bob 3s ease-in-out infinite;
+  }
+  @keyframes bob { 0%,100%{transform:translateX(-50%) translateY(0) rotate(-2deg)} 50%{transform:translateX(-50%) translateY(-8px) rotate(2deg)} }
+  .boat-body {
+    position: absolute; bottom: 0; width: 120px; height: 30px;
+    background: linear-gradient(180deg, #8b4513, #5d2f0a);
+    border-radius: 0 0 50% 50% / 0 0 100% 100%;
+    border: 2px solid #3d1f05;
+  }
+  .fisher {
+    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+    width: 30px; height: 50px;
+  }
+  .fisher-head {
+    width: 22px; height: 22px; background: #ffd7a8;
+    border-radius: 50%; margin: 0 auto;
+    border: 2px solid #333;
+  }
+  .fisher-hat {
+    position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+    width: 30px; height: 10px; background: #c0392b;
+    border-radius: 50% 50% 10% 10%;
+    border: 2px solid #7b1e13;
+  }
+  .fisher-body {
+    width: 26px; height: 24px; background: #2980b9;
+    margin: 2px auto 0; border-radius: 6px 6px 0 0;
+    border: 2px solid #1a5480;
+  }
+  .rod {
+    position: absolute; bottom: 35px; left: 65%;
+    width: 3px; height: 90px; background: #3d2817;
+    transform-origin: bottom; transform: rotate(25deg);
+    transition: transform 0.3s;
+  }
+  .rod.fishing { transform: rotate(45deg); }
+  .line {
+    position: absolute; top: 0; right: -2px;
+    width: 1px; height: 60px; background: #fff;
+    opacity: 0.7;
+  }
+  .hook {
+    position: absolute; bottom: -8px; left: -3px;
+    width: 8px; height: 8px; border: 2px solid #c0c0c0;
+    border-top: none; border-left: none;
+    border-radius: 0 0 50% 0;
+  }
+
+  .hud {
+    position: absolute; top: 10px; left: 10px; right: 10px;
+    display: flex; justify-content: space-between; z-index: 10;
+    pointer-events: none;
+  }
+  .stat {
+    background: rgba(0,0,0,0.6); padding: 8px 14px;
+    border-radius: 8px; border: 2px solid #f1c40f;
+    font-weight: bold; font-size: 16px;
+    pointer-events: auto;
+  }
+  .stat .label { color: #f1c40f; font-size: 11px; display: block; }
+
+  .btn {
+    background: linear-gradient(180deg, #f39c12, #d35400);
+    color: #fff; border: 3px solid #7b3a08;
+    padding: 12px 24px; border-radius: 10px;
+    font-size: 18px; font-weight: bold; cursor: pointer;
+    box-shadow: 0 4px 0 #7b3a08, 0 6px 10px rgba(0,0,0,0.4);
+    transition: all 0.1s;
+    font-family: inherit;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #7b3a08, 0 8px 14px rgba(0,0,0,0.4); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #7b3a08; }
+  .btn.secondary { background: linear-gradient(180deg, #3498db, #2471a3); border-color: #154360; box-shadow: 0 4px 0 #154360, 0 6px 10px rgba(0,0,0,0.4); }
+  .btn.secondary:hover { box-shadow: 0 6px 0 #154360, 0 8px 14px rgba(0,0,0,0.4); }
+  .btn.danger { background: linear-gradient(180deg, #e74c3c, #a93226); border-color: #641e16; box-shadow: 0 4px 0 #641e16, 0 6px 10px rgba(0,0,0,0.4); }
+
+  .fishing-ui {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px; padding: 20px;
+    background: rgba(0,0,0,0.85);
+    border: 3px solid #f1c40f;
+    border-radius: 15px;
+    text-align: center;
+    z-index: 20;
+    display: none;
+  }
+  .fishing-ui.active { display: block; animation: pop 0.3s; }
+  @keyframes pop { from { transform: translate(-50%,-50%) scale(0.5); opacity: 0 } to { transform: translate(-50%,-50%) scale(1); opacity: 1 } }
+  .bar-container {
+    width: 100%; height: 40px;
+    background: #1a1a1a; border: 2px solid #555;
+    border-radius: 8px; position: relative;
+    overflow: hidden; margin: 15px 0;
+  }
+  .bar-fill {
+    position: absolute; top: 0; left: 0; height: 100%;
+    background: linear-gradient(90deg, #27ae60, #f1c40f, #e74c3c);
+    transition: width 0.05s linear;
+  }
+  .bar-target {
+    position: absolute; top: 0; height: 100%;
+    background: rgba(46, 204, 113, 0.5);
+    border-left: 3px solid #2ecc71;
+    border-right: 3px solid #2ecc71;
+  }
+  .bar-indicator {
+    position: absolute; top: -5px; width: 4px; height: 50px;
+    background: #fff; box-shadow: 0 0 10px #fff;
+    transition: left 0.05s linear;
+  }
+  .fish-info { font-size: 14px; color: #aaa; margin-bottom: 5px; }
+  .fish-name { font-size: 22px; font-weight: bold; margin: 5px 0; }
+
+  .r-common { color: #bdc3c7; text-shadow: 0 0 5px #bdc3c7; }
+  .r-uncommon { color: #2ecc71; text-shadow: 0 0 8px #2ecc71; }
+  .r-rare { color: #3498db; text-shadow: 0 0 10px #3498db; }
+  .r-epic { color: #9b59b6; text-shadow: 0 0 12px #9b59b6; }
+  .r-legendary { color: #f39c12; text-shadow: 0 0 15px #f39c12; }
+  .r-mythic { color: #e74c3c; text-shadow: 0 0 20px #e74c3c; animation: glow 1.5s infinite alternate; }
+  @keyframes glow { from { filter: brightness(1); } to { filter: brightness(1.5); } }
+
+  .panel {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 700px; max-height: 500px;
+    background: rgba(10, 25, 41, 0.95);
+    border: 3px solid #f1c40f;
+    border-radius: 15px;
+    padding: 20px;
+    z-index: 30;
+    display: none;
+    overflow-y: auto;
+  }
+  .panel.active { display: block; animation: pop 0.3s; }
+  .panel h2 { color: #f1c40f; text-align: center; margin-bottom: 15px; font-size: 24px; }
+  .close-btn {
+    position: absolute; top: 10px; right: 15px;
+    background: #e74c3c; color: #fff; border: none;
+    width: 30px; height: 30px; border-radius: 50%;
+    cursor: pointer; font-size: 16px; font-weight: bold;
+  }
+  .items-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  .item {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid #555;
+    border-radius: 8px; padding: 10px;
+    text-align: center; cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .item:hover { transform: scale(1.05); border-color: #f1c40f; }
+  .item .emoji { font-size: 32px; display: block; }
+  .item .name { font-size: 11px; margin: 4px 0; font-weight: bold; }
+  .item .count {
+    position: absolute; top: 3px; right: 5px;
+    background: #e74c3c; color: #fff;
+    padding: 2px 6px; border-radius: 10px;
+    font-size: 11px; font-weight: bold;
+  }
+  .item .price { font-size: 11px; color: #f1c40f; }
+  .item.locked { opacity: 0.4; cursor: not-allowed; }
+  .item.owned { border-color: #2ecc71; }
+
+  /* ===== MUTAÇÕES - Visuais ===== */
+  .mut-shiny { filter: brightness(1.8) saturate(1.5); animation: shinyPulse 1.5s infinite; }
+  @keyframes shinyPulse {
+    0%,100% { filter: brightness(1.8) saturate(1.5) drop-shadow(0 0 4px #fff); }
+    50% { filter: brightness(2.2) saturate(2) drop-shadow(0 0 10px #fff); }
+  }
+  .mut-golden { filter: sepia(1) saturate(3) hue-rotate(-20deg) brightness(1.2); }
+  .mut-galaxy { filter: hue-rotate(240deg) saturate(2) brightness(1.3); animation: galaxySpin 3s linear infinite; }
+  @keyframes galaxySpin {
+    0% { filter: hue-rotate(240deg) saturate(2) brightness(1.3); }
+    50% { filter: hue-rotate(300deg) saturate(2.5) brightness(1.5); }
+    100% { filter: hue-rotate(240deg) saturate(2) brightness(1.3); }
+  }
+  .mut-albino { filter: grayscale(1) brightness(2) contrast(1.2); }
+  .mut-shadow { filter: brightness(0.3) contrast(2) saturate(0.5) drop-shadow(0 0 8px #9b59b6); }
+  .mut-rainbow { animation: rainbow 2s linear infinite; }
+  @keyframes rainbow {
+    0% { filter: hue-rotate(0deg) saturate(2) brightness(1.3); }
+    100% { filter: hue-rotate(360deg) saturate(2) brightness(1.3); }
+  }
+
+  .catch-msg {
+    position: absolute; top: 30%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px; font-weight: bold;
+    pointer-events: none; z-index: 15;
+    animation: catchAnim 2.5s forwards;
+    text-shadow: 2px 2px 4px #000;
+  }
+  @keyframes catchAnim {
+    0% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+    20% { transform: translate(-50%,-50%) scale(1.3); opacity: 1; }
+    80% { transform: translate(-50%,-80%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%,-120%) scale(0.8); opacity: 0; }
+  }
+
+  .bubble {
+    position: absolute; bottom: 0;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    animation: rise 4s linear infinite;
+  }
+  @keyframes rise {
+    from { transform: translateY(0); opacity: 0.8; }
+    to { transform: translateY(-400px); opacity: 0; }
+  }
+
+  #menu {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, #0a1929, #1e5a8a);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    z-index: 100;
+  }
+  #menu h1 {
+    font-size: 72px; color: #f1c40f;
+    text-shadow: 4px 4px 0 #d35400, 0 0 30px rgba(241,196,15,0.5);
+    margin-bottom: 10px;
+    animation: titleBounce 2s ease-in-out infinite;
+  }
+  @keyframes titleBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  #menu p { color: #ecf0f1; margin-bottom: 30px; font-size: 18px; }
+  #menu .btn { margin: 8px; }
+
+  .controls-info {
+    position: absolute; bottom: 10px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.6); padding: 8px 16px;
+    border-radius: 8px; font-size: 12px;
+    color: #ecf0f1; z-index: 5;
+  }
+
+  .biome-name {
+    position: absolute; top: 60px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7); padding: 6px 20px;
+    border-radius: 20px; font-weight: bold;
+    border: 2px solid #f1c40f; z-index: 5;
+  }
+
+  /* Flash de mutação */
+  .mutation-flash {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle, rgba(255,255,255,0.8), transparent 70%);
+    pointer-events: none; z-index: 50;
+    animation: flash 0.8s forwards;
+  }
+  @keyframes flash {
+    0% { opacity: 0; }
+    30% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .mutation-badge {
+    position: absolute; top: 3px; left: 5px;
+    font-size: 14px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    font-weight: bold;
+    background: rgba(0,0,0,0.6);
+  }
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="menu">
+    <h1>🎣 FISCH 2D</h1>
+    <p>Aventura de Pesca Épica — Agora com Mutações!</p>
+    <button class="btn" onclick="startGame()">▶ JOGAR</button>
+    <button class="btn secondary" onclick="loadGame()">📂 CARREGAR SAVE</button>
+    <p style="margin-top:30px; font-size:13px; opacity:0.7;">Clique em PESCAR ou pressione ESPAÇO</p>
+  </div>
+
+  <div class="sky">
+    <div class="sun"></div>
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+  </div>
+  <div class="water" id="water">
+    <div class="wave"></div>
+  </div>
+
+  <div class="boat" id="boat">
+    <div class="fisher">
+      <div class="fisher-hat"></div>
+      <div class="fisher-head"></div>
+      <div class="fisher-body"></div>
+    </div>
+    <div class="rod" id="rod">
+      <div class="line"></div>
+      <div class="hook"></div>
+    </div>
+    <div class="boat-body"></div>
+  </div>
+
+  <div class="biome-name" id="biomeName">🌊 Enseada Inicial</div>
+
+  <div class="hud">
+    <div class="stat"><span class="label">💰 MOEDAS</span><span id="coins">0</span></div>
+    <div class="stat"><span class="label">⭐ NÍVEL</span><span id="level">1</span></div>
+    <div class="stat"><span class="label">🎣 VARA</span><span id="rodLevel">Básica</span></div>
+    <div class="stat"><span class="label">🧬 ENCANTO</span><span id="charmLevel">Nenhum</span></div>
+  </div>
+
+  <div style="position:absolute; bottom:15px; left:15px; z-index:10; display:flex; gap:8px;">
+    <button class="btn" id="fishBtn" onclick="startFishing()">🎣 PESCAR</button>
+    <button class="btn secondary" onclick="openInventory()">🎒 MOCHILA</button>
+  </div>
+  <div style="position:absolute; bottom:15px; right:15px; z-index:10; display:flex; gap:8px;">
+    <button class="btn secondary" onclick="openShop()">🛒 LOJA</button>
+    <button class="btn secondary" onclick="openBiomes()">🗺️ BIOMAS</button>
+  </div>
+
+  <div class="controls-info">ESPAÇO = Pescar | I = Mochila | S = Loja | B = Biomas</div>
+
+  <div class="fishing-ui" id="fishingUI">
+    <div class="fish-info">Algo mordeu!</div>
+    <div class="fish-name" id="fishName">???</div>
+    <div class="bar-container">
+      <div class="bar-fill" id="barFill"></div>
+      <div class="bar-target" id="barTarget"></div>
+      <div class="bar-indicator" id="barIndicator"></div>
+    </div>
+    <div style="font-size:13px; color:#aaa;">Clique ou pressione ESPAÇO na zona verde!</div>
+  </div>
+
+  <div class="panel" id="inventoryPanel">
+    <button class="close-btn" onclick="closePanel('inventoryPanel')">✕</button>
+    <h2>🎒 Mochila</h2>
+    <div style="text-align:center; margin-bottom:15px;">
+      <button class="btn" onclick="sellAll()">💰 VENDER TUDO</button>
+    </div>
+    <div class="items-grid" id="inventoryGrid"></div>
+  </div>
+
+  <div class="panel" id="shopPanel">
+    <button class="close-btn" onclick="closePanel('shopPanel')">✕</button>
+    <h2>🛒 Loja</h2>
+    <div style="text-align:center; margin-bottom:10px; color:#aaa; font-size:13px;">
+      🎣 Varas aumentam a zona verde | 🧬 Encantos aumentam chance de mutação
+    </div>
+    <div class="items-grid" id="shopGrid"></div>
+  </div>
+
+  <div class="panel" id="biomesPanel">
+    <button class="close-btn" onclick="closePanel('biomesPanel')">✕</button>
+    <h2>🗺️ Biomas</h2>
+    <div class="items-grid" id="biomesGrid"></div>
+  </div>
+</div>
+
+<script>
+// ============ DADOS DO JOGO ============
+const RARITIES = {
+  common:    { name: 'Comum',     color: '#bdc3c7', class: 'r-common',    mult: 1 },
+  uncommon:  { name: 'Incomum',   color: '#2ecc71', class: 'r-uncommon',  mult: 2 },
+  rare:      { name: 'Raro',      color: '#3498db', class: 'r-rare',      mult: 5 },
+  epic:      { name: 'Épico',     color: '#9b59b6', class: 'r-epic',      mult: 15 },
+  legendary: { name: 'Lendário',  color: '#f39c12', class: 'r-legendary', mult: 50 },
+  mythic:    { name: 'Mítico',    color: '#e74c3c', class: 'r-mythic',    mult: 200 }
+};
+
+// ===== 🧬 SISTEMA DE MUTAÇÕES =====
+const MUTATIONS = {
+  none:    { name: '',          emoji: '', color: '#fff',    mult: 1,    chance: 0,    css: '' },
+  shiny:   { name: 'Shiny',     emoji: '✨', color: '#ffffff', mult: 3,    chance: 8,    css: 'mut-shiny' },
+  golden:  { name: 'Dourado',   emoji: '👑', color: '#f1c40f', mult: 5,    chance: 4,    css: 'mut-golden' },
+  albino:  { name: 'Albino',    emoji: '🤍', color: '#ecf0f1', mult: 7,    chance: 2.5,  css: 'mut-albino' },
+  shadow:  { name: 'Sombrio',   emoji: '🌑', color: '#9b59b6', mult: 10,   chance: 1.5,  css: 'mut-shadow' },
+  galaxy:  { name: 'Galáxia',   emoji: '🌌', color: '#3498db', mult: 20,   chance: 0.6,  css: 'mut-galaxy' },
+  rainbow: { name: 'Arco-Íris', emoji: '🌈', color: '#ff69b4', mult: 50,   chance: 0.15, css: 'mut-rainbow' }
+};
+
+const FISH_DB = [
+  { id:'sardinha', name:'Sardinha', emoji:'🐟', rarity:'common', price:5, biome:'beach', size:[10,25] },
+  { id:'baiacu', name:'Baiacu', emoji:'🐡', rarity:'uncommon', price:15, biome:'beach', size:[15,30] },
+  { id:'peixe_palhaco', name:'Peixe-Palhaço', emoji:'🐠', rarity:'uncommon', price:20, biome:'beach', size:[10,20] },
+  { id:'tubarao_bebe', name:'Tubarão Bebê', emoji:'🦈', rarity:'rare', price:80, biome:'beach', size:[40,80] },
+  { id:'polvo', name:'Polvo', emoji:'🐙', rarity:'rare', price:100, biome:'beach', size:[30,60] },
+  { id:'baleia', name:'Baleia', emoji:'🐋', rarity:'epic', price:500, biome:'beach', size:[200,400] },
+  { id:'kraken', name:'Kraken', emoji:'🦑', rarity:'legendary', price:2500, biome:'beach', size:[300,600] },
+  { id:'leviatã', name:'Leviatã', emoji:'🐉', rarity:'mythic', price:15000, biome:'beach', size:[500,1000] },
+  { id:'atum', name:'Atum', emoji:'🐟', rarity:'common', price:10, biome:'ocean', size:[30,60] },
+  { id:'espada', name:'Peixe-Espada', emoji:'🗡️', rarity:'uncommon', price:30, biome:'ocean', size:[80,150] },
+  { id:'lula_gigante', name:'Lula Gigante', emoji:'🦑', rarity:'rare', price:150, biome:'ocean', size:[100,200] },
+  { id:'tubarao_branco', name:'Tubarão Branco', emoji:'🦈', rarity:'epic', price:800, biome:'ocean', size:[200,400] },
+  { id:'serpente', name:'Serpente Marinha', emoji:'🐍', rarity:'legendary', price:4000, biome:'ocean', size:[400,800] },
+  { id:'poseidon', name:'Cavalo de Poseidon', emoji:'🐴', rarity:'mythic', price:25000, biome:'ocean', size:[300,500] },
+  { id:'sapo', name:'Sapo Dourado', emoji:'🐸', rarity:'common', price:8, biome:'lake', size:[5,15] },
+  { id:'truta', name:'Truta Mística', emoji:'🐟', rarity:'uncommon', price:25, biome:'lake', size:[20,40] },
+  { id:'peixe_fantasma', name:'Peixe-Fantasma', emoji:'👻', rarity:'rare', price:180, biome:'lake', size:[30,60] },
+  { id:'dragao_lago', name:'Dragão do Lago', emoji:'🐲', rarity:'epic', price:1200, biome:'lake', size:[300,600] },
+  { id:'deus_agua', name:'Deus das Águas', emoji:'🌊', rarity:'legendary', price:6000, biome:'lake', size:[500,1000] },
+  { id:'cosmico', name:'Peixe Cósmico', emoji:'✨', rarity:'mythic', price:40000, biome:'lake', size:[200,400] },
+  { id:'peixe_abissal', name:'Peixe Abissal', emoji:'🐟', rarity:'uncommon', price:50, biome:'abyss', size:[20,50] },
+  { id:'angler', name:'Peixe-Pescador', emoji:'💡', rarity:'rare', price:250, biome:'abyss', size:[40,80] },
+  { id:'vazio', name:'Criatura do Vazio', emoji:'🕳️', rarity:'epic', price:2000, biome:'abyss', size:[300,700] },
+  { id:'cthulhu', name:'Cthulhu', emoji:'🐙', rarity:'legendary', price:10000, biome:'abyss', size:[800,1500] },
+  { id:'deus_antigo', name:'Deus Antigo', emoji:'👁️', rarity:'mythic', price:80000, biome:'abyss', size:[1000,2000] }
+];
+
+const RODS = [
+  { id:'basica', name:'Vara Básica', price:0, bonus:0, desc:'Vara inicial' },
+  { id:'ferro', name:'Vara de Ferro', price:200, bonus:0.1, desc:'+10% zona verde' },
+  { id:'ouro', name:'Vara de Ouro', price:1500, bonus:0.2, desc:'+20% zona verde' },
+  { id:'diamante', name:'Vara de Diamante', price:8000, bonus:0.3, desc:'+30% zona verde' },
+  { id:'mistica', name:'Vara Mística', price:40000, bonus:0.4, desc:'+40% zona verde' },
+  { id:'divina', name:'Vara Divina', price:200000, bonus:0.5, desc:'+50% zona verde' }
+];
+
+// ===== 🧬 ENCANTOS (aumentam chance de mutação) =====
+const CHARMS = [
+  { id:'none',    name:'Nenhum',         price:0,      mult:1,   desc:'Sem bônus' },
+  { id:'bronze',  name:'Encanto Bronze', price:500,    mult:1.5, desc:'+50% chance de mutação' },
+  { id:'prata',   name:'Encanto Prata',  price:3000,   mult:2,   desc:'+100% chance de mutação' },
+  { id:'ouro',    name:'Encanto Ouro',   price:15000,  mult:3,   desc:'+200% chance de mutação' },
+  { id:'platina', name:'Encanto Platina',price:75000,  mult:5,   desc:'+400% chance de mutação' },
+  { id:'cosmico', name:'Encanto Cósmico',price:400000, mult:10,  desc:'+900% chance de mutação' }
+];
+
+const BIOMES = [
+  { id:'beach', name:'🌊 Enseada Inicial', price:0, level:1, bg:['#87ceeb','#4a90c2','#1e5a8a','#0a3d62'] },
+  { id:'ocean', name:'🌊 Oceano Profundo', price:1000, level:5, bg:['#5dade2','#2874a6','#1b4f72','#0b2838'] },
+  { id:'lake', name:'🏞️ Lago Místico', price:5000, level:10, bg:['#a29bfe','#6c5ce7','#341f97','#1e0a4a'] },
+  { id:'abyss', name:'🕳️ Abismo', price:25000, level:20, bg:['#2c3e50','#1a252f','#0d1318','#000000'] }
+];
+
+// ============ ESTADO ============
+let state = {
+  coins: 0,
+  level: 1,
+  xp: 0,
+  currentRod: 'basica',
+  ownedRods: ['basica'],
+  currentCharm: 'none',
+  ownedCharms: ['none'],
+  currentBiome: 'beach',
+  unlockedBiomes: ['beach'],
+  inventory: {}, // key: "id_mutation" -> {count, totalValue}
+  totalCaught: 0,
+  mutationsFound: 0
+};
+
+let fishing = false;
+let barPos = 0;
+let barDir = 1;
+let barSpeed = 2;
+let targetStart = 0;
+let targetWidth = 0;
+let currentFish = null;
+let currentMutation = 'none';
+let animFrame = null;
+
+// ============ FUNÇÕES ============
+function startGame() {
+  document.getElementById('menu').style.display = 'none';
+  updateHUD();
+  createBubbles();
+}
+
+function loadGame() {
+  const saved = localStorage.getItem('fisch_save');
+  if (saved) {
+    state = JSON.parse(saved);
+    // Migração de saves antigos
+    if (!state.currentCharm) state.currentCharm = 'none';
+    if (!state.ownedCharms) state.ownedCharms = ['none'];
+    if (!state.mutationsFound) state.mutationsFound = 0;
+    document.getElementById('menu').style.display = 'none';
+    updateHUD();
+    updateBiomeVisual();
+    createBubbles();
+    showMsg('Save carregado!', '#2ecc71');
+  } else {
+    showMsg('Nenhum save encontrado!', '#e74c3c');
+  }
+}
+
+function saveGame() {
+  localStorage.setItem('fisch_save', JSON.stringify(state));
+}
+
+function updateHUD() {
+  document.getElementById('coins').textContent = state.coins.toLocaleString();
+  document.getElementById('level').textContent = state.level;
+  const rod = RODS.find(r => r.id === state.currentRod);
+  document.getElementById('rodLevel').textContent = rod.name;
+  const charm = CHARMS.find(c => c.id === state.currentCharm);
+  document.getElementById('charmLevel').textContent = charm.name || 'Nenhum';
+  document.getElementById('charmLevel').style.color = charm.id === 'none' ? '#fff' : '#e056fd';
+}
+
+function updateBiomeVisual() {
+  const biome = BIOMES.find(b => b.id === state.currentBiome);
+  document.getElementById('biomeName').textContent = biome.name;
+  const game = document.getElementById('game');
+  game.style.background = `linear-gradient(180deg, ${biome.bg[0]} 0%, ${biome.bg[1]} 40%, ${biome.bg[2]} 40%, ${biome.bg[3]} 100%)`;
+}
+
+function createBubbles() {
+  const water = document.getElementById('water');
+  for (let i = 0; i < 10; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = 5 + Math.random() * 15;
+    b.style.width = size + 'px';
+    b.style.height = size + 'px';
+    b.style.left = Math.random() * 100 + '%';
+    b.style.animationDelay = Math.random() * 4 + 's';
+    b.style.animationDuration = (3 + Math.random() * 3) + 's';
+    water.appendChild(b);
+  }
+}
+
+function showMsg(text, color = '#f1c40f') {
+  const msg = document.createElement('div');
+  msg.className = 'catch-msg';
+  msg.textContent = text;
+  msg.style.color = color;
+  document.getElementById('game').appendChild(msg);
+  setTimeout(() => msg.remove(), 2500);
+}
+
+// ===== 🧬 Rolar mutação =====
+function rollMutation() {
+  const charm = CHARMS.find(c => c.id === state.currentCharm);
+  const charmMult = charm.mult;
+
+  // Acumula chances (ordenadas da mais rara para mais comum)
+  const muts = Object.entries(MUTATIONS).filter(([k]) => k !== 'none');
+  // Ordena do mais raro (menor chance) para mais comum
+  muts.sort((a, b) => a[1].chance - b[1].chance);
+
+  let roll = Math.random() * 100;
+  for (const [id, mut] of muts) {
+    const adjustedChance = mut.chance * charmMult;
+    if (roll < adjustedChance) return id;
+    roll -= adjustedChance;
+  }
+  return 'none';
+}
+
+function startFishing() {
+  if (fishing) return;
+  fishing = true;
+  document.getElementById('rod').classList.add('fishing');
+  document.getElementById('fishBtn').disabled = true;
+
+  const biomeFish = FISH_DB.filter(f => f.biome === state.currentBiome);
+  const weights = {
+    common: 60, uncommon: 25, rare: 10, epic: 3.5, legendary: 1.2, mythic: 0.3
+  };
+  const rod = RODS.find(r => r.id === state.currentRod);
+  const bonus = 1 + rod.bonus;
+
+  let total = 0;
+  const pool = biomeFish.map(f => {
+    const w = weights[f.rarity] * (f.rarity === 'common' ? 1 : bonus);
+    total += w;
+    return { fish: f, weight: w };
+  });
+  let r = Math.random() * total;
+  let chosen = pool[0].fish;
+  for (const p of pool) {
+    r -= p.weight;
+    if (r <= 0) { chosen = p.fish; break; }
+  }
+  currentFish = chosen;
+
+  // 🧬 Rola mutação ANTES de mostrar (mas só revela na captura)
+  currentMutation = rollMutation();
+
+  const rod2 = RODS.find(r => r.id === state.currentRod);
+  targetWidth = 15 + rod2.bonus * 30;
+  targetStart = 20 + Math.random() * (60 - targetWidth);
+  // Mutantes são mais difíceis!
+  let difficultyBonus = 0;
+  if (currentMutation !== 'none') {
+    const mut = MUTATIONS[currentMutation];
+    difficultyBonus = Math.log2(mut.mult) * 0.3;
+  }
+  barSpeed = 1.5 + (state.level * 0.05) + difficultyBonus +
+    (chosen.rarity === 'mythic' ? 1.5 : chosen.rarity === 'legendary' ? 1 : 0);
+
+  document.getElementById('fishName').textContent = chosen.name;
+  document.getElementById('fishName').className = 'fish-name ' + RARITIES[chosen.rarity].class;
+  document.getElementById('barTarget').style.left = targetStart + '%';
+  document.getElementById('barTarget').style.width = targetWidth + '%';
+
+  document.getElementById('fishingUI').classList.add('active');
+
+  barPos = 0;
+  barDir = 1;
+  animFrame = requestAnimationFrame(updateBar);
+}
+
+function updateBar() {
+  barPos += barDir * barSpeed;
+  if (barPos >= 100) { barPos = 100; barDir = -1; }
+  if (barPos <= 0) { barPos = 0; barDir = 1; }
+  document.getElementById('barIndicator').style.left = barPos + '%';
+  document.getElementById('barFill').style.width = barPos + '%';
+  if (fishing) animFrame = requestAnimationFrame(updateBar);
+}
+
+function tryCatch() {
+  if (!fishing) return;
+  fishing = false;
+  cancelAnimationFrame(animFrame);
+
+  const hit = barPos >= targetStart && barPos <= targetStart + targetWidth;
+
+  document.getElementById('fishingUI').classList.remove('active');
+  document.getElementById('rod').classList.remove('fishing');
+  document.getElementById('fishBtn').disabled = false;
+
+  if (hit) {
+    const size = currentFish.size[0] + Math.random() * (currentFish.size[1] - currentFish.size[0]);
+    const sizeRounded = Math.round(size);
+    const rarity = RARITIES[currentFish.rarity];
+    const mut = MUTATIONS[currentMutation];
+    const baseValue = Math.round(currentFish.price * (size / ((currentFish.size[0]+currentFish.size[1])/2)));
+    const finalValue = Math.round(baseValue * mut.mult);
+
+    // Chave única no inventário: "id_mutation"
+    const invKey = currentFish.id + '_' + currentMutation;
+    if (!state.inventory[invKey]) {
+      state.inventory[invKey] = { count: 0, totalValue: 0, mutation: currentMutation, fishId: currentFish.id };
+    }
+    state.inventory[invKey].count++;
+    state.inventory[invKey].totalValue += finalValue;
+    state.totalCaught++;
+    state.xp += rarity.mult * (currentMutation !== 'none' ? 2 : 1);
+
+    if (currentMutation !== 'none') state.mutationsFound++;
+
+    // Level up
+    const xpNeeded = state.level * 50;
+    while (state.xp >= xpNeeded) {
+      state.xp -= xpNeeded;
+      state.level++;
+      showMsg('⭐ LEVEL UP! Nível ' + state.level, '#f1c40f');
+    }
+
+    // Mensagem de captura
+    let catchText = `${currentFish.emoji} ${currentFish.name} (${sizeRounded}cm)`;
+    let catchColor = rarity.color;
+    if (currentMutation !== 'none') {
+      catchText = `${mut.emoji} ${mut.name}! ${catchText} +${finalValue}💰`;
+      catchColor = mut.color;
+      // Flash de mutação!
+      const flash = document.createElement('div');
+      flash.className = 'mutation-flash';
+      flash.style.background = `radial-gradient(circle, ${mut.color}88, transparent 70%)`;
+      document.getElementById('game').appendChild(flash);
+      setTimeout(() => flash.remove(), 800);
+      playSound('mutation');
+    } else {
+      catchText += ` +${finalValue}💰`;
+      playSound('catch');
+    }
+    showMsg(catchText, catchColor);
+  } else {
+    showMsg('❌ Escapou!', '#e74c3c');
+    playSound('miss');
+  }
+  updateHUD();
+  saveGame();
+}
+
+function openInventory() {
+  const grid = document.getElementById('inventoryGrid');
+  grid.innerHTML = '';
+  const entries = Object.entries(state.inventory).filter(([_, v]) => v.count > 0);
+  if (entries.length === 0) {
+    grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:#aaa;">Mochila vazia! Vá pescar 🎣</p>';
+  }
+  entries.forEach(([key, data]) => {
+    const fish = FISH_DB.find(f => f.id === data.fishId);
+    const rarity = RARITIES[fish.rarity];
+    const mut = MUTATIONS[data.mutation];
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.style.borderColor = data.mutation !== 'none' ? mut.color : rarity.color;
+    div.innerHTML = `
+      <span class="count">${data.count}</span>
+      ${data.mutation !== 'none' ? `<span class="mutation-badge" style="color:${mut.color};">${mut.emoji}</span>` : ''}
+      <span class="emoji ${mut.css}">${fish.emoji}</span>
+      <div class="name" style="color:${data.mutation !== 'none' ? mut.color : rarity.color};">
+        ${data.mutation !== 'none' ? mut.name + ' ' : ''}${fish.name}
+      </div>
+      <div class="price">💰 ${data.totalValue.toLocaleString()}</div>
+    `;
+    div.onclick = () => sellFish(key);
+    grid.appendChild(div);
+  });
+  document.getElementById('inventoryPanel').classList.add('active');
+}
+
+function sellFish(key) {
+  const data = state.inventory[key];
+  if (!data || data.count === 0) return;
+  state.coins += data.totalValue;
+  showMsg(`+${data.totalValue.toLocaleString()} 💰`, '#f1c40f');
+  data.count = 0;
+  data.totalValue = 0;
+  updateHUD();
+  openInventory();
+  saveGame();
+}
+
+function sellAll() {
+  let total = 0;
+  for (const key in state.inventory) {
+    total += state.inventory[key].totalValue;
+    state.inventory[key].count = 0;
+    state.inventory[key].totalValue = 0;
+  }
+  if (total > 0) {
+    state.coins += total;
+    showMsg(`+${total.toLocaleString()} 💰`, '#f1c40f');
+    updateHUD();
+    openInventory();
+    saveGame();
+  } else {
+    showMsg('Nada para vender!', '#e74c3c');
+  }
+}
+
+function openShop() {
+  const grid = document.getElementById('shopGrid');
+  grid.innerHTML = '';
+
+  // Seção de Varas
+  const rodTitle = document.createElement('div');
+  rodTitle.style.gridColumn = '1 / -1';
+  rodTitle.style.color = '#f1c40f';
+  rodTitle.style.fontSize = '16px';
+  rodTitle.style.margin = '10px 0 5px';
+  rodTitle.style.textAlign = 'center';
+  rodTitle.textContent = '🎣 VARAS';
+  grid.appendChild(rodTitle);
+
+  RODS.forEach(rod => {
+    const owned = state.ownedRods.includes(rod.id);
+    const equipped = state.currentRod === rod.id;
+    const div = document.createElement('div');
+    div.className = 'item' + (equipped ? ' owned' : '') + (!owned && state.coins < rod.price ? ' locked' : '');
+    div.innerHTML = `
+      <span class="emoji">🎣</span>
+      <div class="name" style="color:#f1c40f;">${rod.name}</div>
+      <div style="font-size:10px; color:#aaa; margin:3px 0;">${rod.desc}</div>
+      ${equipped ? '<div class="price" style="color:#2ecc71;">✓ EQUIPADA</div>' :
+        owned ? '<div class="price" style="color:#3498db;">CLIQUE PARA EQUIPAR</div>' :
+        `<div class="price">💰 ${rod.price.toLocaleString()}</div>`}
+    `;
+    div.onclick = () => {
+      if (equipped) return;
+      if (owned) {
+        state.currentRod = rod.id;
+        showMsg(`${rod.name} equipada!`, '#2ecc71');
+        updateHUD(); openShop(); saveGame();
+      } else if (state.coins >= rod.price) {
+        state.coins -= rod.price;
+        state.ownedRods.push(rod.id);
+        state.currentRod = rod.id;
+        showMsg(`${rod.name} comprada!`, '#f1c40f');
+        updateHUD(); openShop(); saveGame();
+      } else showMsg('Moedas insuficientes!', '#e74c3c');
+    };
+    grid.appendChild(div);
+  });
+
+  // Seção de Encantos
+  const charmTitle = document.createElement('div');
+  charmTitle.style.gridColumn = '1 / -1';
+  charmTitle.style.color = '#e056fd';
+  charmTitle.style.fontSize = '16px';
+  charmTitle.style.margin = '15px 0 5px';
+  charmTitle.style.textAlign = 'center';
+  charmTitle.textContent = '🧬 ENCANTOS (aumentam mutações)';
+  grid.appendChild(charmTitle);
+
+  CHARMS.forEach(charm => {
+    const owned = state.ownedCharms.includes(charm.id);
+    const equipped = state.currentCharm === charm.id;
+    const div = document.createElement('div');
+    div.className = 'item' + (equipped ? ' owned' : '') + (!owned && state.coins < charm.price ? ' locked' : '');
+    div.style.borderColor = charm.id === 'none' ? '#555' : '#e056fd';
+    div.innerHTML = `
+      <span class="emoji">${charm.id === 'none' ? '❌' : '🧬'}</span>
+      <div class="name" style="color:#e056fd;">${charm.name}</div>
+      <div style="font-size:10px; color:#aaa; margin:3px 0;">${charm.desc}</div>
+      ${equipped ? '<div class="price" style="color:#2ecc71;">✓ EQUIPADO</div>' :
+        owned ? '<div class="price" style="color:#3498db;">CLIQUE PARA EQUIPAR</div>' :
+        `<div class="price">💰 ${charm.price.toLocaleString()}</div>`}
+    `;
+    div.onclick = () => {
+      if (equipped) return;
+      if (owned) {
+        state.currentCharm = charm.id;
+        showMsg(`${charm.name} equipado!`, '#e056fd');
+        updateHUD(); openShop(); saveGame();
+      } else if (state.coins >= charm.price) {
+        state.coins -= charm.price;
+        state.ownedCharms.push(charm.id);
+        state.currentCharm = charm.id;
+        showMsg(`${charm.name} comprado!`, '#e056fd');
+        updateHUD(); openShop(); saveGame();
+      } else showMsg('Moedas insuficientes!', '#e74c3c');
+    };
+    grid.appendChild(div);
+  });
+
+  document.getElementById('shopPanel').classList.add('active');
+}
+
+function openBiomes() {
+  const grid = document.getElementById('biomesGrid');
+  grid.innerHTML = '';
+  BIOMES.forEach(biome => {
+    const unlocked = state.unlockedBiomes.includes(biome.id);
+    const current = state.currentBiome === biome.id;
+    const canUnlock = state.coins >= biome.price && state.level >= biome.level;
+    const div = document.createElement('div');
+    div.className = 'item' + (current ? ' owned' : '') + (!unlocked && !canUnlock ? ' locked' : '');
+    div.innerHTML = `
+      <span class="emoji" style="font-size:40px;">${biome.name.split(' ')[0]}</span>
+      <div class="name" style="color:#f1c40f;">${biome.name.substring(biome.name.indexOf(' ')+1)}</div>
+      ${current ? '<div class="price" style="color:#2ecc71;">✓ ATUAL</div>' :
+        unlocked ? '<div class="price" style="color:#3498db;">CLIQUE PARA IR</div>' :
+        `<div class="price">💰 ${biome.price.toLocaleString()} | Nv.${biome.level}</div>`}
+    `;
+    div.onclick = () => {
+      if (current) return;
+      if (unlocked) {
+        state.currentBiome = biome.id;
+        updateBiomeVisual();
+        showMsg(`Viajando para ${biome.name}`, '#3498db');
+        openBiomes(); saveGame();
+      } else if (canUnlock) {
+        state.coins -= biome.price;
+        state.unlockedBiomes.push(biome.id);
+        state.currentBiome = biome.id;
+        updateBiomeVisual();
+        showMsg(`${biome.name} desbloqueado!`, '#f1c40f');
+        updateHUD(); openBiomes(); saveGame();
+      } else {
+        if (state.level < biome.level) showMsg(`Precisa nível ${biome.level}!`, '#e74c3c');
+        else showMsg('Moedas insuficientes!', '#e74c3c');
+      }
+    };
+    grid.appendChild(div);
+  });
+  document.getElementById('biomesPanel').classList.add('active');
+}
+
+function closePanel(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+let audioCtx;
+function playSound(type) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    const t = audioCtx.currentTime;
+    if (type === 'catch') {
+      osc.frequency.setValueAtTime(600, t);
+      osc.frequency.exponentialRampToValueAtTime(1200, t + 0.15);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+      osc.start(); osc.stop(t + 0.3);
+    } else if (type === 'mutation') {
+      // Som especial de mutação: arpejo mágico
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(400, t);
+      osc.frequency.exponentialRampToValueAtTime(800, t + 0.1);
+      osc.frequency.exponentialRampToValueAtTime(1200, t + 0.2);
+      osc.frequency.exponentialRampToValueAtTime(1600, t + 0.3);
+      gain.gain.setValueAtTime(0.25, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+      osc.start(); osc.stop(t + 0.5);
+    } else {
+      osc.frequency.setValueAtTime(300, t);
+      osc.frequency.exponentialRampToValueAtTime(100, t + 0.2);
+      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+      osc.start(); osc.stop(t + 0.3);
+    }
+  } catch(e) {}
+}
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (fishing) tryCatch();
+    else if (document.getElementById('menu').style.display !== 'none') startGame();
+    else startFishing();
+  }
+  if (e.key === 'i' || e.key === 'I') {
+    const p = document.getElementById('inventoryPanel');
+    if (p.classList.contains('active')) closePanel('inventoryPanel');
+    else openInventory();
+  }
+  if (e.key === 's' || e.key === 'S') {
+    const p = document.getElementById('shopPanel');
+    if (p.classList.contains('active')) closePanel('shopPanel');
+    else openShop();
+  }
+  if (e.key === 'b' || e.key === 'B') {
+    const p = document.getElementById('biomesPanel');
+    if (p.classList.contains('active')) closePanel('biomesPanel');
+    else openBiomes();
+  }
+});
+
+document.getElementById('fishingUI').addEventListener('click', tryCatch);
+
+updateBiomeVisual();
+</script>
+</body>
+</html>

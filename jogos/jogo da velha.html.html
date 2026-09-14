@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Velha - Versão Estável</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+        :root {
+            --bg: #0f172a;
+            --cyan: #00f2ff;
+            --pink: #ff0055;
+            --text: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; user-select: none; }
+
+        body {
+            background: radial-gradient(circle at center, #1e293b, var(--bg));
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 { 
+            font-size: 2.5rem; 
+            margin-bottom: 20px; 
+            text-transform: uppercase; 
+            letter-spacing: 3px; 
+            text-shadow: 0 0 15px rgba(255,255,255,0.2); 
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .placar {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .p-item { text-align: center; flex: 1; font-size: 0.8rem; text-transform: uppercase; }
+        .p-val { font-size: 1.5rem; font-weight: bold; margin-top: 5px; display: block; }
+        .c-x { color: var(--cyan); }
+        .c-o { color: var(--pink); }
+
+        .status { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; min-height: 28px; }
+
+        .tabuleiro {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 25px;
+            background: rgba(255,255,255,0.2); /* Linhas do tabuleiro */
+            padding: 10px;
+            border-radius: 15px;
+        }
+
+        .celula {
+            aspect-ratio: 1;
+            background: var(--bg);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .celula:hover:not(.ocupada) { background: #253045; }
+        .celula.x { color: var(--cyan); text-shadow: 0 0 20px var(--cyan); animation: pop 0.3s forwards; }
+        .celula.o { color: var(--pink); text-shadow: 0 0 20px var(--pink); animation: pop 0.3s forwards; }
+        
+        .botoes { display: flex; gap: 12px; width: 100%; }
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.15s;
+        }
+        button:hover { transform: translateY(-2px); }
+        .btn-novo { background: linear-gradient(135deg, var(--cyan), #00a8ff); }
+        .btn-zera { background: linear-gradient(135deg, #ff4757, #ff6b81); }
+
+        @keyframes pop { 0%{transform:scale(0);opacity:0} 70%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
+    </style>
+</head>
+<body>
+
+    <h1>Tic Tac Toe</h1>
+
+    <div class="container">
+        <div class="placar">
+            <div class="p-item c-x">Jogador X<span class="p-val" id="plx">0</span></div>
+            <div class="p-item">Empates<span class="p-val" id="ple">0</span></div>
+            <div class="p-item c-o">Jogador O<span class="p-val" id="plo">0</span></div>
+        </div>
+
+        <div class="status" id="statusMsg">Vez do Jogador X</div>
+
+        <div class="tabuleiro" id="board">
+            <div class="celula" data-idx="0"></div>
+            <div class="celula" data-idx="1"></div>
+            <div class="celula" data-idx="2"></div>
+            <div class="celula" data-idx="3"></div>
+            <div class="celula" data-idx="4"></div>
+            <div class="celula" data-idx="5"></div>
+            <div class="celula" data-idx="6"></div>
+            <div class="celula" data-idx="7"></div>
+            <div class="celula" data-idx="8"></div>
+        </div>
+
+        <div class="botoes">
+            <button class="btn-novo" id="btnNovo">Nova Partida</button>
+            <button class="btn-zera" id="btnZera">Zerar Placar</button>
+        </div>
+    </div>
+
+    <script>
+        // === VARIÁVEIS GLOBAIS ===
+        let boardState = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let isGameActive = true;
+        let scores = { X: 0, O: 0, E: 0 };
+
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        // === ELEMENTOS DO DOM ===
+        const cells = document.querySelectorAll('.celula');
+        const statusDisplay = document.getElementById('statusMsg');
+        const scoreXEl = document.getElementById('plx');
+        const scoreOEl = document.getElementById('plo');
+        const scoreEEl = document.getElementById('ple');
+        const btnNovo = document.getElementById('btnNovo');
+        const btnZera = document.getElementById('btnZera');
+
+        // === FUNÇÕES ===
+        function handleCellClick(clickedCellEvent) {
+            const clickedCell = clickedCellEvent.target;
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-idx'));
+
+            if (boardState[clickedCellIndex] !== "" || !isGameActive) {
+                return;
+            }
+
+            handleCellPlayed(clickedCell, clickedCellIndex);
+            handleResultValidation();
+        }
+
+        function handleCellPlayed(clickedCell, clickedCellIndex) {
+            boardState[clickedCellIndex] = currentPlayer;
+            clickedCell.innerHTML = currentPlayer;
+            clickedCell.classList.add('ocupada', currentPlayer.toLowerCase());
+        }
+
+        function handleResultValidation() {
+            let roundWon = false;
+            for (let i = 0; i <= 7; i++) {
+                const winCondition = winningConditions[i];
+                let a = boardState[winCondition[0]];
+                let b = boardState[winCondition[1]];
+                let c = boardState[winCondition[2]];
+                if (a === '' || b === '' || c === '') {
+                    continue;
+                }
+                if (a === b && b === c) {
+                    roundWon = true;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                statusDisplay.innerHTML = `🏆 Jogador ${currentPlayer} Venceu!`;
+                scores[currentPlayer]++;
+                updateScoreboard();
+                isGameActive = false;
+                return;
+            }
+
+            let roundDraw = !boardState.includes("");
+            if (roundDraw) {
+                statusDisplay.innerHTML = `🤝 Empate!`;
+                scores.E++;
+                updateScoreboard();
+                isGameActive = false;
+                return;
+            }
+
+            handlePlayerChange();
+        }
+
+        function handlePlayerChange() {
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            statusDisplay.innerHTML = `Vez do Jogador ${currentPlayer}`;
+        }
+
+        function updateScoreboard() {
+            scoreXEl.innerText = scores.X;
+            scoreOEl.innerText = scores.O;
+            scoreEEl.innerText = scores.E;
+        }
+
+        // === FUNÇÃO DE REINÍCIO (CORRIGIDA) ===
+        function restartGame() {
+            console.log("Botão Nova Partida clicado!"); // Debug
+            isGameActive = true;
+            currentPlayer = "X";
+            boardState = ["", "", "", "", "", "", "", "", ""];
+            statusDisplay.innerHTML = "Vez do Jogador X";
+            
+            cells.forEach(cell => {
+                cell.innerHTML = "";
+                cell.classList.remove('x', 'o', 'ocupada');
+            });
+        }
+
+        function resetScores() {
+            scores = { X: 0, O: 0, E: 0 };
+            updateScoreboard();
+            restartGame();
+        }
+
+        // === EVENT LISTENERS ===
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        btnNovo.addEventListener('click', restartGame);
+        btnZera.addEventListener('click', resetScores);
+
+    </script>
+</body>
+</html>

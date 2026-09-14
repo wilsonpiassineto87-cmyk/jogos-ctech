@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Candy Crush</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    user-select: none;
+    padding: 20px;
+  }
+  @keyframes gradientBG {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  .game-container {
+    display: flex;
+    gap: 30px;
+    padding: 25px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 25px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    backdrop-filter: blur(15px);
+    border: 2px solid rgba(255,255,255,0.3);
+    align-items: flex-start;
+  }
+  h1 {
+    text-align: center;
+    font-size: 42px;
+    background: linear-gradient(90deg, #ff6b9d, #feca57, #48dbfb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 3px;
+    margin-bottom: 15px;
+  }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(8, 60px);
+    grid-template-rows: repeat(8, 60px);
+    gap: 4px;
+    padding: 12px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 15px;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.2);
+    position: relative;
+  }
+  .cell {
+    width: 60px;
+    height: 60px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.2s;
+  }
+  .cell:hover { background: rgba(255,255,255,0.3); }
+  .candy {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    border-radius: 10px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .candy.selected {
+    animation: pulse 0.6s ease-in-out infinite;
+    filter: brightness(1.3) drop-shadow(0 0 15px gold);
+    z-index: 10;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+  .candy.removing {
+    animation: pop 0.4s ease-out forwards;
+  }
+  @keyframes pop {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.8; }
+    100% { transform: scale(0); opacity: 0; }
+  }
+  
+  /* ✅ DOCES ESPECIAIS */
+  .candy.striped-h::before, .candy.striped-v::before {
+    content: '';
+    position: absolute;
+    background: rgba(255,255,255,0.6);
+    box-shadow: 0 0 8px rgba(255,255,255,0.8);
+    pointer-events: none;
+  }
+  .candy.striped-h::before {
+    width: 100%;
+    height: 4px;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    box-shadow: 0 -8px 0 rgba(255,255,255,0.4), 0 8px 0 rgba(255,255,255,0.4), 0 0 8px rgba(255,255,255,0.8);
+  }
+  .candy.striped-v::before {
+    width: 4px;
+    height: 100%;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    box-shadow: -8px 0 0 rgba(255,255,255,0.4), 8px 0 0 rgba(255,255,255,0.4), 0 0 8px rgba(255,255,255,0.8);
+  }
+  .candy.rainbow {
+    animation: rainbowGlow 1.5s ease-in-out infinite;
+    font-size: 38px;
+  }
+  @keyframes rainbowGlow {
+    0%, 100% { 
+      filter: drop-shadow(0 0 8px #ff6b9d) drop-shadow(0 0 15px #feca57);
+      transform: rotate(0deg);
+    }
+    50% { 
+      filter: drop-shadow(0 0 15px #48dbfb) drop-shadow(0 0 25px #a55eea);
+      transform: rotate(10deg);
+    }
+  }
+  
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-width: 200px;
+  }
+  .panel {
+    background: rgba(255,255,255,0.15);
+    padding: 18px;
+    border-radius: 15px;
+    border: 1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(10px);
+  }
+  .panel h3 {
+    font-size: 13px;
+    color: #fff;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.9;
+  }
+  .panel .value {
+    font-size: 32px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+  .combo-display {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #feca57;
+    text-shadow: 0 0 20px #feca57;
+    min-height: 30px;
+    transition: all 0.3s;
+  }
+  .restart-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, #ff6b9d, #feca57);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(255,107,157,0.4);
+  }
+  .restart-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255,107,157,0.6);
+  }
+  .restart-btn:active { transform: translateY(0); }
+  .instructions {
+    font-size: 12px;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.9);
+  }
+  .instructions b { color: #feca57; }
+  .instructions .special-info {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+  }
+  #gameOver {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    backdrop-filter: blur(5px);
+  }
+  #gameOver.show { display: flex; }
+  .modal {
+    background: linear-gradient(135deg, #ff6b9d, #feca57);
+    padding: 50px 70px;
+    border-radius: 25px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    animation: modalIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes modalIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .modal h2 { font-size: 42px; margin-bottom: 15px; text-shadow: 0 3px 15px rgba(0,0,0,0.3); }
+  .modal p { font-size: 22px; margin-bottom: 25px; }
+  .modal button {
+    padding: 14px 40px;
+    background: #fff;
+    color: #ff6b9d;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .modal button:hover { transform: scale(1.05); }
+  .score-popup {
+    position: absolute;
+    font-size: 24px;
+    font-weight: bold;
+    color: #feca57;
+    text-shadow: 0 0 10px #feca57, 0 2px 5px rgba(0,0,0,0.5);
+    pointer-events: none;
+    animation: floatUp 1s ease-out forwards;
+    z-index: 20;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0) scale(0.5); opacity: 0; }
+    20% { transform: translateY(-10px) scale(1.3); opacity: 1; }
+    100% { transform: translateY(-60px) scale(1); opacity: 0; }
+  }
+  .special-popup {
+    position: absolute;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(90deg, #ff6b9d, #a55eea);
+    padding: 4px 10px;
+    border-radius: 8px;
+    pointer-events: none;
+    animation: floatUp 1.5s ease-out forwards;
+    z-index: 25;
+    white-space: nowrap;
+    box-shadow: 0 0 15px rgba(165,94,234,0.8);
+  }
+</style>
+</head>
+<body>
+<div>
+  <h1>🍬 CANDY CRUSH 🍭</h1>
+  <div class="game-container">
+    <div class="board" id="board"></div>
+    <div class="sidebar">
+      <div class="panel">
+        <h3>Pontuação</h3>
+        <div class="value" id="score">0</div>
+      </div>
+      <div class="panel">
+        <h3>Movimentos</h3>
+        <div class="value" id="moves">30</div>
+      </div>
+      <div class="panel">
+        <h3>Meta</h3>
+        <div class="value" id="target">2000</div>
+      </div>
+      <div class="combo-display" id="combo"></div>
+      <button class="restart-btn" onclick="resetGame()">🔄 Reiniciar</button>
+      <div class="panel instructions">
+        <h3>Como jogar</h3>
+        <b>Clique</b> em um doce e depois em um <b>adjacente</b> para trocar.<br>
+        Combine <b>3+</b> doces iguais para pontuar!
+        <div class="special-info">
+          <b>4 em linha</b> → 🎯 Listrado (limpa linha/coluna)<br>
+          <b>5+ em linha</b> → 🌈 Arco-íris (remove toda uma cor!)
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="gameOver">
+  <div class="modal">
+    <h2 id="modalTitle">🎉 Parabéns!</h2>
+    <p id="modalText">Você venceu!</p>
+    <button onclick="resetGame()">Jogar Novamente</button>
+  </div>
+</div>
+
+<script>
+const ROWS = 8, COLS = 8;
+const CANDIES = ['🍬', '🍭', '🍫', '🍪', '🍩', '🧁'];
+const RAINBOW = '🌈';
+
+let board = [];      // board[r][c] = tipo (0-5) ou -1 para arco-íris
+let specials = [];   // specials[r][c] = null | 'striped-h' | 'striped-v' | 'rainbow'
+let selected = null;
+let score = 0;
+let moves = 30;
+let target = 2000;
+let isAnimating = false;
+
+const boardEl = document.getElementById('board');
+const scoreEl = document.getElementById('score');
+const movesEl = document.getElementById('moves');
+const targetEl = document.getElementById('target');
+const comboEl = document.getElementById('combo');
+const gameOverEl = document.getElementById('gameOver');
+
+function randomCandy() {
+  return Math.floor(Math.random() * CANDIES.length);
+}
+
+function initBoard() {
+  board = [];
+  specials = [];
+  for (let r = 0; r < ROWS; r++) {
+    board[r] = [];
+    specials[r] = [];
+    for (let c = 0; c < COLS; c++) {
+      let type;
+      do {
+        type = randomCandy();
+      } while (
+        (c >= 2 && board[r][c-1] === type && board[r][c-2] === type) ||
+        (r >= 2 && board[r-1][c] === type && board[r-2][c] === type)
+      );
+      board[r][c] = type;
+      specials[r][c] = null;
+    }
+  }
+}
+
+function render() {
+  boardEl.innerHTML = '';
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      
+      if (board[r][c] !== null) {
+        const candy = document.createElement('div');
+        candy.className = 'candy';
+        
+        if (board[r][c] === -1) {
+          // Arco-íris
+          candy.textContent = RAINBOW;
+          candy.classList.add('rainbow');
+        } else {
+          candy.textContent = CANDIES[board[r][c]];
+          const sp = specials[r][c];
+          if (sp === 'striped-h') candy.classList.add('striped-h');
+          if (sp === 'striped-v') candy.classList.add('striped-v');
+        }
+        
+        if (selected && selected.r === r && selected.c === c) {
+          candy.classList.add('selected');
+        }
+        cell.appendChild(candy);
+      }
+      
+      cell.addEventListener('click', () => handleClick(r, c));
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+// ✅ Encontra matches e agrupa por linha/coluna para detectar 4+ e 5+
+function findMatches() {
+  const matches = new Set();
+  const groups = []; // cada grupo = {cells: [[r,c],...], direction: 'h'|'v'}
+  
+  // Horizontal
+  for (let r = 0; r < ROWS; r++) {
+    let c = 0;
+    while (c < COLS) {
+      const t = board[r][c];
+      if (t === null || t === -1) { c++; continue; }
+      let end = c;
+      while (end + 1 < COLS && board[r][end+1] === t) end++;
+      const len = end - c + 1;
+      if (len >= 3) {
+        const cells = [];
+        for (let i = c; i <= end; i++) {
+          matches.add(`${r},${i}`);
+          cells.push([r, i]);
+        }
+        groups.push({cells, direction: 'h', type: t, length: len});
+      }
+      c = end + 1;
+    }
+  }
+  
+  // Vertical
+  for (let c = 0; c < COLS; c++) {
+    let r = 0;
+    while (r < ROWS) {
+      const t = board[r][c];
+      if (t === null || t === -1) { r++; continue; }
+      let end = r;
+      while (end + 1 < ROWS && board[end+1][c] === t) end++;
+      const len = end - r + 1;
+      if (len >= 3) {
+        const cells = [];
+        for (let i = r; i <= end; i++) {
+          matches.add(`${i},${c}`);
+          cells.push([i, c]);
+        }
+        groups.push({cells, direction: 'v', type: t, length: len});
+      }
+      r = end + 1;
+    }
+  }
+  
+  return {
+    cells: Array.from(matches).map(s => s.split(',').map(Number)),
+    groups
+  };
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function showScorePopup(r, c, points) {
+  const cell = boardEl.children[r * COLS + c];
+  if (!cell) return;
+  const rect = cell.getBoundingClientRect();
+  const boardRect = boardEl.getBoundingClientRect();
+  
+  const popup = document.createElement('div');
+  popup.className = 'score-popup';
+  popup.textContent = `+${points}`;
+  popup.style.left = (rect.left - boardRect.left + 15) + 'px';
+  popup.style.top = (rect.top - boardRect.top + 15) + 'px';
+  boardEl.appendChild(popup);
+  setTimeout(() => popup.remove(), 1000);
+}
+
+function showSpecialPopup(r, c, text) {
+  const cell = boardEl.children[r * COLS + c];
+  if (!cell) return;
+  const rect = cell.getBoundingClientRect();
+  const boardRect = boardEl.getBoundingClientRect();
+  
+  const popup = document.createElement('div');
+  popup.className = 'special-popup';
+  popup.textContent = text;
+  popup.style.left = (rect.left - boardRect.left - 10) + 'px';
+  popup.style.top = (rect.top - boardRect.top - 30) + 'px';
+  boardEl.appendChild(popup);
+  setTimeout(() => popup.remove(), 1500);
+}
+
+async function animateRemoval(cells) {
+  cells.forEach(([r, c]) => {
+    const cell = boardEl.children[r * COLS + c];
+    if (!cell) return;
+    const candy = cell.querySelector('.candy');
+    if (candy) candy.classList.add('removing');
+  });
+  await sleep(400);
+}
+
+// ✅ Processa grupos para criar especiais
+function processGroupsForSpecials(groups) {
+  const specialsToCreate = [];
+  
+  groups.forEach(group => {
+    if (group.length >= 5) {
+      // 5+ em linha = arco-íris
+      const mid = Math.floor(group.cells.length / 2);
+      specialsToCreate.push({
+        r: group.cells[mid][0],
+        c: group.cells[mid][1],
+        type: -1,
+        special: 'rainbow'
+      });
+    } else if (group.length === 4) {
+      // 4 em linha = listrado
+      const mid = Math.floor(group.cells.length / 2);
+      specialsToCreate.push({
+        r: group.cells[mid][0],
+        c: group.cells[mid][1],
+        type: group.type,
+        special: group.direction === 'h' ? 'striped-v' : 'striped-h'
+      });
+    }
+  });
+  
+  return specialsToCreate;
+}
+
+// ✅ Ativa efeito de especiais atingidos
+function activateSpecials(cellsToRemove) {
+  const extraCells = new Set();
+  
+  cellsToRemove.forEach(([r, c]) => {
+    const sp = specials[r][c];
+    if (!sp) return;
+    
+    if (sp === 'striped-h') {
+      // Limpa linha inteira
+      for (let i = 0; i < COLS; i++) {
+        if (board[r][i] !== null) extraCells.add(`${r},${i}`);
+      }
+    } else if (sp === 'striped-v') {
+      // Limpa coluna inteira
+      for (let i = 0; i < ROWS; i++) {
+        if (board[i][c] !== null) extraCells.add(`${i},${c}`);
+      }
+    } else if (sp === 'rainbow') {
+      // Arco-íris: precisa de cor alvo (definida no momento do swap)
+      // Se foi ativado por match normal, remove todos da cor adjacente
+      const targetType = findAdjacentColor(r, c, cellsToRemove);
+      if (targetType !== null) {
+        for (let rr = 0; rr < ROWS; rr++) {
+          for (let cc = 0; cc < COLS; cc++) {
+            if (board[rr][cc] === targetType) {
+              extraCells.add(`${rr},${cc}`);
+            }
+          }
+        }
+      }
+    }
+  });
+  
+  return Array.from(extraCells).map(s => s.split(',').map(Number));
+}
+
+function findAdjacentColor(r, c, cellsToRemove) {
+  // Pega a cor de um doce adjacente que não seja especial
+  const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+  for (const [dr, dc] of dirs) {
+    const nr = r + dr, nc = c + dc;
+    if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
+    if (board[nr][nc] !== null && board[nr][nc] !== -1 && specials[nr][nc] !== 'rainbow') {
+      return board[nr][nc];
+    }
+  }
+  // Fallback: qualquer cor no tabuleiro
+  for (let rr = 0; rr < ROWS; rr++) {
+    for (let cc = 0; cc < COLS; cc++) {
+      if (board[rr][cc] !== null && board[rr][cc] !== -1) return board[rr][cc];
+    }
+  }
+  return null;
+}
+
+async function removeMatches(cells, combo, specialsToCreate) {
+  const points = cells.length * 10 * combo;
+  score += points;
+  
+  const [pr, pc] = cells[Math.floor(Math.random() * cells.length)];
+  showScorePopup(pr, pc, points);
+  
+  // Criar especiais nas posições certas
+  specialsToCreate.forEach(sp => {
+    board[sp.r][sp.c] = sp.type;
+    specials[sp.r][sp.c] = sp.special;
+    const text = sp.special === 'rainbow' ? '🌈 ARCO-ÍRIS!' : '🎯 LISTRADO!';
+    showSpecialPopup(sp.r, sp.c, text);
+  });
+  
+  // Remover células (exceto onde criamos especiais)
+  const createPositions = new Set(specialsToCreate.map(s => `${s.r},${s.c}`));
+  cells.forEach(([r, c]) => {
+    if (!createPositions.has(`${r},${c}`)) {
+      board[r][c] = null;
+      specials[r][c] = null;
+    }
+  });
+  
+  updateUI();
+}
+
+async function applyGravity() {
+  for (let c = 0; c < COLS; c++) {
+    // Compactar para baixo mantendo especiais
+    let writePos = ROWS - 1;
+    for (let r = ROWS - 1; r >= 0; r--) {
+      if (board[r][c] !== null) {
+        if (writePos !== r) {
+          board[writePos][c] = board[r][c];
+          specials[writePos][c] = specials[r][c];
+          board[r][c] = null;
+          specials[r][c] = null;
+        }
+        writePos--;
+      }
+    }
+    // Preencher topo com novos doces
+    for (let r = writePos; r >= 0; r--) {
+      board[r][c] = randomCandy();
+      specials[r][c] = null;
+    }
+  }
+}
+
+async function processMatches() {
+  let {cells, groups} = findMatches();
+  let combo = 0;
+  
+  while (cells.length > 0) {
+    combo++;
+    if (combo > 1) {
+      comboEl.textContent = `🔥 COMBO x${combo}! 🔥`;
+      comboEl.style.transform = 'scale(1.3)';
+      setTimeout(() => comboEl.style.transform = 'scale(1)', 300);
+    }
+    
+    // Detectar especiais a criar
+    const specialsToCreate = processGroupsForSpecials(groups);
+    
+    // Ativar especiais que serão atingidos
+    const extraCells = activateSpecials(cells);
+    const allCells = [...cells];
+    extraCells.forEach(cell => {
+      if (!allCells.some(c => c[0] === cell[0] && c[1] === cell[1])) {
+        allCells.push(cell);
+      }
+    });
+    
+    // Se ativou especiais, pode ter criado cadeia - re-processar
+    let changed = true;
+    while (changed) {
+      changed = false;
+      const moreExtra = activateSpecials(allCells);
+      moreExtra.forEach(cell => {
+        if (!allCells.some(c => c[0] === cell[0] && c[1] === cell[1])) {
+          allCells.push(cell);
+          changed = true;
+        }
+      });
+    }
+    
+    await animateRemoval(allCells);
+    await removeMatches(allCells, combo, specialsToCreate);
+    render();
+    await sleep(100);
+    
+    await applyGravity();
+    render();
+    await sleep(400);
+    
+    const result = findMatches();
+    cells = result.cells;
+    groups = result.groups;
+  }
+  
+  setTimeout(() => { comboEl.textContent = ''; }, 1500);
+}
+
+async function handleClick(r, c) {
+  if (isAnimating) return;
+  if (moves <= 0) return;
+  
+  if (!selected) {
+    selected = {r, c};
+    render();
+    return;
+  }
+  
+  if (selected.r === r && selected.c === c) {
+    selected = null;
+    render();
+    return;
+  }
+  
+  const dr = Math.abs(selected.r - r);
+  const dc = Math.abs(selected.c - c);
+  
+  if (dr + dc !== 1) {
+    selected = {r, c};
+    render();
+    return;
+  }
+  
+  isAnimating = true;
+  const sr = selected.r, sc = selected.c;
+  selected = null;
+  
+  // ✅ Tratamento especial: trocar arco-íris com qualquer doce
+  const isRainbow1 = board[sr][sc] === -1;
+  const isRainbow2 = board[r][c] === -1;
+  
+  // Fazer swap
+  [board[sr][sc], board[r][c]] = [board[r][c], board[sr][sc]];
+  [specials[sr][sc], specials[r][c]] = [specials[r][c], specials[sr][sc]];
+  render();
+  await sleep(300);
+  
+  if (isRainbow1 || isRainbow2) {
+    // Ativar arco-íris: remove todos da cor do outro doce
+    const rainbowPos = isRainbow1 ? [sr, sc] : [r, c];
+    const otherPos = isRainbow1 ? [r, c] : [sr, sc];
+    const targetType = board[otherPos[0]][otherPos[1]];
+    
+    if (targetType !== null && targetType !== -1) {
+      const cellsToRemove = [[rainbowPos[0], rainbowPos[1]]];
+      for (let rr = 0; rr < ROWS; rr++) {
+        for (let cc = 0; cc < COLS; cc++) {
+          if (board[rr][cc] === targetType) {
+            cellsToRemove.push([rr, cc]);
+          }
+        }
+      }
+      moves--;
+      updateUI();
+      await animateRemoval(cellsToRemove);
+      await removeMatches(cellsToRemove, 1, []);
+      render();
+      await sleep(100);
+      await applyGravity();
+      render();
+      await sleep(400);
+      await processMatches();
+      checkGameState();
+      isAnimating = false;
+      return;
+    }
+  }
+  
+  const {cells, groups} = findMatches();
+  
+  if (cells.length === 0) {
+    // Voltar swap
+    [board[sr][sc], board[r][c]] = [board[r][c], board[sr][sc]];
+    [specials[sr][sc], specials[r][c]] = [specials[r][c], specials[sr][sc]];
+    render();
+    await sleep(300);
+  } else {
+    moves--;
+    updateUI();
+    await processMatches();
+    checkGameState();
+  }
+  
+  isAnimating = false;
+}
+
+function updateUI() {
+  scoreEl.textContent = score;
+  movesEl.textContent = moves;
+  targetEl.textContent = target;
+}
+
+function checkGameState() {
+  if (score >= target) {
+    setTimeout(() => {
+      document.getElementById('modalTitle').textContent = '🎉 Você Venceu!';
+      document.getElementById('modalText').textContent = `Pontuação: ${score}`;
+      gameOverEl.classList.add('show');
+    }, 500);
+  } else if (moves <= 0) {
+    setTimeout(() => {
+      document.getElementById('modalTitle').textContent = '😢 Fim de Jogo';
+      document.getElementById('modalText').textContent = `Pontuação: ${score} / ${target}`;
+      gameOverEl.classList.add('show');
+    }, 500);
+  }
+}
+
+function resetGame() {
+  score = 0;
+  moves = 30;
+  target = 2000;
+  selected = null;
+  isAnimating = false;
+  gameOverEl.classList.remove('show');
+  comboEl.textContent = '';
+  initBoard();
+  render();
+  updateUI();
+  
+  while (findMatches().cells.length > 0) {
+    initBoard();
+  }
+}
+
+resetGame();
+</script>
+</body>
+</html>

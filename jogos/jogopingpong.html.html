@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Ping Pong - Escolha o Modo</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    display:flex; justify-content:center; align-items:center;
+    min-height:100vh;
+    background: radial-gradient(ellipse at center, #3a3a3a 0%, #1a1a1a 100%);
+    font-family: 'Arial', sans-serif;
+    overflow:hidden;
+  }
+  .wrap { position:relative; }
+  canvas {
+    display:block;
+    border-radius:12px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+  }
+  .hud {
+    position:absolute; top:15px; left:50%; transform:translateX(-50%);
+    display:flex; gap:60px;
+    background: rgba(0,0,0,0.75);
+    padding: 10px 40px; border-radius:10px;
+    color:white; font-weight:bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  }
+  .hud .p { text-align:center; }
+  .hud .lbl { font-size:12px; opacity:0.8; letter-spacing:2px; }
+  .hud .val { font-size:32px; color:#FFD700; }
+  .info {
+    position:absolute; bottom:15px; left:50%; transform:translateX(-50%);
+    background: rgba(0,0,0,0.75); color:white;
+    padding:8px 20px; border-radius:8px; font-size:13px;
+  }
+  .info b { color:#FFD700; }
+  .overlay {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    background: rgba(0,0,0,0.88);
+    color:white; border-radius:12px;
+    z-index:10;
+  }
+  .overlay h1 { font-size:52px; color:#FFD700; margin-bottom:5px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+  .overlay .sub { font-size:16px; margin-bottom:30px; opacity:0.8; }
+  .overlay button {
+    padding: 16px 50px; font-size:18px; font-weight:bold;
+    color:white; border:none; border-radius:10px;
+    cursor:pointer; transition:all 0.2s;
+    margin: 8px;
+    min-width: 220px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+  .overlay button:hover { transform:scale(1.05); }
+  .btn-1p { background: linear-gradient(135deg, #2196F3, #1976D2); }
+  .btn-1p:hover { background: linear-gradient(135deg, #1976D2, #1565C0); }
+  .btn-2p { background: linear-gradient(135deg, #4CAF50, #388E3C); }
+  .btn-2p:hover { background: linear-gradient(135deg, #388E3C, #2E7D32); }
+  .btn-restart { background: linear-gradient(135deg, #FF9800, #F57C00); }
+  .btn-restart:hover { background: linear-gradient(135deg, #F57C00, #E65100); }
+  .btn-back { background: linear-gradient(135deg, #9E9E9E, #757575); font-size:14px; padding:12px 30px; min-width:180px; }
+  .btn-back:hover { background: linear-gradient(135deg, #757575, #616161); }
+  .hidden { display:none !important; }
+  .mode-icon { font-size: 40px; margin-bottom: 10px; }
+  .controls-box {
+    background: rgba(255,255,255,0.1);
+    padding: 15px 25px; border-radius: 10px;
+    margin: 15px 0 25px 0;
+    font-size: 14px;
+    text-align: center;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="c" width="1000" height="600"></canvas>
+  <div class="hud">
+    <div class="p"><div class="lbl" id="lbl1">JOGADOR 1</div><div class="val" id="s1">0</div></div>
+    <div class="p"><div class="lbl" id="lbl2">JOGADOR 2</div><div class="val" id="s2">0</div></div>
+  </div>
+  <div class="info" id="infoBar"><b>W/S</b> para mover | Primeiro a 10 vence</div>
+
+  <!-- MENU PRINCIPAL -->
+  <div class="overlay" id="menuScreen">
+    <div class="mode-icon">🏓</div>
+    <h1>PING PONG</h1>
+    <div class="sub">Escolha o modo de jogo</div>
+    <button class="btn-1p" onclick="startGame(1)">👤 1 JOGADOR <small style="opacity:0.8">(vs Computador)</small></button>
+    <button class="btn-2p" onclick="startGame(2)">👥 2 JOGADORES <small style="opacity:0.8">(vs Amigo)</small></button>
+  </div>
+
+  <!-- TELA DE FIM DE JOGO -->
+  <div class="overlay hidden" id="endScreen">
+    <div class="mode-icon"></div>
+    <h1 id="winText">Vencedor!</h1>
+    <p id="finalScore" style="font-size:22px; margin:15px 0;"></p>
+    <button class="btn-restart" onclick="playAgain()"> Jogar Novamente</button>
+    <button class="btn-back" onclick="backToMenu()"> Voltar ao Menu</button>
+  </div>
+</div>
+
+<script>
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+
+let gameMode = 1; // 1 = vs IA, 2 = 2 jogadores
+
+// === MESA REALISTA ===
+function drawTable() {
+  const floor = ctx.createLinearGradient(0,0,0,H);
+  floor.addColorStop(0,'#2a2a2a'); floor.addColorStop(1,'#1a1a1a');
+  ctx.fillStyle = floor;
+  ctx.fillRect(0,0,W,H);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(60, 55, W-120, H-90);
+
+  const wood = ctx.createLinearGradient(0,0,W,0);
+  wood.addColorStop(0,'#6b3410'); wood.addColorStop(0.5,'#a0522d'); wood.addColorStop(1,'#6b3410');
+  ctx.fillStyle = wood;
+  ctx.fillRect(40, 40, W-80, H-80);
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  ctx.lineWidth = 1;
+  for (let i=0; i<15; i++) {
+    ctx.beginPath();
+    ctx.moveTo(40, 40 + i*(H-80)/15);
+    ctx.lineTo(W-40, 40 + i*(H-80)/15);
+    ctx.stroke();
+  }
+
+  const green = ctx.createRadialGradient(W/2,H/2,50,W/2,H/2,W/2);
+  green.addColorStop(0,'#3a8a4a'); green.addColorStop(1,'#2d6b3a');
+  ctx.fillStyle = green;
+  ctx.fillRect(55, 55, W-110, H-110);
+
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(60, 60, W-120, H-120);
+  ctx.beginPath();
+  ctx.moveTo(W/2, 60); ctx.lineTo(W/2, H-60);
+  ctx.stroke();
+  ctx.setLineDash([8,6]);
+  ctx.beginPath();
+  ctx.moveTo(60, H/2); ctx.lineTo(W-60, H/2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillRect(50, H/2 - 3, W-100, 6);
+  ctx.fillStyle = '#333';
+  ctx.fillRect(45, H/2 - 20, 10, 40);
+  ctx.fillRect(W-55, H/2 - 20, 10, 40);
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  ctx.lineWidth = 1;
+  for (let x=60; x<W-60; x+=15) {
+    ctx.beginPath(); ctx.moveTo(x, H/2-3); ctx.lineTo(x, H/2+3); ctx.stroke();
+  }
+}
+
+// === PERSONAGEM ===
+function drawPerson(x, y, armAngle, color, isLeft) {
+  ctx.save();
+  ctx.translate(x, y);
+  if (!isLeft) ctx.scale(-1, 1);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(0, 55, 30, 8, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-8, 20); ctx.lineTo(-10, 55);
+  ctx.moveTo(8, 20); ctx.lineTo(10, 55);
+  ctx.stroke();
+
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(-16, 50, 12, 8);
+  ctx.fillRect(4, 50, 12, 8);
+
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(-18, -10, 36, 35, 6);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.fillRect(-18, -10, 36, 8);
+
+  ctx.save();
+  ctx.translate(10, 0);
+  ctx.rotate(armAngle);
+  ctx.strokeStyle = '#f4c29a';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(0,0); ctx.lineTo(25, 5);
+  ctx.stroke();
+  ctx.fillStyle = '#c0392b';
+  ctx.beginPath();
+  ctx.ellipse(32, 5, 14, 18, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#8b0000';
+  ctx.fillRect(22, 2, 8, 6);
+  ctx.restore();
+
+  ctx.strokeStyle = '#f4c29a';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(-10, 0); ctx.lineTo(-18, 25);
+  ctx.stroke();
+
+  ctx.fillStyle = '#f4c29a';
+  ctx.beginPath();
+  ctx.arc(0, -22, 14, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = '#3a2410';
+  ctx.beginPath();
+  ctx.arc(0, -26, 14, Math.PI, 0);
+  ctx.fill();
+  ctx.fillRect(-14, -26, 28, 4);
+
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(4, -22, 2, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(4, -18, 4, 0, Math.PI);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// === BOLA ===
+const ball = { x: W/2, y: H/2, r: 10, vx: 0, vy: 0, trail: [] };
+
+function resetBall(dir) {
+  ball.x = W/2; ball.y = H/2;
+  ball.vx = 6 * dir;
+  ball.vy = (Math.random()*2-1) * 3;
+  ball.trail = [];
+}
+
+// === JOGADORES ===
+const p1 = { x: 140, y: H/2, score: 0, armAngle: 0, targetArm: 0, color: '#2196F3' };
+const p2 = { x: W-140, y: H/2, score: 0, armAngle: 0, targetArm: 0, color: '#e91e63' };
+
+const keys = {};
+document.addEventListener('keydown', e => keys[e.key] = true);
+document.addEventListener('keyup', e => keys[e.key] = false);
+
+let running = false;
+let lastHit = { p1: 0, p2: 0 };
+
+// === IA DO COMPUTADOR ===
+function updateAI() {
+  const aiSpeed = 5.5; // velocidade da IA (um pouco mais lenta que o jogador)
+  const aiCenter = p2.y;
+  const targetY = ball.y;
+  const diff = targetY - aiCenter;
+  const deadZone = 15; // zona morta para não tremer
+
+  if (Math.abs(diff) > deadZone) {
+    if (diff > 0) p2.y += aiSpeed;
+    else p2.y -= aiSpeed;
+  }
+
+  // Limitar movimento
+  p2.y = Math.max(100, Math.min(H-100, p2.y));
+
+  // IA tenta "prever" um pouco - se a bola está vindo na direção dela
+  if (ball.vx > 0 && ball.x > W/2) {
+    // Acelera um pouco mais quando a bola está vindo
+    if (Math.abs(diff) > deadZone) {
+      if (diff > 0) p2.y += 1.5;
+      else p2.y -= 1.5;
+    }
+  }
+}
+
+function update() {
+  // Movimento P1 (sempre controlado pelo jogador)
+  if (keys['w'] || keys['W']) p1.y -= 7;
+  if (keys['s'] || keys['S']) p1.y += 7;
+  p1.y = Math.max(100, Math.min(H-100, p1.y));
+
+  // Movimento P2 (jogador 2 ou IA)
+  if (gameMode === 2) {
+    if (keys['ArrowUp']) p2.y -= 7;
+    if (keys['ArrowDown']) p2.y += 7;
+    p2.y = Math.max(100, Math.min(H-100, p2.y));
+  } else {
+    updateAI();
+  }
+
+  // Bola
+  ball.trail.push({x: ball.x, y: ball.y});
+  if (ball.trail.length > 8) ball.trail.shift();
+  ball.x += ball.vx;
+  ball.y += ball.vy;
+
+  if (ball.y - ball.r < 60) { ball.y = 60 + ball.r; ball.vy *= -1; }
+  if (ball.y + ball.r > H-60) { ball.y = H-60 - ball.r; ball.vy *= -1; }
+
+  const now = Date.now();
+
+  // Colisão P1
+  if (ball.vx < 0 &&
+      ball.x - ball.r < p1.x + 30 && ball.x + ball.r > p1.x - 20 &&
+      ball.y > p1.y - 40 && ball.y < p1.y + 40) {
+    ball.vx = Math.abs(ball.vx) * 1.05;
+    if (ball.vx > 14) ball.vx = 14;
+    ball.vy = ((ball.y - p1.y) / 40) * 8;
+    ball.x = p1.x + 30 + ball.r;
+    p1.targetArm = -0.8;
+    lastHit.p1 = now;
+  }
+
+  // Colisão P2
+  if (ball.vx > 0 &&
+      ball.x + ball.r > p2.x - 30 && ball.x - ball.r < p2.x + 20 &&
+      ball.y > p2.y - 40 && ball.y < p2.y + 40) {
+    ball.vx = -Math.abs(ball.vx) * 1.05;
+    if (ball.vx < -14) ball.vx = -14;
+    ball.vy = ((ball.y - p2.y) / 40) * 8;
+    ball.x = p2.x - 30 - ball.r;
+    p2.targetArm = 0.8;
+    lastHit.p2 = now;
+  }
+
+  p1.armAngle += (p1.targetArm - p1.armAngle) * 0.3;
+  p2.armAngle += (p2.targetArm - p2.armAngle) * 0.3;
+  if (now - lastHit.p1 > 200) p1.targetArm = 0;
+  if (now - lastHit.p2 > 200) p2.targetArm = 0;
+
+  if (ball.x < 40) {
+    p2.score++;
+    document.getElementById('s2').textContent = p2.score;
+    if (p2.score >= 10) return endGame(2);
+    resetBall(1);
+  }
+  if (ball.x > W-40) {
+    p1.score++;
+    document.getElementById('s1').textContent = p1.score;
+    if (p1.score >= 10) return endGame(1);
+    resetBall(-1);
+  }
+}
+
+function draw() {
+  drawTable();
+
+  ball.trail.forEach((t, i) => {
+    const a = i / ball.trail.length * 0.5;
+    ctx.fillStyle = `rgba(255,255,200,${a})`;
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, ball.r * (i/ball.trail.length), 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.beginPath();
+  ctx.arc(ball.x-3, ball.y-3, ball.r/2, 0, Math.PI*2);
+  ctx.fill();
+
+  drawPerson(p1.x, p1.y, p1.armAngle, p1.color, true);
+  drawPerson(p2.x, p2.y, p2.armAngle, p2.color, false);
+}
+
+function loop() {
+  if (!running) return;
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// === CONTROLE DE TELAS ===
+function startGame(mode) {
+  gameMode = mode;
+  document.getElementById('menuScreen').classList.add('hidden');
+  document.getElementById('endScreen').classList.add('hidden');
+
+  // Atualiza labels
+  if (mode === 1) {
+    document.getElementById('lbl1').textContent = 'JOGADOR';
+    document.getElementById('lbl2').textContent = 'COMPUTADOR';
+    document.getElementById('infoBar').innerHTML = '<b>W/S</b> para mover | Primeiro a 10 vence';
+  } else {
+    document.getElementById('lbl1').textContent = 'JOGADOR 1';
+    document.getElementById('lbl2').textContent = 'JOGADOR 2';
+    document.getElementById('infoBar').innerHTML = '<b>J1:</b> W/S &nbsp;|&nbsp; <b>J2:</b> ↑/↓ | Primeiro a 10 vence';
+  }
+
+  // Reset scores
+  p1.score = 0; p2.score = 0;
+  p1.y = H/2; p2.y = H/2;
+  document.getElementById('s1').textContent = 0;
+  document.getElementById('s2').textContent = 0;
+
+  running = true;
+  resetBall(Math.random() > 0.5 ? 1 : -1);
+  loop();
+}
+
+function endGame(winner) {
+  running = false;
+  let winnerName;
+  if (gameMode === 1) {
+    winnerName = winner === 1 ? '🎉 VOCÊ VENCEU!' : '💻 COMPUTADOR VENCEU!';
+  } else {
+    winnerName = `🏆 JOGADOR ${winner} VENCEU!`;
+  }
+  document.getElementById('winText').textContent = winnerName;
+  document.getElementById('finalScore').textContent = `${p1.score} x ${p2.score}`;
+  document.getElementById('endScreen').classList.remove('hidden');
+}
+
+function playAgain() {
+  startGame(gameMode);
+}
+
+function backToMenu() {
+  document.getElementById('endScreen').classList.add('hidden');
+  document.getElementById('menuScreen').classList.remove('hidden');
+  running = false;
+  drawTable(); // redesenha a mesa no fundo
+}
+
+// Desenha a mesa inicialmente
+drawTable();
+</script>
+</body>
+</html>

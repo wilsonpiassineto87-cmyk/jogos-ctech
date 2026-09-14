@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Velha - vs Computador</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .modo-jogo {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-modo {
+            padding: 10px 20px;
+            font-size: 0.9em;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-modo.ativo {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-modo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .status {
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .tabuleiro {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .celula {
+            aspect-ratio: 1;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 10px;
+            font-size: 3em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .celula:hover:not(:disabled) {
+            background: #d0d0d0;
+            transform: scale(1.05);
+        }
+
+        .celula:disabled {
+            cursor: not-allowed;
+        }
+
+        .celula.x {
+            color: #e74c3c;
+        }
+
+        .celula.o {
+            color: #3498db;
+        }
+
+        .botoes {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-reiniciar {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-reiniciar:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        .placar {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .placar-item {
+            text-align: center;
+        }
+
+        .placar-x {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .placar-o {
+            color: #3498db;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .vencedor {
+            animation: pulse 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        .pensando {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        @media (max-width: 480px) {
+            .celula {
+                font-size: 2em;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Jogo da Velha</h1>
+        
+        <div class="modo-jogo">
+            <button class="btn-modo ativo" onclick="mudarModo('pvp')">👥 2 Jogadores</button>
+            <button class="btn-modo" onclick="mudarModo('facil')">🤖 Fácil</button>
+            <button class="btn-modo" onclick="mudarModo('medio')">🤖 Médio</button>
+            <button class="btn-modo" onclick="mudarModo('dificil')">🤖 Difícil</button>
+        </div>
+        
+        <div class="status" id="status">Jogador atual: X</div>
+        
+        <div class="tabuleiro" id="tabuleiro">
+            <button class="celula" data-index="0"></button>
+            <button class="celula" data-index="1"></button>
+            <button class="celula" data-index="2"></button>
+            <button class="celula" data-index="3"></button>
+            <button class="celula" data-index="4"></button>
+            <button class="celula" data-index="5"></button>
+            <button class="celula" data-index="6"></button>
+            <button class="celula" data-index="7"></button>
+            <button class="celula" data-index="8"></button>
+        </div>
+        
+        <div class="botoes">
+            <button class="btn-reiniciar" onclick="reiniciarJogo()">🔄 Reiniciar Jogo</button>
+        </div>
+        
+        <div class="placar">
+            <div class="placar-item">
+                <div class="placar-x">X (Você): <span id="pontosX">0</span></div>
+            </div>
+            <div class="placar-item">
+                <div class="placar-o">O (Computador): <span id="pontosO">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tabuleiro = ['', '', '', '', '', '', '', '', ''];
+        let jogadorAtual = 'X';
+        let jogoAtivo = true;
+        let pontosX = 0;
+        let pontosO = 0;
+        let modoJogo = 'pvp'; // pvp, facil, medio, dificil
+
+        const celulas = document.querySelectorAll('.celula');
+        const statusDisplay = document.getElementById('status');
+        const pontosXDisplay = document.getElementById('pontosX');
+        const pontosODisplay = document.getElementById('pontosO');
+
+        const combinacoesVencedoras = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        celulas.forEach(celula => {
+            celula.addEventListener('click', fazerJogada);
+        });
+
+        function mudarModo(modo) {
+            modoJogo = modo;
+            
+            // Atualizar botões
+            document.querySelectorAll('.btn-modo').forEach(btn => {
+                btn.classList.remove('ativo');
+            });
+            event.target.classList.add('ativo');
+            
+            // Atualizar texto do placar
+            if (modo === 'pvp') {
+                document.querySelector('.placar-x').innerHTML = 'X: <span id="pontosX">' + pontosX + '</span>';
+                document.querySelector('.placar-o').innerHTML = 'O: <span id="pontosO">' + pontosO + '</span>';
+            } else {
+                document.querySelector('.placar-x').innerHTML = 'X (Você): <span id="pontosX">' + pontosX + '</span>';
+                document.querySelector('.placar-o').innerHTML = 'O (Computador): <span id="pontosO">' + pontosO + '</span>';
+            }
+            
+            reiniciarJogo();
+        }
+
+        function fazerJogada(event) {
+            const indice = parseInt(event.target.getAttribute('data-index'));
+
+            if (!jogoAtivo || tabuleiro[indice] !== '') {
+                return;
+            }
+
+            // Fazer a jogada do jogador
+            tabuleiro[indice] = jogadorAtual;
+            event.target.textContent = jogadorAtual;
+            event.target.classList.add(jogadorAtual.toLowerCase());
+            event.target.disabled = true;
+
+            // Verificar vencedor
+            if (verificarVencedor()) {
+                finalizarJogo(jogadorAtual);
+                return;
+            }
+
+            // Verificar empate
+            if (!tabuleiro.includes('')) {
+                finalizarJogo(null);
+                return;
+            }
+
+            // Trocar jogador
+            jogadorAtual = jogadorAtual === 'X' ? 'O' : 'X';
+            statusDisplay.textContent = `Jogador atual: ${jogadorAtual}`;
+
+            // Se for modo contra computador e é turno do O
+            if (modoJogo !== 'pvp' && jogadorAtual === 'O') {
+                setTimeout(jogadaComputador, 500);
+            }
+        }
+
+        function jogadaComputador() {
+            if (!jogoAtivo) return;
+
+            let jogada;
+
+            switch(modoJogo) {
+                case 'facil':
+                    jogada = jogadaFacil();
+                    break;
+                case 'medio':
+                    jogada = Math.random() < 0.6 ? jogadaInteligente() : jogadaFacil();
+                    break;
+                case 'dificil':
+                    jogada = jogadaInteligente();
+                    break;
+                default:
+                    return;
+            }
+
+            // Fazer a jogada do computador
+            const celula = document.querySelector(`[data-index="${jogada}"]`);
+            tabuleiro[jogada] = 'O';
+            celula.textContent = 'O';
+            celula.classList.add('o');
+            celula.disabled = true;
+
+            // Verificar vencedor
+            if (verificarVencedor()) {
+                finalizarJogo('O');
+                return;
+            }
+
+            // Verificar empate
+            if (!tabuleiro.includes('')) {
+                finalizarJogo(null);
+                return;
+            }
+
+            // Trocar de volta para X
+            jogadorAtual = 'X';
+            statusDisplay.textContent = `Jogador atual: ${jogadorAtual}`;
+        }
+
+        function jogadaFacil() {
+            // Escolhe uma posição aleatória disponível
+            const disponiveis = tabuleiro.map((valor, indice) => valor === '' ? indice : null).filter(v => v !== null);
+            return disponiveis[Math.floor(Math.random() * disponiveis.length)];
+        }
+
+        function jogadaInteligente() {
+            // 1. Tentar vencer
+            for (let i = 0; i < 9; i++) {
+                if (tabuleiro[i] === '') {
+                    tabuleiro[i] = 'O';
+                    if (verificarVencedor()) {
+                        tabuleiro[i] = '';
+                        return i;
+                    }
+                    tabuleiro[i] = '';
+                }
+            }
+
+            // 2. Bloquear o jogador
+            for (let i = 0; i < 9; i++) {
+                if (tabuleiro[i] === '') {
+                    tabuleiro[i] = 'X';
+                    if (verificarVencedor()) {
+                        tabuleiro[i] = '';
+                        return i;
+                    }
+                    tabuleiro[i] = '';
+                }
+            }
+
+            // 3. Pegar o centro
+            if (tabuleiro[4] === '') return 4;
+
+            // 4. Pegar cantos
+            const cantos = [0, 2, 6, 8];
+            const cantosDisponiveis = cantos.filter(i => tabuleiro[i] === '');
+            if (cantosDisponiveis.length > 0) {
+                return cantosDisponiveis[Math.floor(Math.random() * cantosDisponiveis.length)];
+            }
+
+            // 5. Pegar qualquer posição disponível
+            return jogadaFacil();
+        }
+
+        function verificarVencedor() {
+            for (let combinacao of combinacoesVencedoras) {
+                const [a, b, c] = combinacao;
+                if (tabuleiro[a] && tabuleiro[a] === tabuleiro[b] && tabuleiro[a] === tabuleiro[c]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function finalizarJogo(vencedor) {
+            jogoAtivo = false;
+            
+            if (vencedor) {
+                if (vencedor === 'X') {
+                    statusDisplay.textContent = '🎉 Você venceu!';
+                    statusDisplay.style.background = '#2ecc71';
+                    statusDisplay.style.color = 'white';
+                    pontosX++;
+                    pontosXDisplay.textContent = pontosX;
+                } else {
+                    statusDisplay.textContent = '😔 Computador venceu!';
+                    statusDisplay.style.background = '#e74c3c';
+                    statusDisplay.style.color = 'white';
+                    pontosO++;
+                    pontosODisplay.textContent = pontosO;
+                }
+                destacarVencedor();
+            } else {
+                statusDisplay.textContent = '🤝 Empate!';
+                statusDisplay.style.background = '#f39c12';
+                statusDisplay.style.color = 'white';
+            }
+        }
+
+        function destacarVencedor() {
+            for (let combinacao of combinacoesVencedoras) {
+                const [a, b, c] = combinacao;
+                if (tabuleiro[a] && tabuleiro[a] === tabuleiro[b] && tabuleiro[a] === tabuleiro[c]) {
+                    celulas[a].classList.add('vencedor');
+                    celulas[b].classList.add('vencedor');
+                    celulas[c].classList.add('vencedor');
+                    break;
+                }
+            }
+        }
+
+        function reiniciarJogo() {
+            tabuleiro = ['', '', '', '', '', '', '', '', ''];
+            jogadorAtual = 'X';
+            jogoAtivo = true;
+            
+            celulas.forEach(celula => {
+                celula.textContent = '';
+                celula.disabled = false;
+                celula.classList.remove('x', 'o', 'vencedor');
+            });
+            
+            statusDisplay.textContent = modoJogo === 'pvp' ? 'Jogador atual: X' : 'Sua vez (X)';
+            statusDisplay.style.background = '#f0f0f0';
+            statusDisplay.style.color = 'black';
+        }
+    </script>
+</body>
+</html>

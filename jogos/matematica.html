@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mestre da Matemática</title>
+    <link href="https://cdn.jsdelivr.net/npm/@fontsource/poppins@5.0.8/400.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fontsource/poppins@5.0.8/700.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #020617;
+            color: white;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ═══════════ 🌌 FUNDO ANIMADO ═══════════ */
+        .game-bg {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 18% 20%, rgba(76, 29, 149, 0.4), transparent 50%),
+                radial-gradient(ellipse at 82% 82%, rgba(8, 51, 68, 0.55), transparent 52%),
+                radial-gradient(ellipse at 60% 35%, rgba(30, 27, 75, 0.65), transparent 55%),
+                radial-gradient(ellipse at 30% 85%, rgba(88, 28, 135, 0.3), transparent 45%),
+                #020617;
+            z-index: -5;
+            animation: bgShift 14s ease-in-out infinite alternate;
+        }
+        @keyframes bgShift {
+            0% { filter: hue-rotate(0deg) brightness(1); }
+            100% { filter: hue-rotate(28deg) brightness(1.12); }
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(70px);
+            opacity: 0.22;
+            z-index: -4;
+            pointer-events: none;
+            animation: orbFloat 16s ease-in-out infinite;
+        }
+        .orb-1 { width: 320px; height: 320px; background: #6366f1; top: -90px; left: -70px; animation-delay: 0s; }
+        .orb-2 { width: 280px; height: 280px; background: #a855f7; bottom: -80px; right: -60px; animation-delay: 4s; }
+        .orb-3 { width: 210px; height: 210px; background: #06b6d4; top: 38%; right: -90px; animation-delay: 8s; }
+        .orb-4 { width: 240px; height: 240px; background: #ec4899; bottom: 22%; left: -100px; animation-delay: 12s; opacity: 0.14; }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(35px, -35px) scale(1.12); }
+            66% { transform: translate(-25px, 25px) scale(0.94); }
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.07) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.07) 1px, transparent 1px);
+            background-size: 44px 44px;
+            z-index: -3;
+            animation: moveGrid 22s linear infinite;
+        }
+        @keyframes moveGrid {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(44px); }
+        }
+
+        .bg-symbol {
+            position: fixed;
+            font-weight: bold;
+            color: white;
+            opacity: 0.06;
+            z-index: -2;
+            pointer-events: none;
+            animation: symbolDrift 11s ease-in-out infinite;
+        }
+        @keyframes symbolDrift {
+            0%, 100% { transform: translateY(0) rotate(-8deg); }
+            50% { transform: translateY(-32px) rotate(10deg); }
+        }
+
+        .star {
+            position: fixed;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            z-index: -2;
+            pointer-events: none;
+            animation: twinkle 3.5s ease-in-out infinite;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.08; transform: scale(0.7); }
+            50% { opacity: 0.55; transform: scale(1.4); }
+        }
+
+        /* ============ 🔄 TELA DE CARREGAMENTO ============ */
+        .loading-logo {
+            animation: logoPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); box-shadow: 0 0 30px rgba(99, 102, 241, 0.45); }
+            50% { transform: scale(1.1) rotate(-4deg); box-shadow: 0 0 70px rgba(139, 92, 246, 0.8); }
+        }
+        .loading-symbol {
+            position: absolute;
+            font-weight: bold;
+            opacity: 0;
+            animation: symbolFloat 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes symbolFloat {
+            0% { opacity: 0; transform: translateY(25px) rotate(0deg) scale(0.7); }
+            25% { opacity: 0.5; }
+            75% { opacity: 0.35; }
+            100% { opacity: 0; transform: translateY(-45px) rotate(20deg) scale(1.15); }
+        }
+        .loading-shimmer {
+            background: linear-gradient(90deg, #6366f1, #06b6d4, #a855f7, #6366f1);
+            background-size: 300% 100%;
+            animation: shimmer 2s linear infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 0% 0; }
+            100% { background-position: 300% 0; }
+        }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        .pop { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+        /* ✨ ANIMAÇÕES DE ACERTO */
+        .correct-flash { animation: correctFlash 0.65s ease-out; }
+        @keyframes correctFlash {
+            0% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.9), 0 0 25px rgba(16, 185, 129, 0.6); border-color: rgba(16, 185, 129, 1); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .question-bounce { animation: questionBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes questionBounce {
+            0%, 100% { transform: scale(1); }
+            40% { transform: scale(1.18); }
+            70% { transform: scale(0.95); }
+        }
+        .correct-ring { animation: correctRing 0.6s ease-out; }
+        @keyframes correctRing {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.85); }
+            100% { box-shadow: 0 0 0 22px rgba(16, 185, 129, 0); }
+        }
+        .particle {
+            position: absolute;
+            width: 9px;
+            height: 9px;
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 40;
+            animation: particleFly 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes particleFly {
+            0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+            100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.2); }
+        }
+        .stamp {
+            position: absolute;
+            top: -18px;
+            right: -8px;
+            font-size: 3.5rem;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 35;
+            text-shadow: 0 0 20px currentColor;
+            animation: stampIn 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes stampIn {
+            0% { opacity: 0; transform: scale(3) rotate(-20deg); }
+            45% { opacity: 1; transform: scale(1) rotate(-10deg); }
+            70% { opacity: 1; transform: scale(1.12) rotate(-10deg); }
+            100% { opacity: 0; transform: scale(1) rotate(-10deg) translateY(-12px); }
+        }
+
+        /* 💥 ANIMAÇÕES DE ERRO */
+        .wrong-flash { animation: wrongFlash 0.6s ease-out; }
+        @keyframes wrongFlash {
+            0% { box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.9), 0 0 30px rgba(244, 63, 94, 0.55); border-color: rgba(244, 63, 94, 1); }
+            50% { box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.5), 0 0 15px rgba(244, 63, 94, 0.3); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+        }
+        .wrong-wobble { animation: wrongWobble 0.5s ease; }
+        @keyframes wrongWobble {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            15% { transform: translateX(-7px) rotate(-2.5deg); }
+            35% { transform: translateX(7px) rotate(2.5deg); }
+            55% { transform: translateX(-5px) rotate(-1.5deg); }
+            75% { transform: translateX(5px) rotate(1.5deg); }
+        }
+
+        /* 🫨 Tremidão do modo Zen */
+        .shake-hard { animation: shakeHard 0.65s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shakeHard {
+            10%, 90% { transform: translate3d(-4px, 2px, 0) rotate(-0.6deg); }
+            20%, 80% { transform: translate3d(6px, -3px, 0) rotate(0.6deg); }
+            30%, 50%, 70% { transform: translate3d(-9px, 3px, 0) rotate(-1.2deg); }
+            40%, 60% { transform: translate3d(9px, -3px, 0) rotate(1.2deg); }
+        }
+        .shake-crazy { animation: shakeCrazy 0.8s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shakeCrazy {
+            10%, 90% { transform: translate3d(-6px, 4px, 0) rotate(-1.5deg) scale(1.01); }
+            20%, 80% { transform: translate3d(9px, -5px, 0) rotate(1.5deg) scale(0.99); }
+            30%, 50%, 70% { transform: translate3d(-12px, 5px, 0) rotate(-2.5deg) scale(1.02); }
+            40%, 60% { transform: translate3d(12px, -5px, 0) rotate(2.5deg) scale(0.98); }
+        }
+
+        .spin-once { animation: spinOnce 0.5s ease; }
+        @keyframes spinOnce { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .record-badge { animation: recordPulse 1s ease-in-out infinite; }
+        @keyframes recordPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px 4px rgba(234, 179, 8, 0.3); }
+        }
+
+        .score-pop {
+            position: absolute;
+            font-weight: bold;
+            pointer-events: none;
+            animation: scoreFloat 1s ease-out forwards;
+            z-index: 30;
+            white-space: nowrap;
+        }
+        @keyframes scoreFloat {
+            0% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-45px) scale(1.2); }
+        }
+
+        .timer-bar {
+            transition: width 0.5s ease;
+        }
+        .timer-normal { background: linear-gradient(90deg, #6366f1, #06b6d4); }
+        .timer-danger { background: linear-gradient(90deg, #ef4444, #f97316); animation: pulse 1s infinite; }
+        .timer-boost { background: linear-gradient(90deg, #10b981, #34d399); }
+        .timer-hardcore { background: linear-gradient(90deg, #dc2626, #f59e0b); }
+        .timer-zen { background: linear-gradient(90deg, #14b8a6, #22d3ee); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .btn-option {
+            transition: all 0.2s;
+        }
+        .btn-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        .btn-option:active {
+            transform: translateY(0);
+        }
+
+        .hint-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex items-center justify-center relative">
+
+    <!-- ═══════════ 🌌 FUNDO ANIMADO ═══════════ -->
+    <div class="game-bg"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="bg-grid"></div>
+
+    <span class="bg-symbol text-5xl" style="top: 12%; left: 8%; animation-delay: 0s;">+</span>
+    <span class="bg-symbol text-4xl" style="top: 25%; right: 12%; animation-delay: 1.5s;">×</span>
+    <span class="bg-symbol text-6xl" style="bottom: 18%; left: 15%; animation-delay: 3s;">√</span>
+    <span class="bg-symbol text-4xl" style="bottom: 30%; right: 18%; animation-delay: 4.5s;">÷</span>
+    <span class="bg-symbol text-5xl" style="top: 55%; left: 5%; animation-delay: 2s;">−</span>
+    <span class="bg-symbol text-4xl" style="top: 8%; right: 35%; animation-delay: 5s;">∑</span>
+    <span class="bg-symbol text-5xl" style="bottom: 8%; right: 40%; animation-delay: 6s;">π</span>
+    <span class="bg-symbol text-4xl" style="top: 40%; right: 5%; animation-delay: 0.8s;">=</span>
+    <span class="bg-symbol text-3xl" style="bottom: 45%; left: 42%; animation-delay: 2.6s;">%</span>
+    <span class="bg-symbol text-4xl" style="top: 70%; right: 8%; animation-delay: 3.8s;">∞</span>
+
+    <div class="star" style="top: 15%; left: 25%; animation-delay: 0s;"></div>
+    <div class="star" style="top: 22%; left: 60%; animation-delay: 0.7s;"></div>
+    <div class="star" style="top: 10%; right: 22%; animation-delay: 1.4s;"></div>
+    <div class="star" style="top: 45%; left: 12%; animation-delay: 2.1s;"></div>
+    <div class="star" style="top: 60%; right: 15%; animation-delay: 0.4s;"></div>
+    <div class="star" style="bottom: 25%; left: 35%; animation-delay: 1.8s;"></div>
+    <div class="star" style="bottom: 12%; right: 30%; animation-delay: 2.6s;"></div>
+    <div class="star" style="top: 35%; left: 48%; animation-delay: 3.1s;"></div>
+    <div class="star" style="bottom: 38%; right: 45%; animation-delay: 1.1s;"></div>
+    <div class="star" style="top: 75%; left: 20%; animation-delay: 2.9s;"></div>
+
+    <!-- ============ 🔄 TELA DE CARREGAMENTO ============ -->
+    <div id="screen-loading" class="fixed inset-0 z-50 flex-col items-center justify-center bg-slate-950/85 backdrop-blur-sm hidden">
+        <span class="loading-symbol text-indigo-400 text-3xl" style="top: 20%; left: 18%; animation-delay: 0s;">+</span>
+        <span class="loading-symbol text-cyan-400 text-2xl" style="top: 30%; right: 20%; animation-delay: 0.5s;">×</span>
+        <span class="loading-symbol text-purple-400 text-4xl" style="bottom: 28%; left: 24%; animation-delay: 1s;">√</span>
+        <span class="loading-symbol text-pink-400 text-2xl" style="bottom: 22%; right: 26%; animation-delay: 1.5s;">÷</span>
+        <span class="loading-symbol text-emerald-400 text-3xl" style="top: 55%; left: 12%; animation-delay: 2s;">−</span>
+        <span class="loading-symbol text-amber-400 text-2xl" style="top: 48%; right: 12%; animation-delay: 2.5s;">∑</span>
+
+        <div class="relative z-10 flex flex-col items-center px-8 w-full max-w-sm">
+            <div class="loading-logo mb-6 inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600">
+                <span class="text-5xl">∑</span>
+            </div>
+            <h1 class="text-4xl font-bold mb-1 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">Math Master</h1>
+            <p id="loading-subtitle" class="text-slate-400 text-sm mb-8">Carregando o jogo...</p>
+
+            <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                <div id="loading-bar" class="loading-shimmer h-full rounded-full transition-all duration-150" style="width: 0%"></div>
+            </div>
+            <div class="w-full flex justify-between mt-2">
+                <p id="loading-percent" class="text-slate-500 text-xs font-bold">0%</p>
+                <p class="text-slate-600 text-xs">v2.4</p>
+            </div>
+
+            <p id="loading-tip" class="text-slate-500 text-xs mt-8 italic text-center min-h-[2rem]">💡 A cada 3 acertos seguidos você ganha uma dica!</p>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="app" class="w-full max-w-md p-4 relative z-10">
+        
+        <!-- Screen: Start Menu -->
+        <div id="screen-start" class="glass-card rounded-3xl p-8 text-center fade-in">
+            <div class="mb-4 inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 shadow-lg">
+                <span class="text-4xl">∑</span>
+            </div>
+            <h1 class="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">Math Master</h1>
+            <p class="text-slate-400 mb-5">Desafie seu cérebro e alcance a pontuação máxima!</p>
+
+            <!-- 🏆 Placar de Melhores Pontuações (SEM o modo Zen) -->
+            <div class="bg-slate-800/60 rounded-xl p-3 mb-4 border border-slate-700">
+                <div class="flex items-center justify-center gap-2 mb-2">
+                    <p class="text-xs text-slate-400 uppercase tracking-wider">🏆 Melhores Pontuações</p>
+                    <button id="refresh-btn" onclick="refreshScoreboard()" 
+                        class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-700/70 hover:bg-indigo-600 text-slate-300 hover:text-white transition-all"
+                        title="Atualizar placar">
+                        <span id="refresh-icon" class="text-xs leading-none inline-block">🔄</span>
+                    </button>
+                </div>
+                <div class="grid grid-cols-4 gap-1.5 text-center">
+                    <div class="bg-emerald-500/10 rounded-lg py-2 border border-emerald-500/20">
+                        <span class="block text-[9px] text-emerald-300/70">Fácil</span>
+                        <span id="best-easy" class="text-base font-bold text-emerald-400 inline-block">0</span>
+                    </div>
+                    <div class="bg-indigo-500/10 rounded-lg py-2 border border-indigo-500/20">
+                        <span class="block text-[9px] text-indigo-300/70">Médio</span>
+                        <span id="best-medium" class="text-base font-bold text-indigo-400 inline-block">0</span>
+                    </div>
+                    <div class="bg-rose-500/10 rounded-lg py-2 border border-rose-500/20">
+                        <span class="block text-[9px] text-rose-300/70">Difícil</span>
+                        <span id="best-hard" class="text-base font-bold text-rose-400 inline-block">0</span>
+                    </div>
+                    <div class="bg-red-500/10 rounded-lg py-2 border border-red-500/30">
+                        <span class="block text-[9px] text-red-300/70">😈 Hard</span>
+                        <span id="best-hardcore" class="text-base font-bold text-red-400 inline-block">0</span>
+                    </div>
+                </div>
+                <p id="scoreboard-status" class="text-[10px] text-slate-500 mt-2 h-3">Atualizado automaticamente</p>
+            </div>
+            
+            <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 mb-5 text-left space-y-1">
+                <p class="text-xs text-emerald-300">✅ Cada acerto ganha <b>segundos extras</b> no cronômetro!</p>
+                <p class="text-xs text-yellow-300">💡 A cada 3 acertos seguidos você ganha uma <b>DICA</b>!</p>
+                <p class="text-xs text-purple-300">📈 Quanto <b>MAIS PONTOS</b>, mais difíceis ficam as contas!</p>
+                <p class="text-xs text-red-300">😈 <b>HARDCORE</b>: errou UMA vez = <b>FIM DE JOGO</b>! Sem dicas, pontos ×2!</p>
+                <p class="text-xs text-teal-300">😇 <b>ZEN</b>: impossível errar... mas se errar, o jogo <b>TREME</b>! 🫨 (sem ranking)</p>
+                <p class="text-xs text-sky-300">🎵 A <b>trilha sonora</b> fica mais forte conforme o modo!</p>
+            </div>
+
+            <div id="mode-buttons" class="space-y-2.5">
+                <button onclick="launchGame('easy')" class="w-full py-3 px-6 rounded-xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-500 hover:text-white transition-all font-bold flex items-center justify-between">
+                    <span>😊 Fácil</span>
+                    <span class="text-xs font-normal opacity-80">soma e subtração</span>
+                </button>
+                <button onclick="launchGame('medium')" class="w-full py-3 px-6 rounded-xl bg-indigo-500/20 border border-indigo-500/50 text-indigo-300 hover:bg-indigo-500 hover:text-white transition-all font-bold flex items-center justify-between">
+                    <span>🤔 Médio</span>
+                    <span class="text-xs font-normal opacity-80">+ − ×</span>
+                </button>
+                <button onclick="launchGame('hard')" class="w-full py-3 px-6 rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-300 hover:bg-rose-500 hover:text-white transition-all font-bold flex items-center justify-between">
+                    <span>🔥 Difícil</span>
+                    <span class="text-xs font-normal opacity-80">+ − × ÷ √</span>
+                </button>
+                <button onclick="launchGame('hardcore')" class="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-red-600/50 to-orange-600/50 border border-red-500/70 text-red-100 hover:from-red-600 hover:to-orange-600 hover:text-white transition-all font-bold flex items-center justify-between shadow-lg shadow-red-900/40">
+                    <span>😈 HARDCORE</span>
+                    <span class="text-xs font-normal opacity-90">1 erro = fim • pontos ×2</span>
+                </button>
+                <button onclick="launchGame('zen')" class="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-teal-500/30 to-cyan-500/30 border border-teal-400/60 text-teal-100 hover:from-teal-500 hover:to-cyan-500 hover:text-white transition-all font-bold flex items-center justify-between">
+                    <span>😇 ZEN</span>
+                    <span class="text-xs font-normal opacity-90">modo prática • sem ranking</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen: Game Area -->
+        <div id="screen-game" class="hidden glass-card rounded-3xl p-6 relative overflow-hidden">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-2">
+                <div class="flex flex-col">
+                    <span class="text-xs text-slate-400 uppercase tracking-wider">Pontos</span>
+                    <span id="score-display" class="text-2xl font-bold text-white">0</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-xs text-slate-400 uppercase tracking-wider">Sequência</span>
+                    <span id="streak-display" class="text-2xl font-bold text-yellow-400">0 🔥</span>
+                </div>
+                <div class="flex flex-col items-end">
+                    <span class="text-xs text-slate-400 uppercase tracking-wider">Tempo</span>
+                    <span id="time-display" class="text-2xl font-bold text-white">60</span>
+                </div>
+            </div>
+
+            <!-- 🏆 Recorde do modo (oculto no Zen) -->
+            <div class="text-center text-xs text-slate-500 mb-4">
+                <span id="record-line-normal">🏆 Recorde: <span id="game-best" class="font-bold text-yellow-400">0</span></span>
+                <span id="record-line-zen" class="hidden text-teal-400">🧘 Modo prática — sem ranking</span>
+                <span id="music-vibe" class="ml-2 text-slate-600"></span>
+            </div>
+
+            <!-- Timer Bar -->
+            <div class="w-full h-2 bg-slate-700 rounded-full mb-8 overflow-hidden">
+                <div id="timer-bar" class="h-full timer-bar timer-normal" style="width: 100%"></div>
+            </div>
+
+            <!-- Question -->
+            <div class="text-center mb-8 relative" id="question-area">
+                <div id="question-box" class="text-5xl font-bold mb-2 slide-up">2 + 2</div>
+                <div id="level-label" class="text-sm text-slate-400">Resolva a equação</div>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="options-grid" class="grid grid-cols-2 gap-4">
+                <!-- Buttons injected via JS -->
+            </div>
+
+            <!-- Hint Button -->
+            <button id="hint-button" onclick="openHintModal()" disabled
+                class="hint-btn w-full mt-4 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-bold shadow-lg shadow-amber-500/20 transition-all transform hover:scale-[1.02]">
+                💡 Usar Dica (0)
+            </button>
+
+            <!-- 🏁 Botão de encerrar (apenas no modo Zen) -->
+            <button id="zen-end-button" onclick="endGame('zen')" class="hidden w-full mt-2 py-2.5 rounded-xl bg-slate-700/60 border border-slate-600 text-slate-300 text-sm font-bold hover:bg-slate-600 hover:text-white transition-all">
+                🏁 Encerrar e ver pontuação
+            </button>
+
+            <!-- Hint Modal -->
+            <div id="hint-modal" class="hidden absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-20 items-center justify-center p-6">
+                <div class="glass-card rounded-2xl p-6 w-full fade-in">
+                    <h3 class="text-lg font-bold mb-1 text-center">💡 Usar Dica</h3>
+                    <p class="text-xs text-slate-400 text-center mb-4">Escolha como quer sua ajuda:</p>
+                    <div class="space-y-3">
+                        <button onclick="useHintRemove()" class="w-full py-3 px-4 rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-300 hover:bg-rose-500 hover:text-white transition-all font-bold text-sm">
+                            🗑️ Remover 2 alternativas erradas
+                        </button>
+                        <button onclick="useHintSimplify()" class="w-full py-3 px-4 rounded-xl bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500 hover:text-white transition-all font-bold text-sm">
+                            🧮 Facilitar um pouco a conta
+                        </button>
+                        <button onclick="closeHintModal()" class="w-full py-2 text-slate-400 hover:text-white transition-all text-sm font-bold">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen: Game Over -->
+        <div id="screen-end" class="hidden glass-card rounded-3xl p-8 text-center">
+            <h2 id="end-title" class="text-3xl font-bold mb-2 text-white">Fim de Jogo!</h2>
+            <p id="end-message" class="text-slate-400 mb-5">Seu desempenho foi incrível.</p>
+
+            <!-- 🏆 Novo Recorde Badge -->
+            <div id="new-record-badge" class="hidden record-badge mb-4 py-2 px-4 rounded-xl bg-yellow-500/20 border border-yellow-500/60 text-yellow-300 font-bold text-sm">
+                🏆 NOVO RECORDE!
+            </div>
+            
+            <div class="bg-slate-800/50 rounded-2xl p-6 mb-3 border border-slate-700">
+                <span class="block text-sm text-slate-400 mb-1">Pontuação Final</span>
+                <span id="final-score" class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">0</span>
+            </div>
+
+            <p id="final-best-line" class="text-xs text-slate-400 mb-4">
+                Recorde (<span id="final-mode" class="text-slate-300 font-bold">Fácil</span>):
+                <span id="final-best" class="text-yellow-400 font-bold">0</span>
+            </p>
+
+            <div class="bg-slate-800/50 rounded-2xl p-4 mb-8 border border-slate-700 grid grid-cols-4 gap-2">
+                <div>
+                    <span class="block text-[10px] text-slate-400">Acertos</span>
+                    <span id="final-correct" class="text-xl font-bold text-emerald-400">0</span>
+                </div>
+                <div>
+                    <span class="block text-[10px] text-slate-400">Erros</span>
+                    <span id="final-wrong" class="text-xl font-bold text-rose-400">0</span>
+                </div>
+                <div>
+                    <span class="block text-[10px] text-slate-400">Sequência</span>
+                    <span id="final-streak" class="text-xl font-bold text-yellow-400">0</span>
+                </div>
+                <div>
+                    <span class="block text-[10px] text-slate-400">Nível Máx</span>
+                    <span id="final-level" class="text-xl font-bold text-purple-400">1</span>
+                </div>
+            </div>
+
+            <button onclick="showStartScreen()" class="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/30 transition-all transform hover:scale-[1.02]">
+                Jogar Novamente
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // ---------------- Estado global de transição ----------------
+        let isTransitioning = false;
+
+        // ---------------- 🔄 TELA DE CARREGAMENTO ----------------
+        const LOADING_TIPS = [
+            '💡 A cada 3 acertos seguidos você ganha uma dica!',
+            '⏱️ Cada acerto adiciona segundos no cronômetro!',
+            '📈 Quanto mais pontos, mais difíceis ficam as contas!',
+            '😈 No HARDCORE, UM erro acaba com tudo!',
+            '😇 O modo ZEN é só prática — sem ranking e sem pressão!',
+            '🎵 A música fica mais intensa nos modos mais difíceis!',
+            '🏆 Bata recordes e apareça no placar!'
+        ];
+
+        let activeLoadingTimers = [];
+
+        function runLoadingScreen(subtitle, duration, callback) {
+            const loadingScreen = document.getElementById('screen-loading');
+            const bar = document.getElementById('loading-bar');
+            const pct = document.getElementById('loading-percent');
+            const tipEl = document.getElementById('loading-tip');
+            const subEl = document.getElementById('loading-subtitle');
+
+            activeLoadingTimers.forEach(t => clearInterval(t));
+            activeLoadingTimers = [];
+
+            subEl.innerText = subtitle;
+            bar.style.width = '0%';
+            pct.innerText = '0%';
+            tipEl.innerText = LOADING_TIPS[Math.floor(Math.random() * LOADING_TIPS.length)];
+
+            loadingScreen.classList.remove('hidden');
+            loadingScreen.classList.add('flex');
+
+            let tipIdx = LOADING_TIPS.indexOf(tipEl.innerText);
+            const tipTimer = setInterval(() => {
+                tipIdx = (tipIdx + 1) % LOADING_TIPS.length;
+                tipEl.innerText = LOADING_TIPS[tipIdx];
+            }, 800);
+            activeLoadingTimers.push(tipTimer);
+
+            let progress = 0;
+            let finished = false;
+            const stepMs = 50;
+            const inc = 100 / (duration / stepMs);
+            const loadTimer = setInterval(() => {
+                progress = Math.min(100, progress + inc * (0.6 + Math.random() * 0.9));
+                bar.style.width = progress + '%';
+                pct.innerText = Math.floor(progress) + '%';
+
+                if (progress >= 100 && !finished) {
+                    finished = true;
+                    clearInterval(loadTimer);
+                    clearInterval(tipTimer);
+                    activeLoadingTimers = [];
+                    setTimeout(() => {
+                        loadingScreen.classList.add('hidden');
+                        loadingScreen.classList.remove('flex');
+                        if (callback) callback();
+                    }, 300);
+                }
+            }, stepMs);
+            activeLoadingTimers.push(loadTimer);
+        }
+
+        // ---------------- 🎵 TRILHA SONORA POR MODO ----------------
+        const MUSIC_CONFIG = {
+            easy:     { bpm: 90,  div: 2, melType: 'sine',     melVol: 0.040, bass: true,  bassType: 'sine',     bassVol: 0.025, kick: false },
+            medium:   { bpm: 108, div: 2, melType: 'triangle', melVol: 0.050, bass: true,  bassType: 'triangle', bassVol: 0.035, kick: false },
+            hard:     { bpm: 124, div: 2, melType: 'square',   melVol: 0.045, bass: true,  bassType: 'sawtooth', bassVol: 0.050, kick: false },
+            hardcore: { bpm: 150, div: 2, melType: 'sawtooth', melVol: 0.060, bass: true,  bassType: 'sawtooth', bassVol: 0.075, kick: true  },
+            zen:      { bpm: 55,  div: 1, melType: 'sine',     melVol: 0.035, bass: false, bassType: 'sine',     bassVol: 0.000, kick: false }
+        };
+
+        const MUSIC_SCALES = {
+            easy:     [261.63, 329.63, 392.00, 523.25, 392.00, 329.63],
+            medium:   [293.66, 369.99, 440.00, 587.33, 440.00, 369.99],
+            hard:     [220.00, 261.63, 329.63, 440.00, 329.63, 261.63],
+            hardcore: [110.00, 130.81, 164.81, 220.00, 164.81, 130.81],
+            zen:      [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]
+        };
+
+        const MODE_VIBE = {
+            easy: '🎵 suave',
+            medium: '🎵 animada',
+            hard: '🎵 intensa',
+            hardcore: '🎵 EXTREMA',
+            zen: '🎵 relaxante'
+        };
+
+        let musicInterval = null;
+        let musicStep = 0;
+        let musicMode = null;
+
+        function startMusic(mode) {
+            stopMusic();
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+            } catch (e) { return; }
+
+            musicMode = mode;
+            musicStep = 0;
+            const cfg = MUSIC_CONFIG[mode];
+            const stepMs = (60000 / cfg.bpm) / cfg.div;
+            musicInterval = setInterval(() => playMusicStep(cfg), stepMs);
+        }
+
+        function stopMusic() {
+            if (musicInterval) {
+                clearInterval(musicInterval);
+                musicInterval = null;
+            }
+            musicMode = null;
+        }
+
+        function playMusicStep(cfg) {
+            if (!audioCtx || !musicMode) return;
+            const t = audioCtx.currentTime;
+            const scale = MUSIC_SCALES[musicMode];
+
+            if (musicMode === 'zen') {
+                if (musicStep % 2 === 0) {
+                    const freq = scale[Math.floor(Math.random() * scale.length)];
+                    scheduleTone(freq, t, 2.8, 'sine', cfg.melVol);
+                    scheduleTone(freq * 1.5, t + 0.15, 2.4, 'sine', cfg.melVol * 0.4);
+                }
+                musicStep++;
+                return;
+            }
+
+            const noteFreq = scale[musicStep % scale.length];
+            scheduleTone(noteFreq, t, 0.16, cfg.melType, cfg.melVol);
+
+            if (cfg.bass && musicStep % 2 === 0) {
+                scheduleTone(noteFreq / 2, t, 0.28, cfg.bassType, cfg.bassVol);
+            }
+
+            if (cfg.kick) {
+                scheduleKick(t);
+            }
+
+            musicStep++;
+        }
+
+        function scheduleTone(freq, time, dur, type, vol) {
+            if (vol <= 0) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, time);
+                g.gain.setValueAtTime(vol, time);
+                g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+                osc.connect(g);
+                g.connect(audioCtx.destination);
+                osc.start(time);
+                osc.stop(time + dur + 0.05);
+            } catch (e) {}
+        }
+
+        function scheduleKick(time) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, time);
+                osc.frequency.exponentialRampToValueAtTime(45, time + 0.12);
+                g.gain.setValueAtTime(0.10, time);
+                g.gain.exponentialRampToValueAtTime(0.001, time + 0.16);
+                osc.connect(g);
+                g.connect(audioCtx.destination);
+                osc.start(time);
+                osc.stop(time + 0.2);
+            } catch (e) {}
+        }
+
+        // ---------------- High Scores (APENAS 4 modos ranqueados — Zen fica de fora) ----------------
+        const STORAGE_KEY = 'mathmaster_highscores_v5';
+
+        const ALL_MODES = ['easy', 'medium', 'hard', 'hardcore'];
+        let memoryScores = { easy: 0, medium: 0, hard: 0, hardcore: 0 };
+
+        function loadHighScores() {
+            try {
+                const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                if (data && typeof data === 'object') {
+                    const result = {};
+                    ALL_MODES.forEach(mode => { result[mode] = Number(data[mode]) || 0; });
+                    return result;
+                }
+            } catch (e) {}
+            return { ...memoryScores };
+        }
+
+        function saveHighScores(scores) {
+            memoryScores = { ...scores };
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+            } catch (e) {}
+        }
+
+        function renderBestScores(withPop = false) {
+            const scores = loadHighScores();
+            const ids = {
+                easy: 'best-easy',
+                medium: 'best-medium',
+                hard: 'best-hard',
+                hardcore: 'best-hardcore'
+            };
+            ALL_MODES.forEach(mode => {
+                const el = document.getElementById(ids[mode]);
+                if (!el) return;
+                const newValue = String(scores[mode]);
+                if (el.innerText !== newValue) {
+                    el.innerText = newValue;
+                    if (withPop) {
+                        el.classList.remove('pop');
+                        void el.offsetWidth;
+                        el.classList.add('pop');
+                    }
+                }
+            });
+            const statusEl = document.getElementById('scoreboard-status');
+            if (statusEl) {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                statusEl.innerText = `Placar atualizado às ${timeStr}`;
+            }
+        }
+
+        function refreshScoreboard() {
+            const icon = document.getElementById('refresh-icon');
+            icon.classList.remove('spin-once');
+            void icon.offsetWidth;
+            icon.classList.add('spin-once');
+            renderBestScores(true);
+        }
+
+        // Game State
+        let score = 0;
+        let timeLeft = 60;
+        let maxTime = 60;
+        let timerInterval = null;
+        let currentDifficulty = 'easy';
+        let isPlaying = false;
+        let gameEnded = false;
+        let streak = 0;
+        let bestStreak = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let currentTier = 0;
+        let maxTierReached = 0;
+        let zenMisses = 0;
+
+        let sessionBest = 0;
+        let recordBroken = false;
+
+        const MAX_TIME_BY_MODE = { easy: 60, medium: 60, hard: 60, hardcore: 45 };
+        const TIME_BONUS = { easy: 2, medium: 4, hard: 6, hardcore: 2 };
+        const WRONG_PENALTY = { easy: 5, medium: 5, hard: 5 };
+
+        const POINTS_PER_LEVEL = 80;
+        const MAX_TIER = 8;
+        const HARDCORE_TIER_OFFSET = 3;
+
+        let hints = 0;
+        let hintUsedThisQuestion = false;
+        let currentCorrectAnswer = 0;
+
+        // DOM Elements
+        const screenStart = document.getElementById('screen-start');
+        const screenGame = document.getElementById('screen-game');
+        const screenEnd = document.getElementById('screen-end');
+        const scoreDisplay = document.getElementById('score-display');
+        const timeDisplay = document.getElementById('time-display');
+        const streakDisplay = document.getElementById('streak-display');
+        const timerBar = document.getElementById('timer-bar');
+        const questionBox = document.getElementById('question-box');
+        const questionArea = document.getElementById('question-area');
+        const levelLabel = document.getElementById('level-label');
+        const optionsGrid = document.getElementById('options-grid');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const finalCorrectDisplay = document.getElementById('final-correct');
+        const finalWrongDisplay = document.getElementById('final-wrong');
+        const finalStreakDisplay = document.getElementById('final-streak');
+        const finalLevelDisplay = document.getElementById('final-level');
+        const endTitle = document.getElementById('end-title');
+        const endMessage = document.getElementById('end-message');
+        const hintButton = document.getElementById('hint-button');
+        const hintModal = document.getElementById('hint-modal');
+        const gameBestDisplay = document.getElementById('game-best');
+        const musicVibeDisplay = document.getElementById('music-vibe');
+        const recordLineNormal = document.getElementById('record-line-normal');
+        const recordLineZen = document.getElementById('record-line-zen');
+        const newRecordBadge = document.getElementById('new-record-badge');
+        const finalBestDisplay = document.getElementById('final-best');
+        const finalModeDisplay = document.getElementById('final-mode');
+        const finalBestLine = document.getElementById('final-best-line');
+        const zenEndButton = document.getElementById('zen-end-button');
+
+        const MODE_LABELS = { easy: 'Fácil', medium: 'Médio', hard: 'Difícil', hardcore: '😈 Hardcore', zen: '😇 Zen' };
+
+        function isHardcore() { return currentDifficulty === 'hardcore'; }
+        function isZen() { return currentDifficulty === 'zen'; }
+
+        // Audio Effects
+        let audioCtx = null;
+        
+        function playSound(type) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.2);
+                } else if (type === 'zenmiss') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(45, audioCtx.currentTime + 0.35);
+                    gainNode.gain.setValueAtTime(0.09, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                } else if (type === 'death') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.7);
+                    gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.7);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.7);
+                } else if (type === 'hint') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(700, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1400, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'time') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.08);
+                    gainNode.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'levelup') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(550, audioCtx.currentTime + 0.1);
+                    osc.frequency.setValueAtTime(700, audioCtx.currentTime + 0.2);
+                    osc.frequency.setValueAtTime(900, audioCtx.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.07, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                } else if (type === 'record') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.12);
+                    osc.frequency.setValueAtTime(1000, audioCtx.currentTime + 0.24);
+                    osc.frequency.setValueAtTime(1300, audioCtx.currentTime + 0.36);
+                    gainNode.gain.setValueAtTime(0.09, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.5);
+                }
+            } catch (e) {
+                // Audio not supported, ignore
+            }
+        }
+
+        // ---------------- ✨💥 ANIMAÇÕES DE ACERTO E ERRO ----------------
+        const PARTICLE_COLORS = {
+            correct: ['#10b981', '#34d399', '#fbbf24', '#a7f3d0', '#ffffff'],
+            zen: ['#14b8a6', '#22d3ee', '#a5f3fc', '#ffffff'],
+            wrong: ['#f43f5e', '#fb7185', '#fda4af']
+        };
+
+        function burstParticles(sourceEl, colors, count = 14) {
+            try {
+                const hostRect = screenGame.getBoundingClientRect();
+                const r = sourceEl.getBoundingClientRect();
+                const x = r.left + r.width / 2 - hostRect.left;
+                const y = r.top + r.height / 2 - hostRect.top;
+
+                for (let i = 0; i < count; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    p.style.left = x + 'px';
+                    p.style.top = y + 'px';
+                    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.6;
+                    const dist = 45 + Math.random() * 85;
+                    p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+                    p.style.setProperty('--dy', Math.sin(angle) * dist - 20 + 'px');
+                    p.style.setProperty('--rot', Math.floor(Math.random() * 540 - 270) + 'deg');
+                    screenGame.appendChild(p);
+                    setTimeout(() => { if (p.parentNode) p.remove(); }, 900);
+                }
+            } catch (e) {}
+        }
+
+        function flashScreen(type) {
+            const cls = type === 'correct' ? 'correct-flash' : 'wrong-flash';
+            screenGame.classList.remove('correct-flash', 'wrong-flash');
+            void screenGame.offsetWidth;
+            screenGame.classList.add(cls);
+            setTimeout(() => screenGame.classList.remove(cls), 700);
+        }
+
+        function showStamp(symbol, colorClass) {
+            const stamp = document.createElement('div');
+            stamp.className = `stamp ${colorClass}`;
+            stamp.innerText = symbol;
+            questionArea.appendChild(stamp);
+            setTimeout(() => { if (stamp.parentNode) stamp.remove(); }, 800);
+        }
+
+        function bounceQuestion() {
+            questionBox.classList.remove('slide-up', 'question-bounce');
+            void questionBox.offsetWidth;
+            questionBox.classList.add('question-bounce');
+            setTimeout(() => questionBox.classList.remove('question-bounce'), 550);
+        }
+
+        function animateCorrect(btnElement) {
+            flashScreen('correct');
+            bounceQuestion();
+            showStamp('✓', 'text-emerald-400');
+            btnElement.classList.add('correct-ring');
+            burstParticles(btnElement, isZen() ? PARTICLE_COLORS.zen : PARTICLE_COLORS.correct, isZen() ? 10 : 16);
+        }
+
+        function animateWrong(btnElement) {
+            if (!isZen()) flashScreen('wrong');
+            showStamp('✗', isZen() ? 'text-teal-400' : 'text-rose-500');
+            btnElement.classList.add('wrong-wobble');
+            burstParticles(btnElement, PARTICLE_COLORS.wrong, 6);
+        }
+
+        // ---------------- 🫨 Tremidão do Zen ----------------
+        function zenEarthquake() {
+            const shakeClass = zenMisses >= 3 ? 'shake-crazy' : 'shake-hard';
+            screenGame.classList.remove('shake-hard', 'shake-crazy');
+            void screenGame.offsetWidth;
+            screenGame.classList.add(shakeClass);
+            setTimeout(() => screenGame.classList.remove(shakeClass), 900);
+        }
+
+        // ---------------- Dificuldade Progressiva por PONTOS ----------------
+        function getTier() {
+            return Math.max(0, Math.min(MAX_TIER, Math.floor(score / POINTS_PER_LEVEL)));
+        }
+
+        function syncTier() {
+            const newTier = getTier();
+            if (newTier > currentTier) {
+                currentTier = newTier;
+                if (currentTier > maxTierReached) maxTierReached = currentTier;
+                playSound('levelup');
+                showScorePopup(`⬆️ Nível ${currentTier + 1}! Mais difícil!`, 'text-purple-300', '84px');
+                updateLevelLabel();
+                return 'up';
+            } else if (newTier < currentTier) {
+                currentTier = newTier;
+                showScorePopup(`📉 Nível ${currentTier + 1}`, 'text-slate-400', '84px');
+                updateLevelLabel();
+                return 'down';
+            }
+            return null;
+        }
+
+        function rangeMax(base, perTier, cap, tier, shrink) {
+            const max = Math.min(cap, base + tier * perTier);
+            return Math.max(2, Math.floor(max * shrink));
+        }
+
+        function updateLevelLabel() {
+            const modeNames = { easy: '😊 Fácil', medium: '🤔 Médio', hard: '🔥 Difícil', hardcore: '😈 HARDCORE', zen: '😇 Zen' };
+            levelLabel.innerText = `Nível ${currentTier + 1} • ${modeNames[currentDifficulty]}`;
+        }
+
+        // ---------------- Timer Display ----------------
+        function updateTimerDisplay(boost = false) {
+            if (isZen()) {
+                timeDisplay.innerText = '∞';
+                timerBar.style.width = '100%';
+                timerBar.className = 'h-full timer-bar timer-zen';
+                return;
+            }
+            timeDisplay.innerText = timeLeft;
+            const pct = Math.min(100, (timeLeft / maxTime) * 100);
+            timerBar.style.width = `${pct}%`;
+
+            if (boost) {
+                timerBar.className = 'h-full timer-bar timer-boost';
+                setTimeout(() => {
+                    if (!isPlaying) return;
+                    applyTimerColor();
+                }, 500);
+            } else {
+                applyTimerColor();
+            }
+        }
+
+        function applyTimerColor() {
+            if (timeLeft <= 10) {
+                timerBar.className = 'h-full timer-bar timer-danger';
+            } else if (isHardcore()) {
+                timerBar.className = 'h-full timer-bar timer-hardcore';
+            } else {
+                timerBar.className = 'h-full timer-bar timer-normal';
+            }
+        }
+
+        function addTime(seconds) {
+            const before = timeLeft;
+            timeLeft = Math.min(maxTime, timeLeft + seconds);
+            const added = timeLeft - before;
+
+            if (added > 0) {
+                updateTimerDisplay(true);
+                playSound('time');
+                showScorePopup(`+${added}s ⏱️`, 'text-emerald-300', '28px');
+                timeDisplay.classList.remove('pop');
+                void timeDisplay.offsetWidth;
+                timeDisplay.classList.add('pop');
+            }
+        }
+
+        // ---------------- Record Tracking (Zen NÃO participa do ranking) ----------------
+        function checkLiveRecord() {
+            if (isZen()) return; // 🧘 Zen não tem ranking
+            if (score > 0 && score > sessionBest) {
+                if (!recordBroken) {
+                    recordBroken = true;
+                    playSound('record');
+                    showScorePopup('🏆 Recorde batido!', 'text-yellow-300', '112px');
+                    gameBestDisplay.classList.add('pop');
+                }
+                gameBestDisplay.innerText = score;
+
+                const highScores = loadHighScores();
+                if (score > highScores[currentDifficulty]) {
+                    highScores[currentDifficulty] = score;
+                    saveHighScores(highScores);
+                }
+            }
+        }
+
+        // ---------------- Hint System ----------------
+        function updateHintButton() {
+            if (isHardcore()) {
+                hintButton.innerText = '🚫 HARDCORE: dicas desativadas';
+                hintButton.disabled = true;
+                return;
+            }
+            if (isZen()) {
+                hintButton.innerText = '😇 ZEN: relaxe, aqui não precisa dica';
+                hintButton.disabled = true;
+                return;
+            }
+            hintButton.innerText = `💡 Usar Dica (${hints})`;
+            hintButton.disabled = hints === 0 || hintUsedThisQuestion || !isPlaying;
+        }
+
+        function openHintModal() {
+            if (isHardcore() || isZen()) return;
+            if (hints <= 0 || hintUsedThisQuestion || !isPlaying) return;
+            hintModal.classList.remove('hidden');
+            hintModal.classList.add('flex');
+        }
+
+        function closeHintModal() {
+            hintModal.classList.add('hidden');
+            hintModal.classList.remove('flex');
+        }
+
+        function useHintRemove() {
+            if (hints <= 0) return;
+            closeHintModal();
+            hints--;
+            hintUsedThisQuestion = true;
+
+            const allButtons = Array.from(optionsGrid.querySelectorAll('button'));
+            const wrongButtons = allButtons.filter(b => parseInt(b.innerText) !== currentCorrectAnswer);
+            wrongButtons.sort(() => Math.random() - 0.5);
+            wrongButtons.slice(0, 2).forEach(b => {
+                b.classList.add('opacity-30', 'pointer-events-none', 'line-through');
+            });
+
+            showScorePopup('🗑️ 2 erradas removidas!', 'text-rose-300', '-30px');
+            playSound('hint');
+            updateHintButton();
+        }
+
+        function useHintSimplify() {
+            closeHintModal();
+            hints--;
+            generateQuestion(true);
+            showScorePopup('✨ Conta um pouco mais fácil!', 'text-cyan-300', '-30px');
+            playSound('hint');
+            updateHintButton();
+        }
+
+        function grantHint() {
+            hints++;
+            playSound('hint');
+            showScorePopup('💡 +1 Dica! (sequência de 3)', 'text-yellow-300', '56px');
+            hintButton.classList.remove('pop');
+            void hintButton.offsetWidth;
+            hintButton.classList.add('pop');
+            updateHintButton();
+        }
+
+        // ---------------- Navigation ----------------
+        function showStartScreen() {
+            stopMusic();
+            clearInterval(timerInterval);
+            isPlaying = false;
+            isTransitioning = false;
+            renderBestScores(true);
+            screenStart.classList.remove('hidden');
+            screenStart.classList.add('fade-in');
+            screenGame.classList.add('hidden');
+            screenEnd.classList.add('hidden');
+        }
+
+        function launchGame(mode) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+            runLoadingScreen(`Modo ${MODE_LABELS[mode]} • ${MODE_VIBE[mode]}`, 1200, () => {
+                startGame(mode);
+                isTransitioning = false;
+            });
+        }
+
+        function startGame(difficulty) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            screenGame.classList.remove('shake', 'shake-hard', 'shake-crazy', 'correct-flash', 'wrong-flash');
+            closeHintModal();
+
+            currentDifficulty = difficulty;
+            score = 0;
+            streak = 0;
+            bestStreak = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            currentTier = 0;
+            maxTierReached = 0;
+            hints = 0;
+            hintUsedThisQuestion = false;
+            isPlaying = true;
+            gameEnded = false;
+            zenMisses = 0;
+
+            if (isZen()) {
+                maxTime = 0;
+                timeLeft = 0;
+            } else {
+                maxTime = MAX_TIME_BY_MODE[difficulty];
+                timeLeft = maxTime;
+            }
+
+            // 🧘 Zen não tem ranking: sem recorde para buscar
+            recordBroken = false;
+            if (isZen()) {
+                sessionBest = 0;
+                recordLineNormal.classList.add('hidden');
+                recordLineZen.classList.remove('hidden');
+            } else {
+                sessionBest = loadHighScores()[difficulty];
+                recordLineNormal.classList.remove('hidden');
+                recordLineZen.classList.add('hidden');
+                gameBestDisplay.innerText = sessionBest;
+                gameBestDisplay.classList.remove('pop');
+                gameBestDisplay.className = 'font-bold text-yellow-400';
+            }
+
+            musicVibeDisplay.innerText = MODE_VIBE[difficulty];
+            startMusic(difficulty);
+            
+            scoreDisplay.innerText = score;
+            streakDisplay.innerText = '0 🔥';
+            updateTimerDisplay();
+            updateLevelLabel();
+
+            if (isZen()) zenEndButton.classList.remove('hidden');
+            else zenEndButton.classList.add('hidden');
+
+            screenStart.classList.add('hidden');
+            screenEnd.classList.add('hidden');
+            screenGame.classList.remove('hidden');
+            screenGame.classList.add('fade-in');
+            updateHintButton();
+
+            generateQuestion();
+            startTimer();
+        }
+
+        function endGame(reason = 'time') {
+            if (gameEnded) return;
+            gameEnded = true;
+
+            isPlaying = false;
+            clearInterval(timerInterval);
+            stopMusic();
+            closeHintModal();
+            updateHintButton();
+
+            // 🏆 Salva o recorde — mas o modo Zen fica FORA do ranking
+            const highScores = loadHighScores();
+            const isNewRecord = recordBroken && score > 0 && !isZen();
+            if (!isZen() && score > highScores[currentDifficulty]) {
+                highScores[currentDifficulty] = score;
+                saveHighScores(highScores);
+            }
+
+            screenGame.classList.add('hidden');
+            screenEnd.classList.remove('hidden');
+            screenEnd.classList.add('fade-in');
+            finalScoreDisplay.innerText = score;
+            finalCorrectDisplay.innerText = correctCount;
+            finalWrongDisplay.innerText = wrongCount;
+            finalStreakDisplay.innerText = bestStreak;
+            finalLevelDisplay.innerText = maxTierReached + 1;
+
+            // Linha de recorde (oculta no Zen)
+            if (isZen()) {
+                finalBestLine.classList.add('hidden');
+            } else {
+                finalBestLine.classList.remove('hidden');
+                finalModeDisplay.innerText = MODE_LABELS[currentDifficulty];
+                finalBestDisplay.innerText = loadHighScores()[currentDifficulty];
+            }
+
+            if (isNewRecord) {
+                newRecordBadge.classList.remove('hidden');
+                playSound('record');
+            } else {
+                newRecordBadge.classList.add('hidden');
+            }
+
+            if (reason === 'death') {
+                endTitle.innerText = '☠️ Game Over!';
+                endMessage.innerText = 'Você errou no HARDCORE... aqui não existe segunda chance!';
+            } else if (isZen()) {
+                endTitle.innerText = '😇 Prática concluída!';
+                const accuracy = (correctCount + wrongCount) > 0
+                    ? Math.round((correctCount / (correctCount + wrongCount)) * 100)
+                    : 100;
+                endMessage.innerText = wrongCount > 0
+                    ? `O jogo tremeu ${wrongCount} ${wrongCount === 1 ? 'vez' : 'vezes'}... mas você acertou ${accuracy}%! 🧘`
+                    : 'Nenhum erro, nenhum tremor. Perfeição total! 🧘';
+            } else {
+                const t = isHardcore() ? [600, 300, 100] : [300, 150, 50];
+                endTitle.innerText = 'Fim de Jogo!';
+                if (score >= t[0]) endMessage.innerText = isHardcore() ? '🔥 IMPOSSÍVEL! Você é uma lenda do HARDCORE!' : '🏆 Você é um gênio da matemática!';
+                else if (score >= t[1]) endMessage.innerText = isHardcore() ? '😈 Insano! Você dominou o modo HARDCORE!' : '🌟 Excelente desempenho!';
+                else if (score >= t[2]) endMessage.innerText = isHardcore() ? '💀 Valente! O HARDCORE não perdoa...' : '👍 Muito bom! Continue praticando!';
+                else endMessage.innerText = isHardcore() ? '☠️ O HARDCORE te destruiu... Tente de novo!' : '💪 Não desista! Tente novamente!';
+            }
+        }
+
+        // ---------------- Timer ----------------
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            if (isZen()) return;
+            timerInterval = setInterval(() => {
+                if (!isPlaying) return;
+                timeLeft--;
+                updateTimerDisplay();
+
+                if (timeLeft <= 0) {
+                    endGame('time');
+                }
+            }, 1000);
+        }
+
+        // ---------------- Math Logic ----------------
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateQuestion(simplified = false) {
+            if (!isPlaying) return;
+
+            let num1, num2, answer, symbol;
+
+            hintUsedThisQuestion = false;
+            zenMisses = 0;
+
+            const tierOffset = isHardcore() ? HARDCORE_TIER_OFFSET : 0;
+            let tier = Math.min(MAX_TIER, currentTier + tierOffset);
+            if (simplified) tier = Math.max(0, tier - 2);
+            const shrink = simplified ? 0.6 : 1;
+
+            if (currentDifficulty === 'easy') {
+                const isAddition = Math.random() < 0.5;
+                if (isAddition) {
+                    num1 = getRandomInt(1, rangeMax(5, 3, 25, tier, shrink));
+                    num2 = getRandomInt(1, rangeMax(5, 3, 25, tier, shrink));
+                    answer = num1 + num2;
+                    symbol = '+';
+                } else {
+                    num1 = getRandomInt(2, rangeMax(10, 5, 40, tier, shrink));
+                    num2 = getRandomInt(1, Math.max(1, num1 - 1));
+                    answer = num1 - num2;
+                    symbol = '−';
+                }
+            } else if (currentDifficulty === 'medium') {
+                const ops = ['+', '−', '×'];
+                const op = ops[getRandomInt(0, 2)];
+                if (op === '+') {
+                    num1 = getRandomInt(5, rangeMax(20, 8, 80, tier, shrink));
+                    num2 = getRandomInt(5, rangeMax(20, 8, 80, tier, shrink));
+                    answer = num1 + num2;
+                } else if (op === '−') {
+                    num1 = getRandomInt(10, rangeMax(30, 8, 90, tier, shrink));
+                    num2 = getRandomInt(1, num1);
+                    answer = num1 - num2;
+                } else {
+                    num1 = getRandomInt(2, rangeMax(9, 1, 15, tier, shrink));
+                    num2 = getRandomInt(2, rangeMax(9, 1, 15, tier, shrink));
+                    answer = num1 * num2;
+                }
+                symbol = op;
+            } else if (isZen()) {
+                const ops = ['+', '+', '−', '−', '×'];
+                const op = ops[getRandomInt(0, 4)];
+                if (op === '+') {
+                    num1 = getRandomInt(1, rangeMax(5, 2, 15, tier, shrink));
+                    num2 = getRandomInt(1, rangeMax(5, 2, 15, tier, shrink));
+                    answer = num1 + num2;
+                } else if (op === '−') {
+                    num1 = getRandomInt(2, rangeMax(10, 3, 25, tier, shrink));
+                    num2 = getRandomInt(1, Math.max(1, num1 - 1));
+                    answer = num1 - num2;
+                } else {
+                    num1 = getRandomInt(2, rangeMax(5, 1, 10, tier, shrink));
+                    num2 = getRandomInt(2, rangeMax(5, 1, 10, tier, shrink));
+                    answer = num1 * num2;
+                }
+                symbol = op;
+            } else {
+                const ops = ['+', '−', '×', '÷', '√'];
+                const op = ops[getRandomInt(0, 4)];
+                if (op === '+') {
+                    num1 = getRandomInt(10, rangeMax(50, 15, 200, tier, shrink));
+                    num2 = getRandomInt(10, rangeMax(50, 15, 200, tier, shrink));
+                    answer = num1 + num2;
+                } else if (op === '−') {
+                    num1 = getRandomInt(20, rangeMax(60, 15, 220, tier, shrink));
+                    num2 = getRandomInt(5, num1);
+                    answer = num1 - num2;
+                } else if (op === '×') {
+                    num1 = getRandomInt(3, rangeMax(12, 1, 19, tier, shrink));
+                    num2 = getRandomInt(3, rangeMax(12, 1, 19, tier, shrink));
+                    answer = num1 * num2;
+                } else if (op === '÷') {
+                    num2 = getRandomInt(2, rangeMax(12, 1, 18, tier, shrink));
+                    answer = getRandomInt(2, rangeMax(12, 1, 18, tier, shrink));
+                    num1 = num2 * answer;
+                } else {
+                    answer = getRandomInt(2, rangeMax(12, 2, 30, tier, shrink));
+                    num1 = answer * answer;
+                }
+                symbol = op;
+            }
+
+            currentCorrectAnswer = answer;
+
+            questionBox.classList.remove('question-bounce');
+            questionBox.classList.remove('slide-up');
+            void questionBox.offsetWidth;
+            questionBox.classList.add('slide-up');
+
+            if (symbol === '√') {
+                questionBox.innerText = `√${num1}`;
+            } else {
+                questionBox.innerText = `${num1} ${symbol} ${num2}`;
+            }
+
+            generateOptions(answer);
+            updateHintButton();
+        }
+
+        function generateOptions(correctAnswer) {
+            let options = new Set();
+            options.add(correctAnswer);
+
+            const maxOffset = currentDifficulty === 'easy' || isZen() ? 3 : Math.max(5, Math.floor(correctAnswer * 0.15));
+
+            let safetyCounter = 0;
+            while (options.size < 4 && safetyCounter < 200) {
+                safetyCounter++;
+                let offset = getRandomInt(1, maxOffset) * (Math.random() < 0.5 ? -1 : 1);
+                let wrongAnswer = correctAnswer + offset;
+                if (wrongAnswer >= 0 && !options.has(wrongAnswer)) {
+                    options.add(wrongAnswer);
+                }
+            }
+
+            let filler = correctAnswer + maxOffset + 1;
+            while (options.size < 4) {
+                options.add(filler);
+                filler++;
+            }
+
+            const optionsArray = Array.from(options).sort(() => Math.random() - 0.5);
+            
+            optionsGrid.innerHTML = '';
+            optionsArray.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option py-4 rounded-xl bg-slate-700/50 border border-slate-600 text-2xl font-bold hover:bg-indigo-600 hover:border-indigo-500 transition-all';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, correctAnswer, btn);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function showScorePopup(text, colorClass, top = '0px') {
+            const popEl = document.createElement('div');
+            popEl.className = `score-pop text-lg ${colorClass}`;
+            popEl.innerText = text;
+            popEl.style.left = '50%';
+            popEl.style.top = top;
+            questionArea.appendChild(popEl);
+            setTimeout(() => { if (popEl.parentNode) popEl.remove(); }, 1100);
+        }
+
+        function checkAnswer(selected, correct, btnElement) {
+            if (!isPlaying || gameEnded) return;
+
+            const allButtons = optionsGrid.querySelectorAll('button');
+            allButtons.forEach(b => b.style.pointerEvents = 'none');
+            hintUsedThisQuestion = true;
+            updateHintButton();
+
+            if (selected === correct) {
+                playSound('correct');
+                streak++;
+                correctCount++;
+                if (streak > bestStreak) bestStreak = streak;
+
+                // ✨ ANIMAÇÃO DE ACERTO
+                animateCorrect(btnElement);
+
+                // 😇 ZEN
+                if (isZen()) {
+                    const firstTry = zenMisses === 0;
+                    const pointsEarned = firstTry ? 5 : 1;
+                    score += pointsEarned;
+                    scoreDisplay.innerText = score;
+                    streakDisplay.innerText = `${streak} 🔥`;
+                    streakDisplay.classList.remove('pop');
+                    void streakDisplay.offsetWidth;
+                    streakDisplay.classList.add('pop');
+                    showScorePopup(firstTry ? `+${pointsEarned} pontos ✨` : `+${pointsEarned} ponto 💜`, 'text-teal-300', '0px');
+                    syncTier();
+                    btnElement.classList.add('bg-teal-500', 'border-teal-400', 'pop');
+                    setTimeout(() => { if (isPlaying && !gameEnded) generateQuestion(); }, 350);
+                    return;
+                }
+
+                addTime(TIME_BONUS[currentDifficulty]);
+
+                let pointsEarned = isHardcore() ? 20 : 10;
+                if (streak % 3 === 0) {
+                    if (isHardcore()) {
+                        pointsEarned += 10;
+                    } else {
+                        pointsEarned += 5;
+                        grantHint();
+                    }
+                }
+
+                pointsEarned += currentTier * (isHardcore() ? 4 : 2);
+
+                score += pointsEarned;
+                scoreDisplay.innerText = score;
+                streakDisplay.innerText = `${streak} 🔥`;
+                streakDisplay.classList.remove('pop');
+                void streakDisplay.offsetWidth;
+                streakDisplay.classList.add('pop');
+
+                showScorePopup(`+${pointsEarned} pontos`, 'text-emerald-400', '0px');
+
+                const levelChange = syncTier();
+                checkLiveRecord();
+                
+                btnElement.classList.add('bg-emerald-500', 'border-emerald-400', 'pop');
+                setTimeout(() => {
+                    if (isPlaying && !gameEnded) generateQuestion();
+                }, levelChange === 'up' ? 700 : 350);
+            } else {
+                // 💥 ANIMAÇÃO DE ERRO
+                animateWrong(btnElement);
+
+                // 😇 ZEN: impossível errar — mas o jogo TREME! 🫨
+                if (isZen()) {
+                    playSound('zenmiss');
+                    streak = 0;
+                    wrongCount++;
+                    zenMisses++;
+                    streakDisplay.innerText = '0 🔥';
+
+                    zenEarthquake();
+
+                    btnElement.classList.add('opacity-30', 'line-through');
+                    btnElement.style.pointerEvents = 'none';
+
+                    allButtons.forEach(b => {
+                        if (b !== btnElement) b.style.pointerEvents = 'auto';
+                    });
+
+                    const messages = [
+                        '🫨 O jogo tremeu! Tente de novo!',
+                        '🫨 TREMEU MAIS FORTE! Cuidado...',
+                        '🌋 TERREMOTO TOTAL! Acerta logo!'
+                    ];
+                    const msgIndex = Math.min(zenMisses - 1, messages.length - 1);
+                    showScorePopup(messages[msgIndex], 'text-teal-300', '0px');
+                    return;
+                }
+
+                playSound('wrong');
+                streak = 0;
+                wrongCount++;
+                streakDisplay.innerText = '0 🔥';
+
+                // 😈 HARDCORE: ERROU = FIM DE JOGO IMEDIATO
+                if (isHardcore()) {
+                    stopMusic();
+                    setTimeout(() => playSound('death'), 200);
+                    showScorePopup('☠️ Erro fatal!', 'text-red-400', '0px');
+
+                    screenGame.classList.add('shake');
+                    btnElement.classList.add('bg-rose-500', 'border-rose-400');
+                    allButtons.forEach(b => {
+                        if (parseInt(b.innerText) === correct) {
+                            b.classList.add('bg-emerald-500', 'border-emerald-400');
+                        }
+                    });
+
+                    isPlaying = false;
+                    clearInterval(timerInterval);
+                    setTimeout(() => endGame('death'), 1200);
+                    return;
+                }
+
+                // Modo normal
+                const penalty = WRONG_PENALTY[currentDifficulty];
+                score = Math.max(0, score - penalty);
+                scoreDisplay.innerText = score;
+
+                showScorePopup(`−${penalty} pontos`, 'text-rose-400', '0px');
+
+                syncTier();
+                
+                screenGame.classList.add('shake');
+                btnElement.classList.add('bg-rose-500', 'border-rose-400');
+
+                allButtons.forEach(b => {
+                    if (parseInt(b.innerText) === correct) {
+                        b.classList.add('bg-emerald-500', 'border-emerald-400');
+                    }
+                });
+                
+                setTimeout(() => {
+                    screenGame.classList.remove('shake');
+                    if (isPlaying && !gameEnded) generateQuestion();
+                }, 700);
+            }
+        }
+
+        // ---------------- Inicialização ----------------
+        renderBestScores();
+
+        function initLoading() {
+            runLoadingScreen('Carregando o jogo...', 2300, null);
+        }
+
+        if (document.readyState === 'complete') {
+            initLoading();
+        } else {
+            window.addEventListener('load', initLoading);
+        }
+    </script>
+</body>
+</html>
