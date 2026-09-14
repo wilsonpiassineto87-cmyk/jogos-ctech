@@ -1992,11 +1992,19 @@ requestAnimationFrame(frame);
     window.dispatchEvent(ev); document.dispatchEvent(ev);
   }
   function bind(btn,code,key){
-    var down=function(e){e.preventDefault();fire('keydown',code,key);};
-    var up=function(e){e.preventDefault();fire('keyup',code,key);};
+    var isDown=false;
+    var down=function(e){ if(isDown)return; isDown=true; e.preventDefault(); fire('keydown',code,key); };
+    var up=function(e){ if(!isDown)return; isDown=false; e.preventDefault(); fire('keyup',code,key); };
+    btn.addEventListener('pointerdown',down);
+    btn.addEventListener('pointerup',up);
+    btn.addEventListener('pointercancel',up);
+    btn.addEventListener('pointerleave',up);
     btn.addEventListener('touchstart',down,{passive:false});
     btn.addEventListener('touchend',up,{passive:false});
     btn.addEventListener('touchcancel',up,{passive:false});
+    btn.addEventListener('mousedown',down);
+    btn.addEventListener('mouseup',up);
+    btn.addEventListener('mouseleave',up);
     btn.addEventListener('contextmenu',function(e){e.preventDefault();});
   }
   if(DPAD.length){
