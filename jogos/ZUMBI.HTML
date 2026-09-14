@@ -2029,29 +2029,35 @@ requestAnimationFrame(frame);
 
 <script id="tc-mouse-relay">
 (function(){
-  function relay(type,t){
+  function relay(type,t,el){
     var ev;
     try{ ev=new MouseEvent(type,{bubbles:true,cancelable:true,clientX:t.clientX,clientY:t.clientY,button:0,buttons:1,view:window}); }
     catch(e){ ev=document.createEvent('MouseEvent'); ev.initMouseEvent(type,true,true,window,0,t.screenX,t.screenY,t.clientX,t.clientY,false,false,false,false,0,null); }
-    var target=document.elementFromPoint(t.clientX,t.clientY)||document;
-    target.dispatchEvent(ev);
+    (el||document.elementFromPoint(t.clientX,t.clientY)||document).dispatchEvent(ev);
   }
-  function inOverlay(e){ return e.target && e.target.closest && e.target.closest('#tc-ov'); }
+  // Only hijack touches that start on the game <canvas> itself, so real UI
+  // buttons (JOGAR, menus, etc.) keep receiving their native click event.
+  // Touch events keep the same e.target for the whole gesture, so checking
+  // touchstart's target is enough for touchmove/touchend too.
+  var onCanvas=false;
   document.addEventListener('touchstart',function(e){
-    if(inOverlay(e))return;
     var t=e.touches[0]; if(!t)return;
+    onCanvas = e.target && e.target.tagName==='CANVAS';
+    if(!onCanvas)return;
     e.preventDefault();
-    relay('mousemove',t); relay('mousedown',t);
+    relay('mousemove',t,e.target); relay('mousedown',t,e.target);
   },{passive:false});
   document.addEventListener('touchmove',function(e){
-    if(inOverlay(e))return;
+    if(!onCanvas)return;
     var t=e.touches[0]; if(!t)return;
     e.preventDefault();
-    relay('mousemove',t);
+    relay('mousemove',t,e.target);
   },{passive:false});
   document.addEventListener('touchend',function(e){
+    if(!onCanvas)return;
     var t=e.changedTouches[0]; if(!t)return;
-    relay('mouseup',t);
+    relay('mouseup',t,e.target);
+    onCanvas=false;
   },{passive:true});
 })();
 </script>
