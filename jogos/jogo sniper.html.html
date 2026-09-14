@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<style id="tc-overflow-guard">html,body{max-width:100vw;overflow-x:hidden}</style>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta charset="UTF-8">
 <title>Sniper 3D - Multiplayer</title>
 <style>
@@ -1359,6 +1362,87 @@ document.addEventListener('click', () => {
 });
 
 init();
+</script>
+
+<style id="tc-style">
+#tc-ov{position:fixed;left:0;right:0;bottom:0;z-index:999999;display:none;justify-content:space-between;align-items:flex-end;padding:14px;pointer-events:none;font-family:Arial,Helvetica,sans-serif}
+@media (pointer:coarse){#tc-ov{display:flex}}
+#tc-ov .tc-pad{position:relative;width:150px;height:150px;pointer-events:auto;flex-shrink:0}
+#tc-ov .tc-pad button{position:absolute;width:50px;height:50px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.4);border-radius:12px;color:#fff;font-size:20px;line-height:1;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#tc-ov .tc-pad .tc-up{top:0;left:50px}
+#tc-ov .tc-pad .tc-down{bottom:0;left:50px}
+#tc-ov .tc-pad .tc-left{top:50px;left:0}
+#tc-ov .tc-pad .tc-right{top:50px;right:0}
+#tc-ov .tc-actions{display:flex;gap:10px;pointer-events:auto;align-items:flex-end;flex-shrink:0}
+#tc-ov .tc-actions button{min-width:56px;height:56px;padding:0 10px;border-radius:28px;background:rgba(0,180,255,.22);border:2px solid rgba(0,180,255,.6);color:#fff;font-weight:700;font-size:11px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+</style>
+
+<div id="tc-ov"></div>
+<script id="tc-script">
+(function(){
+  var DPAD=[{'dir': 'up', 'code': 'KeyW', 'key': 'w'}, {'dir': 'down', 'code': 'KeyS', 'key': 's'}, {'dir': 'left', 'code': 'KeyA', 'key': 'a'}, {'dir': 'right', 'code': 'KeyD', 'key': 'd'}];
+  var ACTS=[];
+  var ov=document.getElementById('tc-ov');
+  var glyph={up:'\u25B2',down:'\u25BC',left:'\u25C0',right:'\u25B6'};
+  function fire(type,code,key){
+    var ev=new KeyboardEvent(type,{code:code,key:key,bubbles:true,cancelable:true});
+    window.dispatchEvent(ev); document.dispatchEvent(ev);
+  }
+  function bind(btn,code,key){
+    var down=function(e){e.preventDefault();fire('keydown',code,key);};
+    var up=function(e){e.preventDefault();fire('keyup',code,key);};
+    btn.addEventListener('touchstart',down,{passive:false});
+    btn.addEventListener('touchend',up,{passive:false});
+    btn.addEventListener('touchcancel',up,{passive:false});
+    btn.addEventListener('contextmenu',function(e){e.preventDefault();});
+  }
+  if(DPAD.length){
+    var pad=document.createElement('div'); pad.className='tc-pad';
+    DPAD.forEach(function(d){
+      var b=document.createElement('button'); b.className='tc-'+d.dir; b.textContent=glyph[d.dir];
+      bind(b,d.code,d.key); pad.appendChild(b);
+    });
+    ov.appendChild(pad);
+  }
+  if(ACTS.length){
+    var act=document.createElement('div'); act.className='tc-actions';
+    ACTS.forEach(function(a){
+      var b=document.createElement('button'); b.textContent=a.label;
+      bind(b,a.code,a.key); act.appendChild(b);
+    });
+    ov.appendChild(act);
+  }
+})();
+</script>
+<style id="tc-canvas-ta">canvas{touch-action:none}</style>
+
+<script id="tc-mouse-relay">
+(function(){
+  function relay(type,t){
+    var ev;
+    try{ ev=new MouseEvent(type,{bubbles:true,cancelable:true,clientX:t.clientX,clientY:t.clientY,button:0,buttons:1,view:window}); }
+    catch(e){ ev=document.createEvent('MouseEvent'); ev.initMouseEvent(type,true,true,window,0,t.screenX,t.screenY,t.clientX,t.clientY,false,false,false,false,0,null); }
+    var target=document.elementFromPoint(t.clientX,t.clientY)||document;
+    target.dispatchEvent(ev);
+  }
+  function inOverlay(e){ return e.target && e.target.closest && e.target.closest('#tc-ov'); }
+  document.addEventListener('touchstart',function(e){
+    if(inOverlay(e))return;
+    var t=e.touches[0]; if(!t)return;
+    e.preventDefault();
+    relay('mousemove',t); relay('mousedown',t);
+  },{passive:false});
+  document.addEventListener('touchmove',function(e){
+    if(inOverlay(e))return;
+    var t=e.touches[0]; if(!t)return;
+    e.preventDefault();
+    relay('mousemove',t);
+  },{passive:false});
+  document.addEventListener('touchend',function(e){
+    var t=e.changedTouches[0]; if(!t)return;
+    relay('mouseup',t);
+  },{passive:true});
+})();
 </script>
 </body>
 </html>

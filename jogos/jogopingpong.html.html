@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<style id="tc-overflow-guard">html,body{max-width:100vw;overflow-x:hidden}</style>
+
+<style id="tc-canvas-fit">canvas{max-width:100vw;max-height:78vh;height:auto;display:block;margin:0 auto}</style>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta charset="UTF-8">
 <title>Ping Pong - Escolha o Modo</title>
 <style>
@@ -440,6 +445,57 @@ function backToMenu() {
 
 // Desenha a mesa inicialmente
 drawTable();
+</script>
+
+<style id="tc-style">
+#tc-ov{position:fixed;left:0;right:0;bottom:0;z-index:999999;display:none;justify-content:space-between;align-items:flex-end;padding:14px;pointer-events:none;font-family:Arial,Helvetica,sans-serif}
+@media (pointer:coarse){#tc-ov{display:flex}}
+#tc-ov .tc-pad{position:relative;width:150px;height:150px;pointer-events:auto;flex-shrink:0}
+#tc-ov .tc-pad button{position:absolute;width:50px;height:50px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.4);border-radius:12px;color:#fff;font-size:20px;line-height:1;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#tc-ov .tc-pad .tc-up{top:0;left:50px}
+#tc-ov .tc-pad .tc-down{bottom:0;left:50px}
+#tc-ov .tc-pad .tc-left{top:50px;left:0}
+#tc-ov .tc-pad .tc-right{top:50px;right:0}
+#tc-ov .tc-actions{display:flex;gap:10px;pointer-events:auto;align-items:flex-end;flex-shrink:0}
+#tc-ov .tc-actions button{min-width:56px;height:56px;padding:0 10px;border-radius:28px;background:rgba(0,180,255,.22);border:2px solid rgba(0,180,255,.6);color:#fff;font-weight:700;font-size:11px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+</style>
+
+<div id="tc-ov"></div>
+<script id="tc-script">
+(function(){
+  var DPAD=[{'dir': 'up', 'code': 'KeyW', 'key': 'w'}, {'dir': 'down', 'code': 'KeyS', 'key': 's'}];
+  var ACTS=[];
+  var ov=document.getElementById('tc-ov');
+  var glyph={up:'\u25B2',down:'\u25BC',left:'\u25C0',right:'\u25B6'};
+  function fire(type,code,key){
+    var ev=new KeyboardEvent(type,{code:code,key:key,bubbles:true,cancelable:true});
+    window.dispatchEvent(ev); document.dispatchEvent(ev);
+  }
+  function bind(btn,code,key){
+    var down=function(e){e.preventDefault();fire('keydown',code,key);};
+    var up=function(e){e.preventDefault();fire('keyup',code,key);};
+    btn.addEventListener('touchstart',down,{passive:false});
+    btn.addEventListener('touchend',up,{passive:false});
+    btn.addEventListener('touchcancel',up,{passive:false});
+    btn.addEventListener('contextmenu',function(e){e.preventDefault();});
+  }
+  if(DPAD.length){
+    var pad=document.createElement('div'); pad.className='tc-pad';
+    DPAD.forEach(function(d){
+      var b=document.createElement('button'); b.className='tc-'+d.dir; b.textContent=glyph[d.dir];
+      bind(b,d.code,d.key); pad.appendChild(b);
+    });
+    ov.appendChild(pad);
+  }
+  if(ACTS.length){
+    var act=document.createElement('div'); act.className='tc-actions';
+    ACTS.forEach(function(a){
+      var b=document.createElement('button'); b.textContent=a.label;
+      bind(b,a.code,a.key); act.appendChild(b);
+    });
+    ov.appendChild(act);
+  }
+})();
 </script>
 </body>
 </html>
