@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style id="tc-overflow-guard">html,body{max-width:100vw;overflow-x:hidden}</style>
+<title>🎂 Confeitaria da Aurora & Laura </title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+    background: linear-gradient(135deg, #ffe0ec 0%, #e0c3fc 50%, #c3e0fc 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+.screen { display: none; animation: fadeIn 0.6s ease-in; }
+.screen.active { display: block; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes sparkle {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-15px) rotate(3deg); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    25% { transform: translateX(-5px) rotate(-5deg); }
+    75% { transform: translateX(5px) rotate(5deg); }
+}
+
+@keyframes pop {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes steam {
+    0% { transform: translateY(0) scale(1); opacity: 0.8; }
+    100% { transform: translateY(-60px) scale(2); opacity: 0; }
+}
+
+@keyframes drip {
+    0% { transform: translateY(-10px); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(20px); opacity: 0; }
+}
+
+.title {
+    text-align: center;
+    font-size: 3em;
+    color: #ff6b9d;
+    text-shadow: 3px 3px 0px #fff, 6px 6px 0px rgba(255, 107, 157, 0.3);
+    margin: 30px 0;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+.subtitle {
+    text-align: center;
+    font-size: 1.5em;
+    color: #9b59b6;
+    margin-bottom: 40px;
+}
+
+.character-selection {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    flex-wrap: wrap;
+    margin: 40px 0;
+}
+
+.character-card {
+    background: white;
+    border-radius: 30px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    border: 5px solid transparent;
+    width: 300px;
+}
+
+.character-card:hover {
+    transform: translateY(-10px) scale(1.05);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+}
+
+.character-card.aurora:hover { border-color: #ff6b9d; }
+.character-card.laura:hover { border-color: #9b59b6; }
+
+.character-card.selected {
+    border-color: #ffd700;
+    transform: scale(1.05);
+    box-shadow: 0 15px 40px rgba(255, 215, 0, 0.5);
+}
+
+.character-image {
+    width: 220px;
+    height: 220px;
+    border-radius: 20px;
+    object-fit: cover;
+    margin-bottom: 20px;
+}
+
+.character-name { font-size: 2em; color: #ff6b9d; margin-bottom: 10px; }
+.character-card.laura .character-name { color: #9b59b6; }
+.character-description { color: #666; font-size: 1.1em; }
+
+.btn {
+    background: linear-gradient(135deg, #ff6b9d, #ff8fab);
+    color: white;
+    border: none;
+    padding: 18px 45px;
+    font-size: 1.4em;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
+    transition: all 0.3s ease;
+    font-family: inherit;
+    display: block;
+    margin: 30px auto;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(255, 107, 157, 0.6);
+}
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: linear-gradient(135deg, #9b59b6, #bb8fce); }
+
+/* TELA DE COZINHA */
+.kitchen-screen {
+    background: linear-gradient(180deg, #fff5f7 0%, #ffe0ec 100%);
+    border-radius: 30px;
+    padding: 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    margin: 20px auto;
+    max-width: 1100px;
+}
+
+.kitchen-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.chef-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 4px solid #ffd700;
+    object-fit: cover;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.speech-bubble {
+    background: white;
+    border-radius: 20px;
+    padding: 15px 25px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    max-width: 500px;
+    font-size: 1.1em;
+    color: #555;
+    flex: 1;
+    min-width: 250px;
+}
+
+.speech-bubble::before {
+    content: '';
+    position: absolute;
+    left: -15px;
+    top: 25px;
+    width: 0;
+    height: 0;
+    border: 10px solid transparent;
+    border-right-color: white;
+}
+
+.step-indicator {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.step-dot {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #999;
+    transition: all 0.3s;
+    font-size: 0.9em;
+}
+
+.step-dot.active {
+    background: linear-gradient(135deg, #ff6b9d, #ff8fab);
+    color: white;
+    transform: scale(1.2);
+    box-shadow: 0 5px 15px rgba(255, 107, 157, 0.5);
+}
+
+.step-dot.completed {
+    background: #4caf50;
+    color: white;
+}
+
+.kitchen-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .kitchen-body { grid-template-columns: 1fr; }
+}
+
+/* ÁREA DO BOLO */
+.cake-stage {
+    background: linear-gradient(180deg, #fffaf0 0%, #ffe4e1 100%);
+    border-radius: 25px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: 450px;
+    border: 3px dashed #ffb3d9;
+    overflow: hidden;
+}
+
+.cake-stage-label {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: white;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    color: #ff6b9d;
+    font-weight: bold;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.cake-container {
+    position: relative;
+    width: 320px;
+    height: 380px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+#cakeSvg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+}
+
+/* Partículas */
+.particle {
+    position: absolute;
+    pointer-events: none;
+    animation: particleFly 1s ease-out forwards;
+}
+
+@keyframes particleFly {
+    0% { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+
+.steam-particle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 50%;
+    animation: steam 2s ease-out infinite;
+}
+
+/* ÁREA DE AÇÃO */
+.action-area {
+    background: white;
+    border-radius: 25px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+}
+
+.action-title {
+    font-size: 1.6em;
+    color: #ff6b9d;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.action-subtitle {
+    color: #888;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1em;
+}
+
+.ingredients-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.ingredient-card {
+    background: linear-gradient(135deg, #fff5f7, #ffe0ec);
+    border: 3px solid #ffb3d9;
+    border-radius: 18px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.ingredient-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(255, 107, 157, 0.3);
+}
+
+.ingredient-card.selected {
+    background: linear-gradient(135deg, #ff6b9d, #ff8fab);
+    color: white;
+    border-color: #ff6b9d;
+    transform: scale(1.05);
+}
+
+.ingredient-emoji { font-size: 2.5em; margin-bottom: 5px; }
+.ingredient-name { font-size: 1em; font-weight: bold; }
+
+/* Ação interativa */
+.interaction-zone {
+    background: linear-gradient(135deg, #fff0f5, #ffe4e1);
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.mix-bowl {
+    font-size: 6em;
+    cursor: pointer;
+    transition: transform 0.1s;
+    display: inline-block;
+}
+
+.mix-bowl:active { transform: scale(0.9); }
+.mix-bowl.mixing { animation: shake 0.3s infinite; }
+
+.progress-container {
+    width: 100%;
+    margin-top: 15px;
+}
+
+.progress-label {
+    font-size: 1em;
+    color: #ff6b9d;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.progress-bar-outer {
+    width: 100%;
+    height: 25px;
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    border: 2px solid #ffb3d9;
+    position: relative;
+}
+
+.progress-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, #ff6b9d, #ff8fab, #ffd700);
+    width: 0%;
+    transition: width 0.3s;
+    border-radius: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar-inner::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Decoração drag */
+.decorations-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.deco-item {
+    width: 55px;
+    height: 55px;
+    background: white;
+    border: 3px solid #ffb3d9;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2em;
+    cursor: grab;
+    transition: all 0.2s;
+}
+
+.deco-item:hover { transform: scale(1.1); }
+.deco-item:active { cursor: grabbing; }
+.deco-item.selected {
+    background: #ffd700;
+    border-color: #ff6b9d;
+    transform: scale(1.1);
+}
+
+.cake-drop-zone {
+    width: 100%;
+    height: 200px;
+    position: relative;
+    background: radial-gradient(ellipse at center, rgba(255,182,193,0.2) 0%, transparent 70%);
+    border-radius: 20px;
+}
+
+.placed-deco {
+    position: absolute;
+    font-size: 2em;
+    cursor: pointer;
+    animation: pop 0.4s ease-out;
+    transition: transform 0.2s;
+}
+
+.placed-deco:hover { transform: scale(1.3); }
+
+.nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+
+.nav-buttons .btn { margin: 0; flex: 1; min-width: 140px; }
+
+/* Forno */
+.oven-animation {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,140,0,0.3), rgba(255,69,0,0.5));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    border-radius: 25px;
+    z-index: 10;
+    animation: fadeIn 0.5s;
+}
+
+.oven-emoji {
+    font-size: 8em;
+    animation: bounce 1s infinite;
+}
+
+.oven-text {
+    color: white;
+    font-size: 1.8em;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    margin-top: 20px;
+}
+
+.oven-timer {
+    color: white;
+    font-size: 3em;
+    font-weight: bold;
+    margin-top: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Tela final */
+.final-screen { text-align: center; padding: 30px 10px; }
+
+.celebration-text {
+    font-size: 2.5em;
+    color: #ff6b9d;
+    margin: 20px 0;
+    animation: sparkle 2s ease-in-out infinite;
+}
+
+.final-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin: 30px 0;
+}
+
+.final-character {
+    width: 250px;
+    height: 250px;
+    border-radius: 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    animation: float 3s ease-in-out infinite;
+    border: 5px solid #ffd700;
+}
+
+.final-cake-wrapper {
+    width: 320px;
+    height: 380px;
+    animation: bounce 2s ease-in-out infinite;
+    filter: drop-shadow(0 15px 30px rgba(0,0,0,0.3));
+}
+
+.stars {
+    font-size: 3em;
+    color: #ffd700;
+    margin: 20px 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.cake-details {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    margin: 25px auto;
+    max-width: 600px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.detail-item {
+    font-size: 1.2em;
+    margin: 12px 0;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 15px;
+    background: linear-gradient(90deg, #fff5f7, transparent);
+    border-radius: 10px;
+}
+
+.detail-label { color: #ff6b9d; font-weight: bold; }
+
+.confetti {
+    position: fixed;
+    width: 12px;
+    height: 12px;
+    top: -20px;
+    z-index: 1000;
+    animation: fall linear forwards;
+}
+
+@keyframes fall {
+    to { transform: translateY(110vh) rotate(720deg); }
+}
+
+.floating-elements {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.floating-item {
+    position: absolute;
+    font-size: 2em;
+    animation: float 6s ease-in-out infinite;
+    opacity: 0.3;
+}
+
+.score-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #8b4513;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    margin: 10px;
+    box-shadow: 0 3px 10px rgba(255,215,0,0.4);
+}
+
+@media (max-width: 768px) {
+    .title { font-size: 2em; }
+    .character-card { width: 100%; max-width: 300px; }
+    .final-display { flex-direction: column; }
+    .final-character { width: 200px; height: 200px; }
+    .final-cake-wrapper { width: 260px; height: 310px; }
+    .celebration-text { font-size: 1.8em; }
+    .ingredients-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="floating-elements" id="floatingElements"></div>
+
+<div class="container">
+    <!-- TELA 1: SELEÇÃO -->
+    <div class="screen active" id="screen1">
+        <h1 class="title">🎂 Confeitaria Mágica 🎂</h1>
+        <p class="subtitle">Escolha sua confeiteira e vamos criar um bolo incrível!</p>
+        
+        <div class="character-selection">
+            <div class="character-card aurora" onclick="selectCharacter('aurora')">
+                <img src="https://image.qwenlm.ai/public_source/bf830872-8ec0-4d3c-b1b9-1b069aafe13c/1d17ab981-000a-4d48-967a-19f2ddf088b0.png" alt="Aurora" class="character-image">
+                <h2 class="character-name">Aurora 👑</h2>
+                <p class="character-description">A princesa dos bolos de morango!</p>
+            </div>
+            
+            <div class="character-card laura" onclick="selectCharacter('laura')">
+                <img src="https://image.qwenlm.ai/public_source/bf830872-8ec0-4d3c-b1b9-1b069aafe13c/1093d186e-7067-4b3e-ad66-63f4b64c4d8c.png" alt="Laura" class="character-image">
+                <h2 class="character-name">Laura 👩‍🍳</h2>
+                <p class="character-description">A chef dos bolos de chocolate!</p>
+            </div>
+        </div>
+        
+        <button class="btn" id="startBtn" onclick="goToScreen(2)" disabled>Começar a Confeitar! 🎉</button>
+    </div>
+
+    <!-- TELA 2: COZINHA -->
+    <div class="screen" id="screen2">
+        <div class="kitchen-screen">
+            <div class="kitchen-header">
+                <img id="chefAvatar" src="" alt="Chef" class="chef-avatar">
+                <div class="speech-bubble" id="speechBubble">Olá! Vamos fazer um bolo maravilhoso!</div>
+                <div class="step-indicator" id="stepIndicator"></div>
+            </div>
+
+            <div class="kitchen-body">
+                <!-- LADO ESQUERDO: BOLO -->
+                <div class="cake-stage" id="cakeStage">
+                    <div class="cake-stage-label">🎂 Seu Bolo</div>
+                    <div class="cake-container" id="cakeContainer">
+                        <svg id="cakeSvg" viewBox="0 0 320 380" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Prato -->
+                            <ellipse cx="160" cy="360" rx="140" ry="15" fill="#d4a574" opacity="0.5"/>
+                            <ellipse cx="160" cy="355" rx="130" ry="12" fill="#f5deb3"/>
+                            <!-- Camadas serão adicionadas dinamicamente -->
+                            <g id="cakeLayers"></g>
+                            <g id="cakeDecorations"></g>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- LADO DIREITO: AÇÃO -->
+                <div class="action-area" id="actionArea">
+                    <!-- Conteúdo dinâmico -->
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" id="prevBtn" onclick="previousStep()">← Voltar</button>
+                <button class="btn" id="nextBtn" onclick="nextStep()" disabled>Próximo →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 3: FINAL -->
+    <div class="screen" id="screen3">
+        <div class="final-screen">
+            <h1 class="celebration-text">🎉 Que Bolo Lindo! 🎉</h1>
+            
+            <div class="final-display">
+                <img id="finalCharacter" src="" alt="Personagem" class="final-character">
+                <div class="final-cake-wrapper">
+                    <svg id="finalCakeSvg" viewBox="0 0 320 380" xmlns="http://www.w3.org/2000/svg"></svg>
+                </div>
+            </div>
+
+            <div class="stars">⭐⭐⭐⭐⭐</div>
+            <div class="score-badge" id="scoreBadge">Pontuação: 0</div>
+
+            <div class="cake-details" id="cakeDetails"></div>
+
+            <button class="btn" onclick="restartGame()">🔄 Fazer Outro Bolo</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============ ESTADO ============
+const state = {
+    character: null,
+    currentStep: 0, // 0=massa, 1=recheio, 2=cobertura, 3=decorar, 4=final
+    score: 0,
+    massa: null,
+    recheio: null,
+    cobertura: null,
+    decoracoes: []
+};
+
+// ============ DADOS ============
+const characterImages = {
+    aurora: 'https://image.qwenlm.ai/public_source/bf830872-8ec0-4d3c-b1b9-1b069aafe13c/1d17ab981-000a-4d48-967a-19f2ddf088b0.png',
+    laura: 'https://image.qwenlm.ai/public_source/bf830872-8ec0-4d3c-b1b9-1b069aafe13c/1093d186e-7067-4b3e-ad66-63f4b64c4d8c.png'
+};
+
+const characterNames = { aurora: 'Aurora', laura: 'Laura' };
+
+const massas = [
+    { id: 'baunilha', name: 'Baunilha', emoji: '🍰', color: '#fff5dc', side: '#f5e6b8' },
+    { id: 'chocolate', name: 'Chocolate', emoji: '🍫', color: '#6b3410', side: '#4a2208' },
+    { id: 'morango', name: 'Morango', emoji: '🍓', color: '#ffb3c6', side: '#ff8fa3' },
+    { id: 'redvelvet', name: 'Red Velvet', emoji: '❤️', color: '#c41e3a', side: '#8b0000' }
+];
+
+const recheios = [
+    { id: 'morango', name: 'Morango', emoji: '🍓', color: '#ff4d6d', filling: '#ff6b88' },
+    { id: 'chocolate', name: 'Brigadeiro', emoji: '🍫', color: '#3d1f0a', filling: '#5c2e0e' },
+    { id: 'creme', name: 'Creme', emoji: '🍦', color: '#fff8dc', filling: '#fffacd' },
+    { id: 'doceleite', name: 'Doce de Leite', emoji: '🍯', color: '#c68e4a', filling: '#a0692d' }
+];
+
+const coberturas = [
+    { id: 'chantilly', name: 'Chantilly', emoji: '🍦', color: '#ffffff', drip: '#fff5f5' },
+    { id: 'ganache', name: 'Ganache', emoji: '🍫', color: '#3d1f0a', drip: '#2a1507' },
+    { id: 'glacemorango', name: 'Glaçê Rosa', emoji: '🌸', color: '#ffb3c6', drip: '#ff8fa3' },
+    { id: 'glacazul', name: 'Glaçê Azul', emoji: '💙', color: '#a8d8ea', drip: '#7fc3db' }
+];
+
+const decoracoes = [
+    { id: 'morango', emoji: '🍓' },
+    { id: 'cereja', emoji: '🍒' },
+    { id: 'vela', emoji: '🕯️' },
+    { id: 'flor', emoji: '🌸' },
+    { id: 'estrela', emoji: '⭐' },
+    { id: 'coracao', emoji: '💖' },
+    { id: 'confete', emoji: '🎊' },
+    { id: 'folha', emoji: '🍃' }
+];
+
+const speechBubbles = {
+    massa: {
+        aurora: ['Vamos escolher a massa perfeita! ✨', 'Uma massinha fofinha para meu bolo de princesa! 👑'],
+        laura: ['Hora da massa! Qual vai ser? 🍫', 'Uma boa massa é o segredo do bolo! 👩‍🍳']
+    },
+    recheio: {
+        aurora: ['Agora o recheio! Tem que ser delicioso! 🍓', 'Qual recheio você escolhe?'],
+        laura: ['Recheio é a alma do bolo! 🎂', 'Vai brigadeiro? Vai doce de leite?']
+    },
+    cobertura: {
+        aurora: ['Uma cobertura linda para ficar perfeito! ✨', 'Deixa eu ver... qual combina mais?'],
+        laura: ['A cobertura finaliza tudo! 👩‍🍳', 'Chantilly ou ganache?']
+    },
+    decoracao: {
+        aurora: ['Agora a parte mais divertida! Decore! 🌸', 'Use sua criatividade!'],
+        laura: ['Hora de decorar como uma chef! 👩‍🍳', 'Clique nas decorações para colocar no bolo!']
+    }
+};
+
+// ============ UTIL ============
+function selectCharacter(c) {
+    state.character = c;
+    document.querySelectorAll('.character-card').forEach(x => x.classList.remove('selected'));
+    document.querySelector(`.character-card.${c}`).classList.add('selected');
+    document.getElementById('startBtn').disabled = false;
+}
+
+function goToScreen(n) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(`screen${n}`).classList.add('active');
+    if (n === 2) {
+        document.getElementById('chefAvatar').src = characterImages[state.character];
+        renderStep();
+    }
+    if (n === 3) showFinal();
+}
+
+function createFloatingElements() {
+    const container = document.getElementById('floatingElements');
+    const emojis = ['🎂', '', '🍰', '🍓', '🍫', '🌸', '⭐', '🧁'];
+    for (let i = 0; i < 15; i++) {
+        const el = document.createElement('div');
+        el.className = 'floating-item';
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        el.style.left = Math.random() * 100 + '%';
+        el.style.top = Math.random() * 100 + '%';
+        el.style.animationDelay = Math.random() * 6 + 's';
+        container.appendChild(el);
+    }
+}
+
+function setSpeech(text) {
+    const bubble = document.getElementById('speechBubble');
+    bubble.style.animation = 'none';
+    bubble.offsetHeight;
+    bubble.style.animation = 'pop 0.4s ease-out';
+    bubble.textContent = text;
+}
+
+function randomSpeech(key) {
+    const arr = speechBubbles[key][state.character];
+    setSpeech(arr[Math.floor(Math.random() * arr.length)]);
+}
+
+// ============ RENDER PASSO ============
+function renderStep() {
+    const stepNames = ['Massa', 'Recheio', 'Cobertura', 'Decoração'];
+    const indicator = document.getElementById('stepIndicator');
+    indicator.innerHTML = '';
+    stepNames.forEach((name, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'step-dot';
+        if (i === state.currentStep) dot.classList.add('active');
+        else if (i < state.currentStep) dot.classList.add('completed');
+        dot.textContent = i < state.currentStep ? '✓' : (i + 1);
+        dot.title = name;
+        indicator.appendChild(dot);
+    });
+
+    document.getElementById('prevBtn').style.display = state.currentStep > 0 ? 'block' : 'none';
+    document.getElementById('nextBtn').textContent = state.currentStep === 3 ? 'Finalizar! 🎉' : 'Próximo →';
+
+    const keys = ['massa', 'recheio', 'cobertura', 'decoracao'];
+    randomSpeech(keys[state.currentStep]);
+
+    if (state.currentStep === 0) renderMassa();
+    else if (state.currentStep === 1) renderRecheio();
+    else if (state.currentStep === 2) renderCobertura();
+    else if (state.currentStep === 3) renderDecoracao();
+
+    updateNextBtn();
+    drawCake();
+}
+
+function updateNextBtn() {
+    const btn = document.getElementById('nextBtn');
+    if (state.currentStep === 0) btn.disabled = !state.massa;
+    else if (state.currentStep === 1) btn.disabled = !state.recheio;
+    else if (state.currentStep === 2) btn.disabled = !state.cobertura;
+    else if (state.currentStep === 3) btn.disabled = state.decoracoes.length < 2;
+}
+
+// ============ PASSO 1: MASSA (com mistura interativa) ============
+function renderMassa() {
+    const area = document.getElementById('actionArea');
+    area.innerHTML = `
+        <h2 class="action-title">🥣 Escolha o Sabor da Massa</h2>
+        <p class="action-subtitle">Clique em um sabor e depois bata a massa!</p>
+        <div class="ingredients-grid" id="massaGrid"></div>
+        <div class="interaction-zone" id="mixZone" style="display:none;">
+            <div class="mix-bowl" id="mixBowl">🥣</div>
+            <div class="progress-container">
+                <div class="progress-label">Bata a massa! <span id="mixCount">0</span>/10</div>
+                <div class="progress-bar-outer">
+                    <div class="progress-bar-inner" id="mixProgress" style="width:0%"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    const grid = document.getElementById('massaGrid');
+    massas.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'ingredient-card';
+        if (state.massa === m.id) card.classList.add('selected');
+        card.innerHTML = `<div class="ingredient-emoji">${m.emoji}</div><div class="ingredient-name">${m.name}</div>`;
+        card.onclick = () => selectMassa(m.id);
+        grid.appendChild(card);
+    });
+    if (state.massa) showMixZone();
+}
+
+function selectMassa(id) {
+    state.massa = id;
+    document.querySelectorAll('#massaGrid .ingredient-card').forEach(c => c.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    // Reset mixing
+    state.mixCount = 0;
+    showMixZone();
+    drawCake();
+    updateNextBtn();
+}
+
+function showMixZone() {
+    const zone = document.getElementById('mixZone');
+    if (!zone) return;
+    zone.style.display = 'flex';
+    const bowl = document.getElementById('mixBowl');
+    state.mixCount = 0;
+    bowl.onclick = mixBowl;
+    updateMixProgress();
+}
+
+function mixBowl() {
+    state.mixCount = (state.mixCount || 0) + 1;
+    const bowl = document.getElementById('mixBowl');
+    bowl.classList.add('mixing');
+    setTimeout(() => bowl.classList.remove('mixing'), 300);
+    
+    // Partículas
+    spawnParticles(bowl, ['🥚', '🥛', '🌾', '✨']);
+    
+    updateMixProgress();
+    
+    if (state.mixCount >= 10) {
+        state.score += 10;
+        setSpeech('Massa perfeita! Vamos ao forno! 🔥');
+        setTimeout(() => showOven(), 500);
+    }
+}
+
+function updateMixProgress() {
+    const prog = document.getElementById('mixProgress');
+    const count = document.getElementById('mixCount');
+    if (prog) prog.style.width = Math.min(100, (state.mixCount / 10) * 100) + '%';
+    if (count) count.textContent = Math.min(10, state.mixCount);
+}
+
+function spawnParticles(element, emojis) {
+    const rect = element.getBoundingClientRect();
+    const stage = document.getElementById('cakeStage');
+    const stageRect = stage.getBoundingClientRect();
+    for (let i = 0; i < 6; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        p.style.fontSize = '1.5em';
+        p.style.left = (rect.left - stageRect.left + rect.width/2) + 'px';
+        p.style.top = (rect.top - stageRect.top + rect.height/2) + 'px';
+        p.style.setProperty('--tx', (Math.random() * 100 - 50) + 'px');
+        p.style.setProperty('--ty', (Math.random() * -80 - 20) + 'px');
+        stage.appendChild(p);
+        setTimeout(() => p.remove(), 1000);
+    }
+}
+
+function showOven() {
+    const stage = document.getElementById('cakeStage');
+    const oven = document.createElement('div');
+    oven.className = 'oven-animation';
+    oven.innerHTML = `
+        <div class="oven-emoji">🔥</div>
+        <div class="oven-text">Assando...</div>
+        <div class="oven-timer" id="ovenTimer">3</div>
+    `;
+    stage.appendChild(oven);
+    
+    let t = 3;
+    const timer = setInterval(() => {
+        t--;
+        const el = document.getElementById('ovenTimer');
+        if (el) el.textContent = t;
+        if (t <= 0) {
+            clearInterval(timer);
+            oven.remove();
+            setSpeech('Massa assada! Ficou perfeita! 🎂');
+            updateNextBtn();
+        }
+    }, 800);
+}
+
+// ============ PASSO 2: RECHEIO ============
+function renderRecheio() {
+    const area = document.getElementById('actionArea');
+    area.innerHTML = `
+        <h2 class="action-title">🍫 Escolha o Recheio</h2>
+        <p class="action-subtitle">Depois espalhe o recheio no bolo!</p>
+        <div class="ingredients-grid" id="recheioGrid"></div>
+        <div class="interaction-zone" id="spreadZone" style="display:none;">
+            <div class="mix-bowl" id="spreadBowl">🍰</div>
+            <div class="progress-container">
+                <div class="progress-label">Espalhe o recheio! <span id="spreadCount">0</span>/8</div>
+                <div class="progress-bar-outer">
+                    <div class="progress-bar-inner" id="spreadProgress" style="width:0%"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    const grid = document.getElementById('recheioGrid');
+    recheios.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'ingredient-card';
+        if (state.recheio === r.id) card.classList.add('selected');
+        card.innerHTML = `<div class="ingredient-emoji">${r.emoji}</div><div class="ingredient-name">${r.name}</div>`;
+        card.onclick = () => selectRecheio(r.id);
+        grid.appendChild(card);
+    });
+    if (state.recheio) showSpreadZone();
+}
+
+function selectRecheio(id) {
+    state.recheio = id;
+    state.spreadCount = 0;
+    document.querySelectorAll('#recheioGrid .ingredient-card').forEach(c => c.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    showSpreadZone();
+    drawCake();
+    updateNextBtn();
+}
+
+function showSpreadZone() {
+    const zone = document.getElementById('spreadZone');
+    if (!zone) return;
+    zone.style.display = 'flex';
+    const bowl = document.getElementById('spreadBowl');
+    state.spreadCount = 0;
+    bowl.onclick = spreadRecheio;
+    updateSpreadProgress();
+}
+
+function spreadRecheio() {
+    state.spreadCount = (state.spreadCount || 0) + 1;
+    const bowl = document.getElementById('spreadBowl');
+    bowl.classList.add('mixing');
+    setTimeout(() => bowl.classList.remove('mixing'), 300);
+    spawnParticles(bowl, ['💗', '✨', '🍯']);
+    updateSpreadProgress();
+    drawCake();
+    if (state.spreadCount >= 8) {
+        state.score += 10;
+        setSpeech('Recheio espalhado! Que delícia! 😋');
+        updateNextBtn();
+    }
+}
+
+function updateSpreadProgress() {
+    const prog = document.getElementById('spreadProgress');
+    const count = document.getElementById('spreadCount');
+    if (prog) prog.style.width = Math.min(100, (state.spreadCount / 8) * 100) + '%';
+    if (count) count.textContent = Math.min(8, state.spreadCount);
+}
+
+// ============ PASSO 3: COBERTURA ============
+function renderCobertura() {
+    const area = document.getElementById('actionArea');
+    area.innerHTML = `
+        <h2 class="action-title">🎨 Escolha a Cobertura</h2>
+        <p class="action-subtitle">Depois derrame a cobertura no bolo!</p>
+        <div class="ingredients-grid" id="coberturaGrid"></div>
+        <div class="interaction-zone" id="pourZone" style="display:none;">
+            <div class="mix-bowl" id="pourBowl">🥛</div>
+            <div class="progress-container">
+                <div class="progress-label">Cubra o bolo! <span id="pourCount">0</span>/8</div>
+                <div class="progress-bar-outer">
+                    <div class="progress-bar-inner" id="pourProgress" style="width:0%"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    const grid = document.getElementById('coberturaGrid');
+    coberturas.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'ingredient-card';
+        if (state.cobertura === c.id) card.classList.add('selected');
+        card.innerHTML = `<div class="ingredient-emoji">${c.emoji}</div><div class="ingredient-name">${c.name}</div>`;
+        card.onclick = () => selectCobertura(c.id);
+        grid.appendChild(card);
+    });
+    if (state.cobertura) showPourZone();
+}
+
+function selectCobertura(id) {
+    state.cobertura = id;
+    state.pourCount = 0;
+    document.querySelectorAll('#coberturaGrid .ingredient-card').forEach(c => c.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    showPourZone();
+    drawCake();
+    updateNextBtn();
+}
+
+function showPourZone() {
+    const zone = document.getElementById('pourZone');
+    if (!zone) return;
+    zone.style.display = 'flex';
+    const bowl = document.getElementById('pourBowl');
+    state.pourCount = 0;
+    bowl.onclick = pourCobertura;
+    updatePourProgress();
+}
+
+function pourCobertura() {
+    state.pourCount = (state.pourCount || 0) + 1;
+    const bowl = document.getElementById('pourBowl');
+    bowl.classList.add('mixing');
+    setTimeout(() => bowl.classList.remove('mixing'), 300);
+    spawnParticles(bowl, ['💧', '✨', '🤍']);
+    updatePourProgress();
+    drawCake();
+    if (state.pourCount >= 8) {
+        state.score += 10;
+        setSpeech('Cobertura perfeita! Agora vamos decorar! 🎨');
+        updateNextBtn();
+    }
+}
+
+function updatePourProgress() {
+    const prog = document.getElementById('pourProgress');
+    const count = document.getElementById('pourCount');
+    if (prog) prog.style.width = Math.min(100, (state.pourCount / 8) * 100) + '%';
+    if (count) count.textContent = Math.min(8, state.pourCount);
+}
+
+// ============ PASSO 4: DECORAÇÃO ============
+function renderDecoracao() {
+    const area = document.getElementById('actionArea');
+    area.innerHTML = `
+        <h2 class="action-title">✨ Decore o Bolo!</h2>
+        <p class="action-subtitle">Escolha decorações e clique no bolo para colocar! (mínimo 2)</p>
+        <div class="decorations-palette" id="decoPalette"></div>
+        <div class="interaction-zone" style="padding:10px;">
+            <div class="cake-drop-zone" id="dropZone"></div>
+            <div class="progress-label" style="margin-top:10px;">Decorações: <span id="decoCount">${state.decoracoes.length}</span></div>
+        </div>
+    `;
+    const palette = document.getElementById('decoPalette');
+    decoracoes.forEach(d => {
+        const item = document.createElement('div');
+        item.className = 'deco-item';
+        item.textContent = d.emoji;
+        item.onclick = () => {
+            document.querySelectorAll('.deco-item').forEach(x => x.classList.remove('selected'));
+            item.classList.add('selected');
+            state.selectedDeco = d.emoji;
+        };
+        palette.appendChild(item);
+    });
+    
+    // Auto-selecionar primeira
+    if (!state.selectedDeco) {
+        state.selectedDeco = decoracoes[0].emoji;
+        palette.firstChild.classList.add('selected');
+    }
+    
+    renderPlacedDecos();
+}
+
+function renderPlacedDecos() {
+    const zone = document.getElementById('dropZone');
+    if (!zone) return;
+    zone.innerHTML = '';
+    state.decoracoes.forEach((d, i) => {
+        const el = document.createElement('div');
+        el.className = 'placed-deco';
+        el.textContent = d.emoji;
+        el.style.left = d.x + 'px';
+        el.style.top = d.y + 'px';
+        el.onclick = () => {
+            state.decoracoes.splice(i, 1);
+            renderPlacedDecos();
+            updateDecoCount();
+            drawCake();
+            updateNextBtn();
+        };
+        zone.appendChild(el);
+    });
+}
+
+function updateDecoCount() {
+    const el = document.getElementById('decoCount');
+    if (el) el.textContent = state.decoracoes.length;
+}
+
+// Clique no SVG do bolo para adicionar decoração
+document.addEventListener('click', (e) => {
+    if (state.currentStep !== 3) return;
+    if (!state.selectedDeco) return;
+    const svg = document.getElementById('cakeSvg');
+    if (!svg) return;
+    if (!svg.contains(e.target) && e.target !== svg) return;
+    
+    const rect = svg.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Converter para coordenadas do viewBox
+    const svgX = (x / rect.width) * 320;
+    const svgY = (y / rect.height) * 380;
+    
+    // Só permite na área do topo do bolo
+    if (svgY > 180) return;
+    
+    state.decoracoes.push({ emoji: state.selectedDeco, x: svgX, y: svgY });
+    state.score += 5;
+    drawCake();
+    renderPlacedDecos();
+    updateDecoCount();
+    updateNextBtn();
+});
+
+// ============ DESENHO DO BOLO ============
+function drawCake(targetSvgId = 'cakeSvg') {
+    const svg = document.getElementById(targetSvgId);
+    if (!svg) return;
+    
+    let layers = svg.querySelector('#cakeLayers');
+    let decos = svg.querySelector('#cakeDecorations');
+    if (!layers) {
+        layers = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        layers.id = 'cakeLayers';
+        svg.appendChild(layers);
+    }
+    if (!decos) {
+        decos = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        decos.id = 'cakeDecorations';
+        svg.appendChild(decos);
+    }
+    
+    layers.innerHTML = '';
+    decos.innerHTML = '';
+    
+    // Se não tem massa, mostrar prato vazio
+    if (!state.massa) {
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', '160');
+        text.setAttribute('y', '200');
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('fill', '#ccc');
+        text.setAttribute('font-size', '20');
+        text.setAttribute('font-family', 'Comic Sans MS');
+        text.textContent = 'Escolha uma massa!';
+        layers.appendChild(text);
+        return;
+    }
+    
+    const massa = massas.find(m => m.id === state.massa);
+    
+    // Bolo em 3 camadas
+    const layersData = [
+        { y: 260, h: 60, rx: 110 }, // base
+        { y: 200, h: 60, rx: 95 },  // meio
+        { y: 140, h: 60, rx: 80 }   // topo
+    ];
+    
+    layersData.forEach((layer, i) => {
+        // Corpo da camada
+        const body = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        body.setAttribute('x', 160 - layer.rx);
+        body.setAttribute('y', layer.y);
+        body.setAttribute('width', layer.rx * 2);
+        body.setAttribute('height', layer.h);
+        body.setAttribute('rx', '8');
+        body.setAttribute('fill', massa.color);
+        body.setAttribute('stroke', massa.side);
+        body.setAttribute('stroke-width', '2');
+        layers.appendChild(body);
+        
+        // Topo da camada (elipse para dar efeito 3D)
+        const top = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        top.setAttribute('cx', '160');
+        top.setAttribute('cy', layer.y);
+        top.setAttribute('rx', layer.rx);
+        top.setAttribute('ry', '10');
+        top.setAttribute('fill', massa.side);
+        layers.appendChild(top);
+        
+        // Recheio entre camadas (exceto topo)
+        if (state.recheio && i < 2) {
+            const recheio = recheios.find(r => r.id === state.recheio);
+            const filling = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            filling.setAttribute('x', 160 - layer.rx + 5);
+            filling.setAttribute('y', layer.y + layer.h - 8);
+            filling.setAttribute('width', (layer.rx - 5) * 2);
+            filling.setAttribute('height', '8');
+            filling.setAttribute('fill', recheio.filling);
+            layers.appendChild(filling);
+            
+            // Gotinhas de recheio saindo
+            const spreadProgress = state.spreadCount || 0;
+            if (spreadProgress > 0) {
+                for (let d = 0; d < Math.min(5, Math.floor(spreadProgress / 2)); d++) {
+                    const drip = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                    const dx = 160 - layer.rx + 15 + (d * 35);
+                    drip.setAttribute('cx', dx);
+                    drip.setAttribute('cy', layer.y + layer.h + 5);
+                    drip.setAttribute('rx', '5');
+                    drip.setAttribute('ry', '8');
+                    drip.setAttribute('fill', recheio.filling);
+                    layers.appendChild(drip);
+                }
+            }
+        }
+    });
+    
+    // Cobertura no topo
+    if (state.cobertura) {
+        const cob = coberturas.find(c => c.id === state.cobertura);
+        const topLayer = layersData[2];
+        
+        // Topo com cobertura
+        const topCover = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        topCover.setAttribute('cx', '160');
+        topCover.setAttribute('cy', topLayer.y);
+        topCover.setAttribute('rx', topLayer.rx);
+        topCover.setAttribute('ry', '10');
+        topCover.setAttribute('fill', cob.color);
+        layers.appendChild(topCover);
+        
+        // Pingos escorrendo (baseado no progresso)
+        const pourProgress = state.pourCount || 0;
+        if (pourProgress > 0) {
+            const numDrips = Math.min(8, Math.floor(pourProgress));
+            for (let d = 0; d < numDrips; d++) {
+                const drip = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const startX = 160 - topLayer.rx + 10 + (d * ((topLayer.rx * 2 - 20) / 7));
+                const dripLen = 15 + (d % 3) * 8;
+                const path = `M ${startX} ${topLayer.y + 5} Q ${startX} ${topLayer.y + dripLen} ${startX} ${topLayer.y + dripLen + 5}`;
+                drip.setAttribute('d', path);
+                drip.setAttribute('stroke', cob.drip);
+                drip.setAttribute('stroke-width', '8');
+                drip.setAttribute('fill', 'none');
+                drip.setAttribute('stroke-linecap', 'round');
+                layers.appendChild(drip);
+            }
+        }
+    }
+    
+    // Decorações (só no SVG final ou na tela de decoração)
+    if (targetSvgId === 'finalCakeSvg' || state.currentStep === 3) {
+        state.decoracoes.forEach(d => {
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', d.x);
+            text.setAttribute('y', d.y);
+            text.setAttribute('font-size', '28');
+            text.setAttribute('text-anchor', 'middle');
+            text.textContent = d.emoji;
+            decos.appendChild(text);
+        });
+    }
+}
+
+// ============ NAVEGAÇÃO ============
+function nextStep() {
+    if (state.currentStep < 3) {
+        state.currentStep++;
+        renderStep();
+    } else {
+        state.score += 20; // bônus por completar
+        goToScreen(3);
+    }
+}
+
+function previousStep() {
+    if (state.currentStep > 0) {
+        state.currentStep--;
+        renderStep();
+    }
+}
+
+// ============ TELA FINAL ============
+function showFinal() {
+    document.getElementById('finalCharacter').src = characterImages[state.character];
+    
+    // Copiar SVG do bolo
+    const finalSvg = document.getElementById('finalCakeSvg');
+    finalSvg.innerHTML = document.getElementById('cakeSvg').innerHTML;
+    
+    const details = document.getElementById('cakeDetails');
+    const massa = massas.find(m => m.id === state.massa);
+    const recheio = recheios.find(r => r.id === state.recheio);
+    const cobertura = coberturas.find(c => c.id === state.cobertura);
+    
+    details.innerHTML = `
+        <h2 style="color:#ff6b9d; margin-bottom:15px;">Receita da ${characterNames[state.character]}:</h2>
+        <div class="detail-item"><span class="detail-label">Confeiteira:</span><span>${characterNames[state.character]}</span></div>
+        <div class="detail-item"><span class="detail-label">Massa:</span><span>${massa.emoji} ${massa.name}</span></div>
+        <div class="detail-item"><span class="detail-label">Recheio:</span><span>${recheio.emoji} ${recheio.name}</span></div>
+        <div class="detail-item"><span class="detail-label">Cobertura:</span><span>${cobertura.emoji} ${cobertura.name}</span></div>
+        <div class="detail-item"><span class="detail-label">Decorações:</span><span>${state.decoracoes.length} itens</span></div>
+    `;
+    
+    document.getElementById('scoreBadge').textContent = `⭐ Pontuação: ${state.score}`;
+    createConfetti();
+}
+
+function createConfetti() {
+    const colors = ['#ff6b9d', '#9b59b6', '#ffd700', '#4caf50', '#2196f3', '#ff4500'];
+    for (let i = 0; i < 80; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random() * 100 + '%';
+        c.style.background = colors[Math.floor(Math.random() * colors.length)];
+        c.style.animationDuration = (2 + Math.random() * 3) + 's';
+        c.style.animationDelay = Math.random() * 2 + 's';
+        c.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 6000);
+    }
+}
+
+function restartGame() {
+    state.currentStep = 0;
+    state.score = 0;
+    state.massa = null;
+    state.recheio = null;
+    state.cobertura = null;
+    state.decoracoes = [];
+    state.mixCount = 0;
+    state.spreadCount = 0;
+    state.pourCount = 0;
+    state.selectedDeco = null;
+    goToScreen(1);
+}
+
+// ============ INIT ============
+createFloatingElements();
+</script>
+</body>
+</html>
