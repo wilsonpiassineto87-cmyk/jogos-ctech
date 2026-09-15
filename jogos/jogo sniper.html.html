@@ -1458,7 +1458,7 @@ init();
 <style id="tc-canvas-ta">canvas{touch-action:none}</style>
 
 <style id="tc-fps-style">
-#tc-look-zone{position:fixed;top:0;right:0;bottom:170px;left:42%;z-index:999998;touch-action:none;display:none}
+#tc-look-zone{position:fixed;top:0;right:0;bottom:170px;left:0;z-index:999998;touch-action:none;display:none}
 @media (pointer:coarse){#tc-look-zone.tc-active{display:block}}
 #tc-fire-cluster{position:fixed;right:14px;bottom:14px;z-index:999999;display:none;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none}
 @media (pointer:coarse){#tc-fire-cluster.tc-active{display:flex}}
@@ -1503,15 +1503,29 @@ init();
   };
 
   // Drag-to-look: mobile can't rely on Pointer Lock, so track raw finger
-  // movement on the right-hand zone and feed the delta straight into the
-  // camera (see applyLookDelta in the main script).
+  // movement on the look zone and feed the delta straight into the camera
+  // (see applyLookDelta in the main script).
+  //
+  // Uses Pointer Events exclusively (not touch events too) so a single
+  // gesture is only ever tracked by one code path - registering both used
+  // to leave the two families racing to claim the same drag. More
+  // importantly, it calls setPointerCapture on press: without it, once the
+  // finger drags past the zone's edge (very easy to do mid-swipe) the
+  // browser stops delivering move events to it and the camera just stops
+  // turning. Capture keeps every event for that finger routed here for the
+  // whole gesture regardless of where it physically ends up on screen.
   var zone=document.getElementById('tc-look-zone');
+  var usePointer = !!window.PointerEvent;
   var activeId=null, lastX=0, lastY=0;
+
   function start(e){
     if(activeId!==null)return;
     var t=e.changedTouches?e.changedTouches[0]:e;
     activeId = e.pointerId!==undefined ? e.pointerId : t.identifier;
     lastX=t.clientX; lastY=t.clientY;
+    if(usePointer && zone.setPointerCapture){
+      try{ zone.setPointerCapture(activeId); }catch(err){}
+    }
     e.preventDefault();
   }
   function move(e){
@@ -1531,14 +1545,17 @@ init();
       for(var i=0;i<e.changedTouches.length;i++){ if(e.changedTouches[i].identifier===activeId){ activeId=null; return; } }
     } else if(e.pointerId===activeId){ activeId=null; }
   }
-  zone.addEventListener('touchstart',start,{passive:false});
-  zone.addEventListener('touchmove',move,{passive:false});
-  zone.addEventListener('touchend',end,{passive:false});
-  zone.addEventListener('touchcancel',end,{passive:false});
-  zone.addEventListener('pointerdown',start);
-  zone.addEventListener('pointermove',move);
-  zone.addEventListener('pointerup',end);
-  zone.addEventListener('pointercancel',end);
+  if(usePointer){
+    zone.addEventListener('pointerdown',start);
+    zone.addEventListener('pointermove',move);
+    zone.addEventListener('pointerup',end);
+    zone.addEventListener('pointercancel',end);
+  } else {
+    zone.addEventListener('touchstart',start,{passive:false});
+    zone.addEventListener('touchmove',move,{passive:false});
+    zone.addEventListener('touchend',end,{passive:false});
+    zone.addEventListener('touchcancel',end,{passive:false});
+  }
 })();
 </script>
 </body>
