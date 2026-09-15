@@ -27,7 +27,7 @@
 <body>
     <div id="ui">
         <h1>🌙 MISSÃO LUNAR 🌙</h1>
-        <p>← → MOVER &nbsp;|&nbsp; ESPAÇO ATIRAR</p>
+        <p>← → ↑ ↓ MOVER &nbsp;|&nbsp; ESPAÇO ATIRAR</p>
         <div id="scoreEl">PONTOS: 0</div>
     </div>
     <div id="bossName">⚠ DREADNOUGHT LUNAR ⚠</div>
@@ -62,10 +62,22 @@ for(let i=0;i<12;i++) craters.push({x:Math.random()*800,y:480+Math.random()*120,
 for(let i=0;i<10;i++) moonMountains.push({x:i*100-50,h:Math.random()*60+30,w:130});
 
 const player={x:380,y:490,w:40,h:46,speed:6};
+const PLAYER_Y_MIN=180,PLAYER_Y_MAX=550;
 let bullets=[],enemies=[],particles=[],bossBullets=[];
-const keys={ArrowRight:false,ArrowLeft:false};
-document.addEventListener('keydown',e=>{if(e.code==='ArrowRight')keys.ArrowRight=true;if(e.code==='ArrowLeft')keys.ArrowLeft=true;if(e.code==='Space'&&gameActive)shoot();});
-document.addEventListener('keyup',e=>{if(e.code==='ArrowRight')keys.ArrowRight=false;if(e.code==='ArrowLeft')keys.ArrowLeft=false;});
+const keys={ArrowRight:false,ArrowLeft:false,ArrowUp:false,ArrowDown:false};
+document.addEventListener('keydown',e=>{
+    if(e.code==='ArrowRight')keys.ArrowRight=true;
+    if(e.code==='ArrowLeft')keys.ArrowLeft=true;
+    if(e.code==='ArrowUp')keys.ArrowUp=true;
+    if(e.code==='ArrowDown')keys.ArrowDown=true;
+    if(e.code==='Space'&&gameActive)shoot();
+});
+document.addEventListener('keyup',e=>{
+    if(e.code==='ArrowRight')keys.ArrowRight=false;
+    if(e.code==='ArrowLeft')keys.ArrowLeft=false;
+    if(e.code==='ArrowUp')keys.ArrowUp=false;
+    if(e.code==='ArrowDown')keys.ArrowDown=false;
+});
 
 function shoot(){
     bullets.push({x:player.x+4,y:player.y+8,w:3,h:12,speed:9,color:'#00eeff'});
@@ -114,8 +126,8 @@ function drawShip(p){
 function drawEnemy(e){
     const cx=e.x+e.w/2,cy=e.y+e.h/2;
     ctx.save();ctx.translate(cx,cy);
-    // Glow
-    ctx.shadowBlur=8;ctx.shadowColor=e.color;
+    // Glow (removed per-enemy shadowBlur - very costly on mobile with several
+    // enemies on screen every frame; a plain fill still reads fine)
     ctx.fillStyle=e.color;
     if(e.type==='drone'){
         ctx.beginPath();ctx.moveTo(0,e.h/2);ctx.lineTo(e.w/2,-e.h/3);ctx.lineTo(-e.w/2,-e.h/3);ctx.closePath();ctx.fill();
@@ -125,7 +137,6 @@ function drawEnemy(e){
         ctx.fillRect(-e.w/2,-e.h/2,e.w,e.h);
         ctx.fillStyle='#ff8866';ctx.fillRect(-e.w/4,-e.h/4,e.w/2,e.h/2);
     }
-    ctx.shadowBlur=0;
     // Núcleo
     ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,e.h*0.1,2,0,Math.PI*2);ctx.fill();
     ctx.restore();
@@ -168,6 +179,8 @@ function update(){
     if(!gameActive)return;
     if(keys.ArrowRight&&player.x+player.w<canvas.width)player.x+=player.speed;
     if(keys.ArrowLeft&&player.x>0)player.x-=player.speed;
+    if(keys.ArrowUp&&player.y>PLAYER_Y_MIN)player.y-=player.speed;
+    if(keys.ArrowDown&&player.y+player.h<PLAYER_Y_MAX)player.y+=player.speed;
 
     // Estrelas piscando
     stars.forEach(s=>{s.bright+=((Math.random()-0.5)*0.05);if(s.bright>1)s.bright=1;if(s.bright<0.2)s.bright=0.2;});
@@ -255,37 +268,39 @@ function draw(){
     ctx.shadowBlur=0;
 
     if(gameActive)drawShip(player);
-    bullets.forEach(b=>{ctx.fillStyle=b.color;ctx.shadowBlur=8;ctx.shadowColor=b.color;ctx.fillRect(b.x,b.y,b.w,b.h);});ctx.shadowBlur=0;
+    bullets.forEach(b=>{ctx.fillStyle=b.color;ctx.fillRect(b.x,b.y,b.w,b.h);});
     enemies.forEach(e=>drawEnemy(e));
     if(boss)drawBoss(boss);
-    bossBullets.forEach(b=>{ctx.fillStyle=b.color;ctx.shadowBlur=10;ctx.shadowColor=b.color;ctx.beginPath();ctx.arc(b.x+b.w/2,b.y+b.h/2,b.w/2+1,0,Math.PI*2);ctx.fill();});ctx.shadowBlur=0;
+    bossBullets.forEach(b=>{ctx.fillStyle=b.color;ctx.beginPath();ctx.arc(b.x+b.w/2,b.y+b.h/2,b.w/2+1,0,Math.PI*2);ctx.fill();});
     particles.forEach(p=>{ctx.fillStyle=p.color;ctx.globalAlpha=p.life/(p.size>3?40:22);ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;
 }
 
 function loop(){update();draw();if(gameActive)requestAnimationFrame(loop);}
 function endGame(){gameActive=false;finalScoreEl.innerText=`Pontos: ${score}`;gameOverScreen.style.display='block';bossBarContainer.style.display='none';bossName.style.display='none';if(window.setTouchControlsActive)window.setTouchControlsActive(false);}
 function winGame(){gameActive=false;winScoreEl.innerText=`Pontos Finais: ${score}`;winScreen.style.display='block';if(window.setTouchControlsActive)window.setTouchControlsActive(false);}
-function restartGame(){score=0;frames=0;bossSpawned=false;boss=null;bullets=[];enemies=[];particles=[];bossBullets=[];player.x=380;scoreEl.innerText='PONTOS: 0';gameOverScreen.style.display='none';winScreen.style.display='none';bossBarContainer.style.display='none';bossName.style.display='none';bossBar.style.width='100%';gameActive=true;if(window.setTouchControlsActive)window.setTouchControlsActive(true);loop();}
+function restartGame(){score=0;frames=0;bossSpawned=false;boss=null;bullets=[];enemies=[];particles=[];bossBullets=[];player.x=380;player.y=490;scoreEl.innerText='PONTOS: 0';gameOverScreen.style.display='none';winScreen.style.display='none';bossBarContainer.style.display='none';bossName.style.display='none';bossBar.style.width='100%';gameActive=true;if(window.setTouchControlsActive)window.setTouchControlsActive(true);loop();}
 loop();
 </script>
 
 <style id="tc-style">
 #tc-ov{position:fixed;left:0;right:0;bottom:0;z-index:999999;display:none;justify-content:space-between;align-items:flex-end;padding:14px;pointer-events:none;font-family:Arial,Helvetica,sans-serif}
 @media (pointer:coarse){#tc-ov.tc-active{display:flex}}
-#tc-ov .tc-pad{position:relative;width:150px;height:110px;pointer-events:auto;flex-shrink:0}
-#tc-ov .tc-pad button{position:absolute;width:60px;height:60px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.4);border-radius:12px;color:#fff;font-size:22px;line-height:1;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
-#tc-ov .tc-pad .tc-left{top:25px;left:0}
-#tc-ov .tc-pad .tc-right{top:25px;right:0}
+#tc-ov .tc-pad{position:relative;width:150px;height:150px;pointer-events:auto;flex-shrink:0}
+#tc-ov .tc-pad button{position:absolute;width:50px;height:50px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.4);border-radius:12px;color:#fff;font-size:20px;line-height:1;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#tc-ov .tc-pad .tc-up{top:0;left:50px}
+#tc-ov .tc-pad .tc-down{bottom:0;left:50px}
+#tc-ov .tc-pad .tc-left{top:50px;left:0}
+#tc-ov .tc-pad .tc-right{top:50px;right:0}
 #tc-ov .tc-actions{display:flex;gap:10px;pointer-events:auto;align-items:flex-end;flex-shrink:0}
 #tc-ov .tc-actions button{min-width:64px;height:64px;padding:0 14px;border-radius:32px;background:rgba(0,180,255,.22);border:2px solid rgba(0,180,255,.6);color:#fff;font-weight:700;font-size:12px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 </style>
 <div id="tc-ov"></div>
 <script id="tc-script">
 (function(){
-  var DPAD=[{dir:'left',code:'ArrowLeft',key:'ArrowLeft'},{dir:'right',code:'ArrowRight',key:'ArrowRight'}];
+  var DPAD=[{dir:'up',code:'ArrowUp',key:'ArrowUp'},{dir:'down',code:'ArrowDown',key:'ArrowDown'},{dir:'left',code:'ArrowLeft',key:'ArrowLeft'},{dir:'right',code:'ArrowRight',key:'ArrowRight'}];
   var ACTS=[{code:'Space',key:' ',label:'TIRO'}];
   var ov=document.getElementById('tc-ov');
-  var glyph={left:'◀',right:'▶'};
+  var glyph={up:'▲',down:'▼',left:'◀',right:'▶'};
   function fire(type,code,key){
     var ev=new KeyboardEvent(type,{code:code,key:key,bubbles:true,cancelable:true});
     window.dispatchEvent(ev); document.dispatchEvent(ev);
