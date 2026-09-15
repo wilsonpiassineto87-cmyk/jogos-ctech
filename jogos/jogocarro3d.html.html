@@ -839,6 +839,7 @@ let frameCount=0;
 document.getElementById('startBtn').addEventListener('click',()=>{
   document.getElementById('menu').style.display='none';
   started=true;initAudio();
+  if(window.setTouchControlsActive)window.setTouchControlsActive(true);
   camState.pos.set(activeCar.group.position.x,3,activeCar.group.position.z-8);
   camState.look.set(activeCar.group.position.x,1,activeCar.group.position.z);
   startMission(0);
@@ -1095,7 +1096,7 @@ animate();
 
 <style id="tc-style">
 #tc-ov{position:fixed;left:0;right:0;bottom:0;z-index:999999;display:none;justify-content:space-between;align-items:flex-end;padding:14px;pointer-events:none;font-family:Arial,Helvetica,sans-serif}
-@media (pointer:coarse){#tc-ov{display:flex}}
+@media (pointer:coarse){#tc-ov.tc-active{display:flex}}
 #tc-ov .tc-pad{position:relative;width:150px;height:150px;pointer-events:auto;flex-shrink:0}
 #tc-ov .tc-pad button{position:absolute;width:50px;height:50px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.4);border-radius:12px;color:#fff;font-size:20px;line-height:1;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 #tc-ov .tc-pad .tc-up{top:0;left:50px}
@@ -1141,6 +1142,7 @@ animate();
     });
     ov.appendChild(pad);
   }
+  window.setTouchControlsActive=function(active){ ov.classList.toggle('tc-active',!!active); };
   if(ACTS.length){
     var act=document.createElement('div'); act.className='tc-actions';
     ACTS.forEach(function(a){
