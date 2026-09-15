@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style id="tc-overflow-guard">html,body{max-width:100vw;overflow-x:hidden}</style>
+    <title>Quiz de Matemática - Ranking Completo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-hint {
+            background: #ffd700;
+            color: #333;
+            font-size: 0.9em;
+            padding: 10px 20px;
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .info-box h3 {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .info-box p {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .question-box {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.3em;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-left: 5px solid #667eea;
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .timer.warning {
+            color: #e74c3c;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hint-text {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* RANKING ESTILOS */
+        .ranking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .ranking-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-box h3 {
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .stat-box p {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .ranking-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .ranking-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .ranking-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .ranking-table tr.current-player {
+            background: #fff3cd;
+            font-weight: bold;
+        }
+
+        .ranking-table tr.current-player:hover {
+            background: #ffe69c;
+        }
+
+        .rank {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+
+        .medal {
+            font-size: 1.5em;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .level-indicator {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .level-1 { background: #28a745; color: white; }
+        .level-2 { background: #ffc107; color: #333; }
+        .level-3 { background: #dc3545; color: white; }
+
+        .hearts {
+            font-size: 1.5em;
+            letter-spacing: 5px;
+        }
+
+        .no-ranking {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            .game-info, .ranking-stats {
+                grid-template-columns: 1fr;
+            }
+            .ranking-table {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- MENU PRINCIPAL -->
+        <div id="menu">
+            <h1>🧮 Quiz Matemático</h1>
+            <p class="subtitle">Teste seus conhecimentos e chegue ao topo!</p>
+            
+            <div class="menu">
+                <button class="btn btn-primary" onclick="startGame()">🎮 Jogar</button>
+                <button class="btn btn-secondary" onclick="showRanking()">🏆 Ranking</button>
+                <button class="btn btn-secondary" onclick="showInstructions()">📖 Como Jogar</button>
+            </div>
+        </div>
+
+        <!-- TELA DO JOGO -->
+        <div id="game" class="hidden">
+            <div class="game-info">
+                <div class="info-box">
+                    <h3>Nível</h3>
+                    <p id="level">1</p>
+                </div>
+                <div class="info-box">
+                    <h3>Pontuação</h3>
+                    <p id="score">0</p>
+                </div>
+                <div class="info-box">
+                    <h3>Vidas</h3>
+                    <p class="hearts" id="hearts">❤️❤️❤️</p>
+                </div>
+            </div>
+
+            <div class="timer" id="timer">⏱️ Tempo: 30s</div>
+
+            <div id="question-container">
+                <span class="level-indicator level-1" id="level-badge">NÍVEL 1 - FÁCIL</span>
+                <div class="question-box" id="question">
+                    Carregando pergunta...
+                </div>
+            </div>
+
+            <div class="hint-text" id="hint"></div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div class="input-group">
+                <input type="text" id="answer" placeholder="Digite sua resposta..." autocomplete="off">
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-primary" onclick="checkAnswer()">Responder</button>
+                <button class="btn btn-hint" onclick="showHint()">💡 Dica</button>
+                <button class="btn btn-secondary" onclick="skipQuestion()">Pular</button>
+            </div>
+        </div>
+
+        <!-- TELA DE GAME OVER -->
+        <div id="gameOver" class="hidden">
+            <h1>💀 Game Over</h1>
+            <div class="question-box">
+                <p id="finalMessage"></p>
+            </div>
+            <div class="game-info">
+                <div class="info-box">
+                    <h3>Pontuação Final</h3>
+                    <p id="finalScore">0</p>
+                </div>
+                <div class="info-box">
+                    <h3>Perguntas</h3>
+                    <p id="finalQuestions">0</p>
+                </div>
+                <div class="info-box">
+                    <h3>Acertos</h3>
+                    <p id="finalCorrect">0</p>
+                </div>
+            </div>
+            <div class="menu">
+                <button class="btn btn-primary" onclick="saveAndShowRanking()">🏆 Salvar e Ver Ranking</button>
+                <button class="btn btn-secondary" onclick="saveAndRestart()">🔄 Jogar Novamente</button>
+                <button class="btn btn-secondary" onclick="backToMenu()">🏠 Menu Principal</button>
+            </div>
+        </div>
+
+        <!-- TELA DE RANKING -->
+        <div id="ranking" class="hidden">
+            <div class="ranking-header">
+                <h1>🏆 Ranking</h1>
+                <button class="btn btn-danger" onclick="clearRanking()" style="padding: 10px 20px; font-size: 0.9em;">🗑️ Limpar</button>
+            </div>
+            
+            <div class="ranking-stats" id="rankingStats">
+                <div class="stat-box">
+                    <h3>Total de Jogos</h3>
+                    <p id="totalGames">0</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Melhor Pontuação</h3>
+                    <p id="bestScore">0</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Média de Pontos</h3>
+                    <p id="avgScore">0</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Nível Máximo</h3>
+                    <p id="maxLevel">1</p>
+                </div>
+            </div>
+
+            <table class="ranking-table">
+                <thead>
+                    <tr>
+                        <th>Posição</th>
+                        <th>Jogador</th>
+                        <th>Pontuação</th>
+                        <th>Nível</th>
+                        <th>Acertos</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody id="rankingBody">
+                </tbody>
+            </table>
+
+            <div class="menu" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="backToMenu()">🏠 Voltar ao Menu</button>
+            </div>
+        </div>
+
+        <!-- TELA DE INSTRUÇÕES -->
+        <div id="instructions" class="hidden">
+            <h1>📖 Como Jogar</h1>
+            <div class="question-box" style="text-align: left; font-size: 1em;">
+                <ul style="list-style: none; line-height: 2;">
+                    <li>❤️ Você começa com 3 vidas</li>
+                    <li>🎯 Cada resposta correta ganha pontos</li>
+                    <li>📈 A cada 3 acertos, sobe de nível</li>
+                    <li>💰 Nível 1: 10 pts | Nível 2: 20 pts | Nível 3: 30 pts</li>
+                    <li>⏱️ 30 segundos para responder</li>
+                    <li>💡 Pode pedir dicas (sem penalidade)</li>
+                    <li>⏭️ Pode pular perguntas difíceis</li>
+                    <li>🏆 Tente chegar ao topo do ranking!</li>
+                    <li>💾 Seu ranking é salvo automaticamente</li>
+                </ul>
+            </div>
+            <div class="menu">
+                <button class="btn btn-primary" onclick="backToMenu()">🏠 Voltar</button>
+            </div>
+        </div>
+
+        <!-- INPUT DE NOME -->
+        <div id="nameInput" class="hidden">
+            <h1>👤 Bem-vindo!</h1>
+            <div class="input-group">
+                <input type="text" id="playerName" placeholder="Digite seu nome..." maxlength="20">
+            </div>
+            <div class="buttons">
+                <button class="btn btn-primary" onclick="confirmName()">Começar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // BANCO DE PERGUNTAS
+        const questions = {
+            1: [
+                { q: "Quanto é 15 + 27?", a: 42, hint: "Some as unidades primeiro: 5+7=12" },
+                { q: "Quanto é 8 × 7?", a: 56, hint: "8 × 7 = 8 × (5+2) = 40 + 16" },
+                { q: "Quanto é 100 - 38?", a: 62, hint: "100 - 40 = 60, depois some 2" },
+                { q: "Quanto é 144 ÷ 12?", a: 12, hint: "12 × 12 = 144" },
+                { q: "Quanto é 25% de 80?", a: 20, hint: "25% é 1/4, então 80 ÷ 4" },
+                { q: "Quanto é 9²?", a: 81, hint: "9 × 9" },
+                { q: "Qual a raiz quadrada de 64?", a: 8, hint: "8 × 8 = 64" }
+            ],
+            2: [
+                { q: "Resolva: 3x + 6 = 21. Qual o valor de x?", a: 5, hint: "Subtraia 6 de ambos os lados, depois divida por 3" },
+                { q: "Qual a área de um retângulo 8cm × 5cm?", a: 40, hint: "Área = base × altura" },
+                { q: "Quanto é 2³ + 3²?", a: 17, hint: "2³=8 e 3²=9, então 8+9" },
+                { q: "Um produto de R$80 com 20% de desconto custa quanto?", a: 64, hint: "20% de 80 = 16, depois 80-16" },
+                { q: "Qual a média de 10, 20 e 30?", a: 20, hint: "Some tudo (60) e divida por 3" },
+                { q: "Quanto é 3/4 de 100?", a: 75, hint: "Divida 100 por 4 e multiplique por 3" },
+                { q: "Se 2x = 18, quanto vale x?", a: 9, hint: "Divida 18 por 2" }
+            ],
+            3: [
+                { q: "Resolva: x² - 5x + 6 = 0. Qual o maior valor de x?", a: 3, hint: "Fatore: (x-2)(x-3)=0" },
+                { q: "Qual o volume de um cubo com aresta 4cm?", a: 64, hint: "Volume = aresta³ = 4³" },
+                { q: "Se log₂(8) = x, quanto vale x?", a: 3, hint: "2 elevado a quanto dá 8?" },
+                { q: "Em um triângulo retângulo, se os catetos são 3 e 4, quanto vale a hipotenusa?", a: 5, hint: "Teorema de Pitágoras: a² = b² + c²" },
+                { q: "Quanto é 5! (5 fatorial)?", a: 120, hint: "5×4×3×2×1" },
+                { q: "Qual a derivada de f(x) = 3x²?", a: "6x", hint: "Multiplique o expoente pelo coeficiente e diminua 1 do expoente" },
+                { q: "Quanto é √144 + √81?", a: 21, hint: "√144=12 e √81=9" }
+            ]
+        };
+
+        // VARIÁVEIS DO JOGO
+        let currentLevel = 1;
+        let score = 0;
+        let lives = 3;
+        let correctAnswers = 0;
+        let totalQuestions = 0;
+        let timer;
+        let timeLeft = 30;
+        let currentQuestion = null;
+        let playerName = "";
+        let usedHints = [];
+        let lastGameId = null;
+
+        // INICIAR JOGO
+        function startGame() {
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('nameInput').classList.remove('hidden');
+            document.getElementById('playerName').value = '';
+            document.getElementById('playerName').focus();
+        }
+
+        function confirmName() {
+            playerName = document.getElementById('playerName').value.trim() || "Jogador";
+            document.getElementById('nameInput').classList.add('hidden');
+            document.getElementById('game').classList.remove('hidden');
+            resetGame();
+            nextQuestion();
+        }
+
+        function resetGame() {
+            currentLevel = 1;
+            score = 0;
+            lives = 3;
+            correctAnswers = 0;
+            totalQuestions = 0;
+            usedHints = [];
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('level').textContent = currentLevel;
+            document.getElementById('score').textContent = score;
+            document.getElementById('hearts').textContent = '❤️'.repeat(lives) + '🖤'.repeat(3-lives);
+            
+            const badge = document.getElementById('level-badge');
+            badge.textContent = `NÍVEL ${currentLevel} - ${currentLevel === 1 ? 'FÁCIL' : currentLevel === 2 ? 'MÉDIO' : 'DIFÍCIL'}`;
+            badge.className = `level-indicator level-${currentLevel}`;
+        }
+
+        function nextQuestion() {
+            clearInterval(timer);
+            timeLeft = 30;
+            document.getElementById('timer').classList.remove('warning');
+            document.getElementById('timer').textContent = `⏱️ Tempo: ${timeLeft}s`;
+            document.getElementById('answer').value = '';
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('hint').style.display = 'none';
+            document.getElementById('answer').focus();
+
+            const levelQuestions = questions[currentLevel];
+            currentQuestion = levelQuestions[Math.floor(Math.random() * levelQuestions.length)];
+            
+            document.getElementById('question').textContent = currentQuestion.q;
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = `⏱️ Tempo: ${timeLeft}s`;
+                
+                if (timeLeft <= 10) {
+                    document.getElementById('timer').classList.add('warning');
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function checkAnswer() {
+            const userAnswer = document.getElementById('answer').value.trim().replace(',', '.');
+            if (!userAnswer) return;
+
+            clearInterval(timer);
+            totalQuestions++;
+            
+            const isCorrect = parseFloat(userAnswer) === currentQuestion.a || 
+                             userAnswer.toLowerCase() === String(currentQuestion.a).toLowerCase();
+
+            const feedback = document.getElementById('feedback');
+            feedback.style.display = 'block';
+
+            if (isCorrect) {
+                const points = currentLevel * 10;
+                score += points;
+                correctAnswers++;
+                
+                feedback.className = 'feedback correct';
+                feedback.textContent = `✅ Correto! +${points} pontos`;
+                
+                if (correctAnswers % 3 === 0 && currentLevel < 3) {
+                    setTimeout(() => {
+                        currentLevel++;
+                        alert(`🎉 Parabéns! Você subiu para o Nível ${currentLevel}!`);
+                        updateDisplay();
+                    }, 1000);
+                }
+                
+                setTimeout(() => {
+                    nextQuestion();
+                }, 2000);
+            } else {
+                lives--;
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = `❌ Errado! A resposta correta era: ${currentQuestion.a}`;
+                updateDisplay();
+                
+                if (lives <= 0) {
+                    setTimeout(gameOver, 2000);
+                } else {
+                    setTimeout(() => {
+                        nextQuestion();
+                    }, 2000);
+                }
+            }
+            
+            updateDisplay();
+        }
+
+        function handleTimeOut() {
+            totalQuestions++;
+            lives--;
+            updateDisplay();
+            
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback incorrect';
+            feedback.textContent = `⏰ Tempo esgotado! A resposta era: ${currentQuestion.a}`;
+            feedback.style.display = 'block';
+            
+            if (lives <= 0) {
+                setTimeout(gameOver, 2000);
+            } else {
+                setTimeout(() => {
+                    nextQuestion();
+                }, 2000);
+            }
+        }
+
+        function showHint() {
+            if (currentQuestion && !usedHints.includes(currentQuestion.q)) {
+                document.getElementById('hint').textContent = `💡 Dica: ${currentQuestion.hint}`;
+                document.getElementById('hint').style.display = 'block';
+                usedHints.push(currentQuestion.q);
+            }
+        }
+
+        function skipQuestion() {
+            clearInterval(timer);
+            totalQuestions++;
+            nextQuestion();
+        }
+
+        function gameOver() {
+            document.getElementById('game').classList.add('hidden');
+            document.getElementById('gameOver').classList.remove('hidden');
+            
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalQuestions').textContent = totalQuestions;
+            document.getElementById('finalCorrect').textContent = correctAnswers;
+            document.getElementById('finalMessage').textContent = 
+                `Você chegou ao Nível ${currentLevel} e fez ${score} pontos!`;
+        }
+
+        // SALVAR NO RANKING
+        function saveToRanking() {
+            const ranking = JSON.parse(localStorage.getItem('quizRanking') || '[]');
+            
+            const newEntry = {
+                id: Date.now(),
+                name: playerName,
+                score: score,
+                level: currentLevel,
+                correct: correctAnswers,
+                total: totalQuestions,
+                date: new Date().toLocaleString('pt-BR'),
+                timestamp: Date.now()
+            };
+            
+            ranking.push(newEntry);
+            ranking.sort((a, b) => b.score - a.score);
+            
+            localStorage.setItem('quizRanking', JSON.stringify(ranking.slice(0, 50)));
+            
+            lastGameId = newEntry.id;
+            return newEntry.id;
+        }
+
+        function saveAndShowRanking() {
+            saveToRanking();
+            showRanking();
+        }
+
+        function saveAndRestart() {
+            saveToRanking();
+            document.getElementById('gameOver').classList.add('hidden');
+            document.getElementById('game').classList.remove('hidden');
+            resetGame();
+            nextQuestion();
+        }
+
+        // MOSTRAR RANKING COMPLETO
+        function showRanking() {
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('gameOver').classList.add('hidden');
+            document.getElementById('ranking').classList.remove('hidden');
+            
+            const ranking = JSON.parse(localStorage.getItem('quizRanking') || '[]');
+            
+            // Calcular estatísticas
+            updateRankingStats(ranking);
+            
+            // Montar tabela
+            const tbody = document.getElementById('rankingBody');
+            tbody.innerHTML = '';
+            
+            if (ranking.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="no-ranking">Nenhuma pontuação registrada ainda!<br>Jogue para aparecer aqui 🎮</td></tr>';
+            } else {
+                ranking.forEach((player, index) => {
+                    const tr = document.createElement('tr');
+                    
+                    // Destacar jogador atual
+                    if (player.id === lastGameId) {
+                        tr.classList.add('current-player');
+                    }
+                    
+                    // Medalhas para top 3
+                    let rankDisplay = '';
+                    if (index === 0) rankDisplay = '<span class="medal">🥇</span>';
+                    else if (index === 1) rankDisplay = '<span class="medal">🥈</span>';
+                    else if (index === 2) rankDisplay = '<span class="medal">🥉</span>';
+                    else rankDisplay = `<span class="rank">${index + 1}º</span>`;
+                    
+                    tr.innerHTML = `
+                        <td>${rankDisplay}</td>
+                        <td>${player.name}${player.id === lastGameId ? ' (você)' : ''}</td>
+                        <td><strong>${player.score}</strong> pts</td>
+                        <td>Nível ${player.level}</td>
+                        <td>${player.correct}/${player.total}</td>
+                        <td>${player.date}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        // ATUALIZAR ESTATÍSTICAS DO RANKING
+        function updateRankingStats(ranking) {
+            const totalGames = ranking.length;
+            const bestScore = ranking.length > 0 ? ranking[0].score : 0;
+            const avgScore = ranking.length > 0 ? Math.round(ranking.reduce((sum, p) => sum + p.score, 0) / ranking.length) : 0;
+            const maxLevel = ranking.length > 0 ? Math.max(...ranking.map(p => p.level)) : 1;
+            
+            document.getElementById('totalGames').textContent = totalGames;
+            document.getElementById('bestScore').textContent = bestScore;
+            document.getElementById('avgScore').textContent = avgScore;
+            document.getElementById('maxLevel').textContent = maxLevel;
+        }
+
+        // LIMPAR RANKING
+        function clearRanking() {
+            if (confirm('⚠️ Tem certeza que deseja apagar TODO o ranking?\nEsta ação não pode ser desfeita!')) {
+                localStorage.removeItem('quizRanking');
+                lastGameId = null;
+                showRanking();
+                alert('✅ Ranking apagado com sucesso!');
+            }
+        }
+
+        function showInstructions() {
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('instructions').classList.remove('hidden');
+        }
+
+        function backToMenu() {
+            document.getElementById('game').classList.add('hidden');
+            document.getElementById('gameOver').classList.add('hidden');
+            document.getElementById('ranking').classList.add('hidden');
+            document.getElementById('instructions').classList.add('hidden');
+            document.getElementById('nameInput').classList.add('hidden');
+            document.getElementById('menu').classList.remove('hidden');
+            lastGameId = null;
+        }
+
+        // Permitir pressionar Enter para responder
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                if (!document.getElementById('game').classList.contains('hidden')) {
+                    checkAnswer();
+                } else if (!document.getElementById('nameInput').classList.contains('hidden')) {
+                    confirmName();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

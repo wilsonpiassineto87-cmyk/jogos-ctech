@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style id="tc-overflow-guard">html,body{max-width:100vw;overflow-x:hidden}</style>
+    <title>Aeronave Lunar - Missão na Lua</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        body { margin:0; background:#000; display:flex; justify-content:center; align-items:center; height:100vh; color:#c0d0e0; font-family:'Orbitron',sans-serif; overflow:hidden; }
+        canvas { border:2px solid #3a5f7f; box-shadow:0 0 40px rgba(60,120,180,0.3); max-width:100vw; max-height:78vh; }
+        #ui { position:absolute; top:15px; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; z-index:20; }
+        h1 { margin:0; font-size:22px; letter-spacing:4px; color:#7ab8e0; text-shadow:0 0 15px rgba(122,184,224,0.6); }
+        p { margin:4px 0; color:#607888; font-size:12px; letter-spacing:1px; }
+        #scoreEl { font-size:18px; margin-top:6px; color:#a0d0f0; }
+        #bossBarContainer { position:absolute; top:60px; left:50%; transform:translateX(-50%); width:380px; height:14px; background:rgba(10,15,25,0.8); border:1px solid #ff4444; border-radius:7px; display:none; z-index:20; overflow:hidden; }
+        #bossBar { width:100%; height:100%; background:linear-gradient(90deg,#cc2222,#ff6633); transition:width 0.15s; }
+        #bossName { position:absolute; top:42px; left:50%; transform:translateX(-50%); color:#ff4444; font-size:14px; font-weight:bold; display:none; z-index:20; text-shadow:0 0 10px rgba(255,50,50,0.5); letter-spacing:2px; }
+        #gameOverScreen,#winScreen { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; display:none; background:rgba(5,8,15,0.95); padding:50px; border:1px solid #3a5f7f; border-radius:8px; z-index:30; backdrop-filter:blur(5px); }
+        #winScreen { border-color:#44cc88; }
+        button { background:transparent; color:#7ab8e0; border:1px solid #7ab8e0; padding:14px 30px; font-size:14px; cursor:pointer; font-family:'Orbitron',sans-serif; font-weight:bold; margin-top:22px; border-radius:4px; transition:all 0.3s; text-transform:uppercase; letter-spacing:2px; }
+        button:hover { background:#7ab8e0; color:#000; box-shadow:0 0 20px rgba(122,184,224,0.5); }
+        #winScreen button { color:#44cc88; border-color:#44cc88; }
+        #winScreen button:hover { background:#44cc88; color:#000; box-shadow:0 0 20px rgba(68,204,136,0.5); }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <h1>🌙 MISSÃO LUNAR 🌙</h1>
+        <p>← → MOVER &nbsp;|&nbsp; ESPAÇO ATIRAR</p>
+        <div id="scoreEl">PONTOS: 0</div>
+    </div>
+    <div id="bossName">⚠ DREADNOUGHT LUNAR ⚠</div>
+    <div id="bossBarContainer"><div id="bossBar"></div></div>
+    <div id="gameOverScreen">
+        <h1 style="color:#ff4444;font-size:28px;text-shadow:0 0 15px rgba(255,50,50,0.5);">NAVE PERDIDA</h1>
+        <h2 id="finalScore" style="color:#607888;font-weight:normal;">Pontos: 0</h2>
+        <button onclick="restartGame()">Reiniciar Missão</button>
+    </div>
+    <div id="winScreen">
+        <h1 style="color:#44cc88;font-size:28px;text-shadow:0 0 15px rgba(68,204,136,0.5);">LUA SEGURA!</h1>
+        <h2 id="winScore" style="color:#607888;font-weight:normal;">Pontos: 0</h2>
+        <p style="color:#44cc88;margin-top:10px;letter-spacing:1px;">Dreadnought destruído</p>
+        <button onclick="restartGame()">Nova Missão</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas=document.getElementById('gameCanvas'),ctx=canvas.getContext('2d');
+const scoreEl=document.getElementById('scoreEl'),gameOverScreen=document.getElementById('gameOverScreen');
+const winScreen=document.getElementById('winScreen'),finalScoreEl=document.getElementById('finalScore');
+const winScoreEl=document.getElementById('winScore'),bossBarContainer=document.getElementById('bossBarContainer');
+const bossBar=document.getElementById('bossBar'),bossName=document.getElementById('bossName');
+canvas.width=800;canvas.height=600;
+
+let score=0,gameActive=true,frames=0,bossSpawned=false,boss=null;
+
+// Cenário lunar
+let stars=[],craters=[],moonMountains=[];
+for(let i=0;i<200;i++) stars.push({x:Math.random()*800,y:Math.random()*600,size:Math.random()*1.8+0.2,bright:Math.random()});
+for(let i=0;i<12;i++) craters.push({x:Math.random()*800,y:480+Math.random()*120,r:Math.random()*25+10});
+for(let i=0;i<10;i++) moonMountains.push({x:i*100-50,h:Math.random()*60+30,w:130});
+
+const player={x:380,y:490,w:40,h:46,speed:6};
+let bullets=[],enemies=[],particles=[],bossBullets=[];
+const keys={ArrowRight:false,ArrowLeft:false};
+document.addEventListener('keydown',e=>{if(e.code==='ArrowRight')keys.ArrowRight=true;if(e.code==='ArrowLeft')keys.ArrowLeft=true;if(e.code==='Space'&&gameActive)shoot();});
+document.addEventListener('keyup',e=>{if(e.code==='ArrowRight')keys.ArrowRight=false;if(e.code==='ArrowLeft')keys.ArrowLeft=false;});
+
+function shoot(){
+    bullets.push({x:player.x+4,y:player.y+8,w:3,h:12,speed:9,color:'#00eeff'});
+    bullets.push({x:player.x+player.w-7,y:player.y+8,w:3,h:12,speed:9,color:'#00eeff'});
+}
+
+function spawnEnemy(){
+    if(bossSpawned)return;
+    let type='drone';
+    if(score>=150)type='fighter';
+    if(score>=350)type='cruiser';
+    const c={drone:{w:26,h:26,speed:3,hp:1,color:'#aa4444',pts:10},fighter:{w:38,h:36,speed:2.2,hp:2,color:'#cc5533',pts:25},cruiser:{w:52,h:48,speed:1.4,hp:4,color:'#993322',pts:50}}[type];
+    enemies.push({x:Math.random()*(canvas.width-c.w),y:-c.h,w:c.w,h:c.h,speed:c.speed+(score/800),hp:c.hp,maxHp:c.hp,color:c.color,pts:c.pts,type,wobble:Math.random()*6});
+}
+
+function spawnBoss(){bossSpawned=true;bossBarContainer.style.display='block';bossName.style.display='block';
+    boss={x:canvas.width/2-100,y:-220,w:200,h:140,speed:1.3,hp:150,maxHp:150,dir:1,shootTimer:0};}
+
+function createExplosion(x,y,color,big){
+    const n=big?30:12;for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-0.5)*(big?12:7),vy:(Math.random()-0.5)*(big?12:7),life:big?40:22,color,size:Math.random()*(big?5:3)+1});}
+
+// AERONAVE FUTURISTA DO JOGADOR
+function drawShip(p){
+    const cx=p.x+p.w/2;
+    // Propulsores (chama azul animada)
+    const fl=Math.random()*10+6;
+    ctx.fillStyle='#0066cc';ctx.beginPath();ctx.moveTo(cx-7,p.y+p.h);ctx.lineTo(cx,p.y+p.h+fl);ctx.lineTo(cx+7,p.y+p.h);ctx.fill();
+    ctx.fillStyle='#66ccff';ctx.beginPath();ctx.moveTo(cx-3,p.y+p.h);ctx.lineTo(cx,p.y+p.h+fl*0.5);ctx.lineTo(cx+3,p.y+p.h);ctx.fill();
+    // Asas principais
+    ctx.fillStyle='#1a3050';
+    ctx.beginPath();ctx.moveTo(cx,p.y+8);ctx.lineTo(p.x+p.w+8,p.y+p.h-4);ctx.lineTo(p.x+p.w-2,p.y+p.h);ctx.lineTo(cx,p.y+p.h-8);ctx.lineTo(p.x+2,p.y+p.h);ctx.lineTo(p.x-8,p.y+p.h-4);ctx.closePath();ctx.fill();
+    // Fuselagem
+    ctx.fillStyle='#2a4a6a';
+    ctx.beginPath();ctx.moveTo(cx,p.y);ctx.lineTo(cx+9,p.y+p.h-6);ctx.lineTo(cx-9,p.y+p.h-6);ctx.closePath();ctx.fill();
+    // Cockpit brilhante
+    ctx.fillStyle='#00ddff';ctx.shadowBlur=10;ctx.shadowColor='#00ddff';
+    ctx.beginPath();ctx.ellipse(cx,p.y+16,4,9,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    // Detalhes neon nas asas
+    ctx.strokeStyle='#00aadd';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(p.x+2,p.y+p.h-8);ctx.lineTo(p.x-4,p.y+p.h-4);ctx.moveTo(p.x+p.w-2,p.y+p.h-8);ctx.lineTo(p.x+p.w+4,p.y+p.h-4);ctx.stroke();
+    // Armas laterais
+    ctx.fillStyle='#334455';ctx.fillRect(p.x+1,p.y+18,5,10);ctx.fillRect(p.x+p.w-6,p.y+18,5,10);
+}
+
+// INIMIGOS ESPACIAIS
+function drawEnemy(e){
+    const cx=e.x+e.w/2,cy=e.y+e.h/2;
+    ctx.save();ctx.translate(cx,cy);
+    // Glow
+    ctx.shadowBlur=8;ctx.shadowColor=e.color;
+    ctx.fillStyle=e.color;
+    if(e.type==='drone'){
+        ctx.beginPath();ctx.moveTo(0,e.h/2);ctx.lineTo(e.w/2,-e.h/3);ctx.lineTo(-e.w/2,-e.h/3);ctx.closePath();ctx.fill();
+    }else if(e.type==='fighter'){
+        ctx.beginPath();ctx.moveTo(0,e.h/2);ctx.lineTo(e.w/2,0);ctx.lineTo(e.w/4,-e.h/2);ctx.lineTo(-e.w/4,-e.h/2);ctx.lineTo(-e.w/2,0);ctx.closePath();ctx.fill();
+    }else{
+        ctx.fillRect(-e.w/2,-e.h/2,e.w,e.h);
+        ctx.fillStyle='#ff8866';ctx.fillRect(-e.w/4,-e.h/4,e.w/2,e.h/2);
+    }
+    ctx.shadowBlur=0;
+    // Núcleo
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,e.h*0.1,2,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    if(e.maxHp>1){ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(e.x,e.y-7,e.w,3);ctx.fillStyle='#44cc88';ctx.fillRect(e.x,e.y-7,e.w*(e.hp/e.maxHp),3);}
+}
+
+// CHEFÃO: DREADNOUGHT LUNAR
+function drawBoss(b){
+    const cx=b.x+b.w/2;
+    ctx.save();
+    // Aura
+    ctx.shadowBlur=25;ctx.shadowColor='#ff3322';
+    // Corpo principal
+    ctx.fillStyle='#3a1515';
+    ctx.beginPath();ctx.moveTo(cx,b.y+b.h);ctx.lineTo(cx+b.w*0.4,b.y+15);ctx.lineTo(cx-b.w*0.4,b.y+15);ctx.closePath();ctx.fill();
+    // Asas pesadas
+    ctx.fillStyle='#4a2020';
+    ctx.beginPath();ctx.moveTo(cx,b.y+b.h*0.2);ctx.lineTo(b.x+b.w+35,b.y+b.h*0.6);ctx.lineTo(b.x+b.w+25,b.y+b.h*0.75);ctx.lineTo(cx,b.y+b.h*0.55);ctx.lineTo(b.x-25,b.y+b.h*0.75);ctx.lineTo(b.x-35,b.y+b.h*0.6);ctx.closePath();ctx.fill();
+    ctx.shadowBlur=0;
+    // Motores triplos
+    [-40,0,40].forEach(off=>{
+        const fl=Math.random()*12+8;
+        ctx.fillStyle='#cc2200';ctx.beginPath();ctx.moveTo(cx+off-6,b.y+15);ctx.lineTo(cx+off,b.y+15-fl);ctx.lineTo(cx+off+6,b.y+15);ctx.fill();
+        ctx.fillStyle='#ff8844';ctx.beginPath();ctx.moveTo(cx+off-3,b.y+15);ctx.lineTo(cx+off,b.y+15-fl*0.5);ctx.lineTo(cx+off+3,b.y+15);ctx.fill();
+    });
+    // Núcleo pulsante
+    const pulse=Math.sin(frames*0.1)*0.3+0.7;
+    ctx.fillStyle=`rgba(255,50,30,${pulse})`;ctx.shadowBlur=20;ctx.shadowColor='#ff3322';
+    ctx.beginPath();ctx.arc(cx,b.y+b.h*0.55,18,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    // Canhões laterais
+    ctx.fillStyle='#2a0a0a';
+    ctx.fillRect(b.x+8,b.y+b.h-8,12,18);ctx.fillRect(b.x+b.w-20,b.y+b.h-8,12,18);
+    // Blindagem detalhe
+    ctx.strokeStyle='#663333';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(cx-b.w*0.3,b.y+b.h*0.35);ctx.lineTo(cx+b.w*0.3,b.y+b.h*0.35);ctx.stroke();
+    ctx.restore();
+}
+
+function update(){
+    if(!gameActive)return;
+    if(keys.ArrowRight&&player.x+player.w<canvas.width)player.x+=player.speed;
+    if(keys.ArrowLeft&&player.x>0)player.x-=player.speed;
+
+    // Estrelas piscando
+    stars.forEach(s=>{s.bright+=((Math.random()-0.5)*0.05);if(s.bright>1)s.bright=1;if(s.bright<0.2)s.bright=0.2;});
+
+    bullets.forEach((b,i)=>{b.y-=b.speed;if(b.y<-20)bullets.splice(i,1);});
+    if(!bossSpawned&&frames%42===0)spawnEnemy();
+    if(!bossSpawned&&score>=500)spawnBoss();
+
+    enemies.forEach((e,ei)=>{
+        e.y+=e.speed;e.wobble+=0.04;e.x+=Math.sin(e.wobble)*0.7;
+        if(e.y>canvas.height+60)enemies.splice(ei,1);
+        if(player.x+5<e.x+e.w&&player.x+player.w-5>e.x&&player.y+5<e.y+e.h&&player.y+player.h-5>e.y){createExplosion(player.x+player.w/2,player.y+player.h/2,'#00aaff',true);endGame();}
+        bullets.forEach((b,bi)=>{
+            if(b.x<e.x+e.w&&b.x+b.w>e.x&&b.y<e.y+e.h&&b.y+b.h>e.y){
+                e.hp--;bullets.splice(bi,1);
+                if(e.hp<=0){createExplosion(e.x+e.w/2,e.y+e.h/2,e.color,e.type==='cruiser');enemies.splice(ei,1);score+=e.pts;scoreEl.innerText=`PONTOS: ${score}`;}
+            }});
+    });
+
+    if(boss){
+        if(boss.y<50)boss.y+=1.8;else{boss.x+=boss.speed*boss.dir;if(boss.x<=5||boss.x+boss.w>=canvas.width-5)boss.dir*=-1;}
+        boss.shootTimer++;
+        if(boss.shootTimer%28===0&&boss.y>=50){
+            bossBullets.push({x:boss.x+boss.w/2-4,y:boss.y+boss.h,w:8,h:16,speed:5,color:'#ff4422'});
+            if(boss.hp<boss.maxHp*0.5){
+                bossBullets.push({x:boss.x+15,y:boss.y+boss.h-10,w:6,h:12,speed:4.5,color:'#ff6633',vx:-1});
+                bossBullets.push({x:boss.x+boss.w-21,y:boss.y+boss.h-10,w:6,h:12,speed:4.5,color:'#ff6633',vx:1});
+            }
+            if(boss.hp<boss.maxHp*0.25){ // Fase 3: tiro lateral extra
+                bossBullets.push({x:boss.x+5,y:boss.y+boss.h*0.7,w:5,h:10,speed:4,color:'#ff8844',vx:-1.5,vy:2});
+                bossBullets.push({x:boss.x+boss.w-10,y:boss.y+boss.h*0.7,w:5,h:10,speed:4,color:'#ff8844',vx:1.5,vy:2});
+            }
+        }
+        bullets.forEach((b,bi)=>{
+            if(b.x<boss.x+boss.w&&b.x+b.w>boss.x&&b.y<boss.y+boss.h&&b.y+b.h>boss.y){
+                boss.hp--;bullets.splice(bi,1);bossBar.style.width=`${Math.max(0,(boss.hp/boss.maxHp)*100)}%`;
+                if(boss.hp<=0){
+                    for(let k=0;k<5;k++)setTimeout(()=>createExplosion(boss.x+Math.random()*boss.w,boss.y+Math.random()*boss.h,'#ff4422',true),k*100);
+                    boss=null;bossBarContainer.style.display='none';bossName.style.display='none';winGame();
+                }
+            }});
+        if(player.x+5<boss.x+boss.w&&player.x+player.w-5>boss.x&&player.y+5<boss.y+boss.h&&player.y+player.h-5>boss.y){createExplosion(player.x+player.w/2,player.y+player.h/2,'#00aaff',true);endGame();}
+    }
+
+    bossBullets.forEach((b,i)=>{
+        b.y+=b.speed;if(b.vx)b.x+=b.vx;if(b.vy)b.y+=b.vy- b.speed; // vy substitui speed padrão se existir
+        if(b.vy) b.y = b.y; // já somado acima, corrigir:
+        // Recalcular posição correta para balas com vy customizado
+        if(b.y>canvas.height+20||b.x<-20||b.x>canvas.width+20)bossBullets.splice(i,1);
+        if(player.x+5<b.x+b.w&&player.x+player.w-5>b.x&&player.y+5<b.y+b.h&&player.y+player.h-5>b.y){createExplosion(player.x+player.w/2,player.y+player.h/2,'#00aaff',true);endGame();}
+    });
+
+    particles.forEach((p,i)=>{p.x+=p.vx;p.y+=p.vy;p.life--;if(p.life<=0)particles.splice(i,1);});
+    frames++;
+}
+
+function draw(){
+    // Céu espacial preto
+    ctx.fillStyle='#020408';ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // Estrelas
+    stars.forEach(s=>{ctx.fillStyle=`rgba(200,220,255,${s.bright})`;ctx.beginPath();ctx.arc(s.x,s.y,s.size,0,Math.PI*2);ctx.fill();});
+
+    // Superfície lunar
+    const moonGrad=ctx.createLinearGradient(0,460,0,600);moonGrad.addColorStop(0,'#3a3a3a');moonGrad.addColorStop(0.3,'#2a2a2a');moonGrad.addColorStop(1,'#1a1a1a');
+    ctx.fillStyle=moonGrad;
+    ctx.beginPath();ctx.moveTo(0,480);
+    // Terreno irregular
+    for(let x=0;x<=800;x+=20){ctx.lineTo(x,480-Math.sin(x*0.02)*15-Math.cos(x*0.05)*8);}
+    ctx.lineTo(800,600);ctx.lineTo(0,600);ctx.closePath();ctx.fill();
+
+    // Montanhas lunares ao fundo
+    ctx.fillStyle='#252525';moonMountains.forEach(m=>{ctx.beginPath();ctx.moveTo(m.x,480);ctx.lineTo(m.x+m.w/2,480-m.h);ctx.lineTo(m.x+m.w,480);ctx.fill();});
+
+    // Crateras
+    craters.forEach(c=>{
+        ctx.fillStyle='rgba(15,15,15,0.5)';ctx.beginPath();ctx.ellipse(c.x,c.y,c.r,c.r*0.4,0,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='rgba(60,60,60,0.3)';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(c.x,c.y,c.r,c.r*0.4,0,0,Math.PI*2);ctx.stroke();
+    });
+
+    // Terra ao longe
+    ctx.fillStyle='#2244aa';ctx.shadowBlur=30;ctx.shadowColor='#2244aa';
+    ctx.beginPath();ctx.arc(680,80,25,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#33aa55';ctx.beginPath();ctx.arc(685,75,10,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+
+    if(gameActive)drawShip(player);
+    bullets.forEach(b=>{ctx.fillStyle=b.color;ctx.shadowBlur=8;ctx.shadowColor=b.color;ctx.fillRect(b.x,b.y,b.w,b.h);});ctx.shadowBlur=0;
+    enemies.forEach(e=>drawEnemy(e));
+    if(boss)drawBoss(boss);
+    bossBullets.forEach(b=>{ctx.fillStyle=b.color;ctx.shadowBlur=10;ctx.shadowColor=b.color;ctx.beginPath();ctx.arc(b.x+b.w/2,b.y+b.h/2,b.w/2+1,0,Math.PI*2);ctx.fill();});ctx.shadowBlur=0;
+    particles.forEach(p=>{ctx.fillStyle=p.color;ctx.globalAlpha=p.life/(p.size>3?40:22);ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;
+}
+
+function loop(){update();draw();if(gameActive)requestAnimationFrame(loop);}
+function endGame(){gameActive=false;finalScoreEl.innerText=`Pontos: ${score}`;gameOverScreen.style.display='block';bossBarContainer.style.display='none';bossName.style.display='none';if(window.setTouchControlsActive)window.setTouchControlsActive(false);}
+function winGame(){gameActive=false;winScoreEl.innerText=`Pontos Finais: ${score}`;winScreen.style.display='block';if(window.setTouchControlsActive)window.setTouchControlsActive(false);}
+function restartGame(){score=0;frames=0;bossSpawned=false;boss=null;bullets=[];enemies=[];particles=[];bossBullets=[];player.x=380;scoreEl.innerText='PONTOS: 0';gameOverScreen.style.display='none';winScreen.style.display='none';bossBarContainer.style.display='none';bossName.style.display='none';bossBar.style.width='100%';gameActive=true;if(window.setTouchControlsActive)window.setTouchControlsActive(true);loop();}
+loop();
+</script>
+
+<style id="tc-style">
+#tc-ov{position:fixed;left:0;right:0;bottom:0;z-index:999999;display:none;justify-content:space-between;align-items:flex-end;padding:14px;pointer-events:none;font-family:Arial,Helvetica,sans-serif}
+@media (pointer:coarse){#tc-ov.tc-active{display:flex}}
+#tc-ov .tc-pad{position:relative;width:150px;height:110px;pointer-events:auto;flex-shrink:0}
+#tc-ov .tc-pad button{position:absolute;width:60px;height:60px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.4);border-radius:12px;color:#fff;font-size:22px;line-height:1;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#tc-ov .tc-pad .tc-left{top:25px;left:0}
+#tc-ov .tc-pad .tc-right{top:25px;right:0}
+#tc-ov .tc-actions{display:flex;gap:10px;pointer-events:auto;align-items:flex-end;flex-shrink:0}
+#tc-ov .tc-actions button{min-width:64px;height:64px;padding:0 14px;border-radius:32px;background:rgba(0,180,255,.22);border:2px solid rgba(0,180,255,.6);color:#fff;font-weight:700;font-size:12px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+</style>
+<div id="tc-ov"></div>
+<script id="tc-script">
+(function(){
+  var DPAD=[{dir:'left',code:'ArrowLeft',key:'ArrowLeft'},{dir:'right',code:'ArrowRight',key:'ArrowRight'}];
+  var ACTS=[{code:'Space',key:' ',label:'TIRO'}];
+  var ov=document.getElementById('tc-ov');
+  var glyph={left:'◀',right:'▶'};
+  function fire(type,code,key){
+    var ev=new KeyboardEvent(type,{code:code,key:key,bubbles:true,cancelable:true});
+    window.dispatchEvent(ev); document.dispatchEvent(ev);
+  }
+  function bind(btn,code,key){
+    var isDown=false;
+    var down=function(e){ if(isDown)return; isDown=true; e.preventDefault(); e.stopPropagation(); fire('keydown',code,key); };
+    var up=function(e){ if(!isDown)return; isDown=false; e.preventDefault(); e.stopPropagation(); fire('keyup',code,key); };
+    btn.addEventListener('pointerdown',down);
+    btn.addEventListener('pointerup',up);
+    btn.addEventListener('pointercancel',up);
+    btn.addEventListener('pointerleave',up);
+    btn.addEventListener('touchstart',down,{passive:false});
+    btn.addEventListener('touchend',up,{passive:false});
+    btn.addEventListener('touchcancel',up,{passive:false});
+    btn.addEventListener('mousedown',down);
+    btn.addEventListener('mouseup',up);
+    btn.addEventListener('mouseleave',up);
+    btn.addEventListener('contextmenu',function(e){e.preventDefault();});
+  }
+  window.setTouchControlsActive=function(active){ ov.classList.toggle('tc-active',!!active); };
+  var pad=document.createElement('div'); pad.className='tc-pad';
+  DPAD.forEach(function(d){
+    var b=document.createElement('button'); b.className='tc-'+d.dir; b.textContent=glyph[d.dir];
+    bind(b,d.code,d.key); pad.appendChild(b);
+  });
+  ov.appendChild(pad);
+  var act=document.createElement('div'); act.className='tc-actions';
+  ACTS.forEach(function(a){
+    var b=document.createElement('button'); b.textContent=a.label;
+    bind(b,a.code,a.key); act.appendChild(b);
+  });
+  ov.appendChild(act);
+  window.setTouchControlsActive(true);
+})();
+</script>
+</body>
+</html>

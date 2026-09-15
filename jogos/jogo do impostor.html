@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style id="tc-overflow-guard">html,body{max-width:100vw;overflow-x:hidden}</style>
+<title>Among Us - Jogo de Funções</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a2e;
+  font-family: 'Segoe UI', sans-serif;
+  overflow: hidden;
+  color: white;
+  height: 100vh;
+}
+
+#menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: radial-gradient(ellipse at center, #1a1a4e 0%, #0a0a2e 70%);
+}
+
+#menu h1 {
+  font-size: 4em;
+  color: #ff1744;
+  text-shadow: 0 0 30px rgba(255,23,68,0.5);
+  margin-bottom: 10px;
+  letter-spacing: 3px;
+}
+
+#menu h2 {
+  font-size: 1.3em;
+  color: #aaa;
+  margin-bottom: 40px;
+}
+
+.role-select {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 30px;
+  max-width: 700px;
+}
+
+.role-card {
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 15px;
+  padding: 20px 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.role-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1);
+}
+
+.role-card.selected {
+  border-color: #ff1744;
+  background: rgba(255,23,68,0.15);
+  box-shadow: 0 0 20px rgba(255,23,68,0.3);
+}
+
+.role-card .icon { font-size: 2.5em; margin-bottom: 8px; }
+.role-card .name { font-size: 1em; font-weight: bold; margin-bottom: 5px; }
+.role-card .team { font-size: 0.75em; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 8px; }
+.role-card .desc { font-size: 0.7em; color: #aaa; line-height: 1.4; }
+
+.team-crew { background: #1565c0; }
+.team-impostor { background: #c62828; }
+.team-neutral { background: #6a1b9a; }
+
+#startBtn {
+  padding: 15px 60px;
+  font-size: 1.3em;
+  background: linear-gradient(135deg, #ff1744, #d50000);
+  border: none;
+  border-radius: 30px;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  letter-spacing: 2px;
+  transition: all 0.3s;
+}
+
+#startBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(255,23,68,0.5);
+}
+
+#gameContainer {
+  display: none;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+#gameCanvas {
+  display: block;
+  background: #1a1a2e;
+}
+
+#hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.7);
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+#hud .role-info {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 5px;
+}
+
+#hud .ability-info {
+  color: #aaa;
+  font-size: 0.85em;
+}
+
+#actionBtns {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.action-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.6);
+  color: white;
+  font-size: 0.7em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.action-btn:hover { transform: scale(1.1); }
+.action-btn.kill { border-color: #ff1744; background: rgba(255,23,68,0.3); }
+.action-btn.report { border-color: #ffab00; background: rgba(255,171,0,0.3); }
+.action-btn.ability { border-color: #7c4dff; background: rgba(124,77,255,0.3); }
+.action-btn.task { border-color: #00e676; background: rgba(0,230,118,0.3); }
+.action-btn.meeting { border-color: #ff6d00; background: rgba(255,109,0,0.3); }
+.action-btn.disabled { opacity: 0.3; pointer-events: none; }
+.action-btn.ready { animation: pulse 1s infinite; }
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+  50% { box-shadow: 0 0 25px rgba(255,255,255,0.6); }
+}
+
+#minimap {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 200px;
+  height: 150px;
+  background: rgba(0,0,0,0.7);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+#meetingOverlay {
+  display: none;
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85);
+  z-index: 100;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#meetingOverlay.active { display: flex; }
+
+#meetingOverlay h2 {
+  font-size: 2em;
+  color: #ff6d00;
+  margin-bottom: 10px;
+  text-shadow: 0 0 20px rgba(255,109,0,0.5);
+}
+
+#voteList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  max-width: 900px;
+  margin-bottom: 10px;
+}
+
+.vote-card {
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  min-width: 90px;
+}
+
+.vote-card:hover { border-color: #ff6d00; background: rgba(255,109,0,0.15); }
+.vote-card.voted { border-color: #ff1744; background: rgba(255,23,68,0.2); }
+.vote-card.dead { opacity: 0.3; pointer-events: none; }
+.vote-card .vname { font-weight: bold; margin-bottom: 3px; font-size: 0.85em; }
+.vote-card .vcolor { width: 18px; height: 18px; border-radius: 50%; margin: 3px auto; }
+.vote-card .votes-count { font-size: 0.75em; color: #aaa; }
+
+#meetingControls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+#skipVoteBtn {
+  padding: 8px 20px;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+#meetingTimer {
+  font-size: 1.3em;
+  color: #ff6d00;
+}
+
+/* CHAT */
+#chatBox {
+  width: 600px;
+  max-width: 90vw;
+  height: 180px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  overflow-y: auto;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 0.85em;
+}
+
+#chatBox .chat-msg {
+  margin-bottom: 5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.05);
+}
+
+#chatBox .chat-msg .sender {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+#chatInput {
+  display: flex;
+  gap: 8px;
+  width: 600px;
+  max-width: 90vw;
+}
+
+#chatInput input {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  color: white;
+  font-size: 0.9em;
+  outline: none;
+}
+
+#chatInput button {
+  padding: 8px 20px;
+  background: #ff6d00;
+  border: none;
+  border-radius: 20px;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#gameOverOverlay {
+  display: none;
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.9);
+  z-index: 200;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#gameOverOverlay.active { display: flex; }
+#gameOverOverlay h1 { font-size: 3em; margin-bottom: 10px; }
+#gameOverOverlay h2 { font-size: 1.5em; color: #aaa; margin-bottom: 30px; }
+
+#restartBtn {
+  padding: 12px 40px;
+  font-size: 1.1em;
+  background: #ff1744;
+  border: none;
+  border-radius: 25px;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#notification {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.85);
+  padding: 20px 40px;
+  border-radius: 15px;
+  font-size: 1.3em;
+  font-weight: bold;
+  z-index: 50;
+  display: none;
+  text-align: center;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+#taskOverlay {
+  display: none;
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(10,10,46,0.95);
+  padding: 30px;
+  border-radius: 15px;
+  z-index: 80;
+  border: 2px solid rgba(255,255,255,0.2);
+  text-align: center;
+  min-width: 300px;
+}
+
+#taskOverlay h3 { margin-bottom: 15px; color: #00e676; }
+
+.task-progress {
+  width: 250px;
+  height: 15px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+  margin: 10px auto;
+  overflow: hidden;
+}
+
+.task-progress-fill {
+  height: 100%;
+  background: #00e676;
+  border-radius: 10px;
+  transition: width 0.3s;
+}
+
+#taskMiniGame {
+  margin-top: 15px;
+  padding: 15px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  cursor: pointer;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-wire {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.task-wire-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1);
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.task-wire-btn.correct { background: #00e676; border-color: #00e676; }
+.task-wire-btn.wrong { background: #ff1744; border-color: #ff1744; }
+
+#controls-hint {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(0,0,0,0.6);
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-size: 0.75em;
+  color: #888;
+}
+
+/* NPC task indicators */
+.npc-task-bar {
+  position: absolute;
+  width: 30px;
+  height: 4px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 2px;
+}
+</style>
+</head>
+<body>
+
+<div id="menu">
+  <h1>AMONG US</h1>
+  <h2>⚡ Edição Funções Especiais ⚡</h2>
+  <div class="role-select" id="roleSelect"></div>
+  <button id="startBtn" onclick="startGame()">JOGAR</button>
+</div>
+
+<div id="gameContainer">
+  <canvas id="gameCanvas"></canvas>
+  <canvas id="minimap"></canvas>
+  <div id="hud">
+    <div class="role-info" id="roleInfo"></div>
+    <div class="ability-info" id="abilityInfo"></div>
+    <div id="aliveCount" style="margin-top:5px;color:#aaa;"></div>
+  </div>
+  <div id="actionBtns"></div>
+  <div id="controls-hint">WASD/Setas: Mover | Botões: Ações</div>
+  <div id="notification"></div>
+  <div id="taskOverlay">
+    <h3>📋 Tarefa</h3>
+    <div class="task-progress"><div class="task-progress-fill" id="taskFill"></div></div>
+    <div id="taskMiniGame"></div>
+    <p style="margin-top:10px;color:#aaa;font-size:0.8em;" id="taskText"></p>
+  </div>
+  <div id="meetingOverlay">
+    <h2>⚠️ REUNIÃO DE EMERGÊNCIA ⚠️</h2>
+    <div id="voteList"></div>
+    <div id="meetingControls">
+      <button id="skipVoteBtn" onclick="skipVote()">Pular Voto</button>
+      <div id="meetingTimer">30</div>
+    </div>
+    <div id="chatBox"></div>
+    <div id="chatInput">
+      <input type="text" id="chatTextField" placeholder="Digite sua mensagem..." maxlength="80">
+      <button onclick="sendChatMessage()">Enviar</button>
+    </div>
+  </div>
+  <div id="gameOverOverlay">
+    <h1 id="goTitle"></h1>
+    <h2 id="goSubtitle"></h2>
+    <div id="goRoles" style="margin-bottom:20px;text-align:center;"></div>
+    <button id="restartBtn" onclick="location.reload()">JOGAR NOVAMENTE</button>
+  </div>
+</div>
+
+<script>
+// ==================== GAME CONFIG ====================
+const ROLES = [
+  { id:'crewmate', name:'Tripulante', icon:'👷', team:'crew', desc:'Complete tarefas e vote para encontrar o impostor.', color:'#1565c0' },
+  { id:'impostor', name:'Impostor', icon:'🔪', team:'impostor', desc:'Elimine todos os tripulantes sem ser descoberto.', color:'#c62828' },
+  { id:'vampire', name:'Vampiro', icon:'🧛', team:'impostor', desc:'Mordida com delay - a vítima morre após alguns segundos.', color:'#880e4f' },
+  { id:'sheriff', name:'Sheriff', icon:'🔫', team:'crew', desc:'Pode eliminar um jogador. Se for inocente, você morre!', color:'#e65100' },
+  { id:'medic', name:'Médico', icon:'⚕️', team:'crew', desc:'Veja quem está vivo e proteja aliados com escudo.', color:'#00897b' },
+  { id:'glutton', name:'Glutão', icon:'👹', team:'neutral', desc:'Coma corpos para ganhar poder e vencer sozinho.', color:'#4a148c' },
+  { id:'jester', name:'Jester', icon:'🃏', team:'neutral', desc:'Seja ejetado na votação para vencer! Pode usar vents.', color:'#6a1b9a' },
+  { id:'spy', name:'Espião', icon:'🕵️', team:'crew', desc:'Veja quem usa ventilação e tenha visão de impostor.', color:'#37474f' },
+  { id:'guardian', name:'Guardião', icon:'🛡️', team:'crew', desc:'Proteja um jogador - se ele morrer, você sabe quem foi.', color:'#1b5e20' }
+];
+
+const PLAYER_COLORS = ['#ff1744','#2979ff','#00e676','#ffab00','#e040fb','#00bcd4','#ff6d00','#76ff03','#f50057','#651fff'];
+const NAMES = ['Você','Alpha','Bravo','Charlie','Delta','Echo','Foxtrot','Golf','Hotel','India'];
+
+let selectedRole = 'crewmate';
+let game = null;
+
+// ==================== MENU ====================
+function initMenu() {
+  const container = document.getElementById('roleSelect');
+  ROLES.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'role-card' + (r.id === selectedRole ? ' selected' : '');
+    card.innerHTML = `
+      <div class="icon">${r.icon}</div>
+      <div class="name">${r.name}</div>
+      <div class="team team-${r.team}">${r.team === 'crew' ? 'Tripulação' : r.team === 'impostor' ? 'Impostor' : 'Neutro'}</div>
+      <div class="desc">${r.desc}</div>
+    `;
+    card.onclick = () => {
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedRole = r.id;
+    };
+    container.appendChild(card);
+  });
+}
+
+// ==================== MAP GRANDE ====================
+const MAP_W = 3200, MAP_H = 2400;
+
+const ROOMS = [
+  { name:'Escudos', x:150, y:150, w:450, h:400 },
+  { name:'Cafeteria', x:750, y:100, w:650, h:450 },
+  { name:'Armas', x:1550, y:150, w:450, h:400 },
+  { name:'Navegação', x:2150, y:100, w:500, h:450 },
+  { name:'Reator', x:150, y:750, w:500, h:450 },
+  { name:'Medbay', x:800, y:750, w:500, h:400 },
+  { name:'Comunicações', x:1500, y:750, w:500, h:400 },
+  { name:'Oficina', x:2200, y:750, w:500, h:450 },
+  { name:'Motor Esq.', x:150, y:1400, w:450, h:400 },
+  { name:'Elétrica', x:750, y:1400, w:500, h:400 },
+  { name:'Armazenamento', x:1400, y:1400, w:600, h:450 },
+  { name:'Motor Dir.', x:2200, y:1400, w:500, h:400 },
+  { name:'Segurança', x:400, y:1950, w:500, h:350 },
+  { name:'Admin', x:1100, y:1950, w:550, h:350 },
+  { name:'Laboratório', x:1850, y:1950, w:500, h:350 }
+];
+
+const CORRIDORS = [
+  { x:600, y:250, w:150, h:200 },
+  { x:1400, y:250, w:150, h:200 },
+  { x:2000, y:250, w:150, h:200 },
+  { x:650, y:850, w:150, h:200 },
+  { x:1300, y:850, w:200, h:200 },
+  { x:2000, y:850, w:200, h:200 },
+  { x:600, y:1500, w:150, h:200 },
+  { x:1250, y:1500, w:150, h:200 },
+  { x:2000, y:1500, w:200, h:200 },
+  { x:900, y:2050, w:200, h:150 },
+  { x:1650, y:2050, w:200, h:150 },
+  { x:300, y:550, w:200, h:200 },
+  { x:1000, y:550, w:200, h:200 },
+  { x:1700, y:550, w:200, h:200 },
+  { x:2350, y:550, w:200, h:200 },
+  { x:300, y:1200, w:200, h:200 },
+  { x:1000, y:1150, w:200, h:250 },
+  { x:1700, y:1150, w:200, h:250 },
+  { x:2350, y:1200, w:200, h:200 },
+  { x:500, y:1800, w:200, h:150 },
+  { x:1300, y:1850, w:200, h:100 },
+  { x:2050, y:1800, w:200, h:150 }
+];
+
+function isWalkable(x, y) {
+  for (let r of ROOMS) {
+    if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return true;
+  }
+  for (let c of CORRIDORS) {
+    if (x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h) return true;
+  }
+  return false;
+}
+
+function getCurrentRoom(x, y) {
+  for (let r of ROOMS) {
+    if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return r.name;
+  }
+  return 'Corredor';
+}
+
+// ==================== GAME STATE ====================
+class Game {
+  constructor(playerRole) {
+    this.canvas = document.getElementById('gameCanvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.miniCanvas = document.getElementById('minimap');
+    this.miniCtx = this.miniCanvas.getContext('2d');
+    this.resize();
+    
+    this.playerRole = playerRole;
+    this.players = [];
+    this.bodies = [];
+    this.reportedBody = null;
+    this.camera = { x: 0, y: 0 };
+    this.keys = {};
+    this.gameOver = false;
+    this.meetingActive = false;
+    this.meetingTimer = 0;
+    this.votes = {};
+    this.playerVoted = false;
+    this.taskProgress = 0;
+    this.totalTasks = 10;
+    this.killCooldown = 0;
+    this.abilityCooldown = 0;
+    this.vampireBites = [];
+    this.shieldedPlayer = null;
+    this.guardianTarget = null;
+    this.gluttonPower = 0;
+    this.sabotageActive = null;
+    this.sabotageTimer = 0;
+    this.vents = [];
+    this.inVent = false;
+    this.chatMessages = [];
+    this.npcTaskProgress = {}; // progresso de tasks dos NPCs
+    this.npcSawEvents = []; // eventos que NPCs viram
+    this.firstKillHappened = false; // garante que o impostor mate cedo
+    
+    this.vents = [
+      { x: 1050, y: 300, connected: [1,2] },
+      { x: 375, y: 350, connected: [0,3] },
+      { x: 1050, y: 950, connected: [0,4] },
+      { x: 400, y: 975, connected: [1,5] },
+      { x: 1750, y: 950, connected: [2,6] },
+      { x: 2450, y: 975, connected: [3,7] },
+      { x: 1050, y: 1600, connected: [4,5,8] },
+      { x: 2450, y: 1600, connected: [6,9] },
+      { x: 375, y: 1600, connected: [5,10] },
+      { x: 1700, y: 1625, connected: [7,11] },
+      { x: 650, y: 2125, connected: [8,12] },
+      { x: 2100, y: 2125, connected: [9,11] },
+      { x: 1375, y: 2125, connected: [10,13] }
+    ];
+    
+    this.createPlayers();
+    this.setupInput();
+    this.setupHUD();
+    this.setupActionButtons();
+    
+    this.lastTime = performance.now();
+    this.loop();
+  }
+  
+  resize() {
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+    this.miniCanvas.width = 200;
+    this.miniCanvas.height = 150;
+  }
+  
+  createPlayers() {
+    const roleAssign = this.assignRoles();
+    for (let i = 0; i < 10; i++) {
+      const room = ROOMS[Math.floor(Math.random() * ROOMS.length)];
+      const px = room.x + 80 + Math.random() * (room.w - 160);
+      const py = room.y + 80 + Math.random() * (room.h - 160);
+      const role = roleAssign[i];
+      this.players.push({
+        id: i,
+        name: NAMES[i],
+        color: PLAYER_COLORS[i],
+        x: px, y: py,
+        role: role,
+        alive: true,
+        speed: i === 0 ? 4 : 2 + Math.random() * 0.5,
+        isPlayer: i === 0,
+        targetX: px, targetY: py,
+        moveTimer: 0,
+        taskTimer: Math.random() * 200 + 100,
+        doingTask: false,
+        taskProgress: 0,
+        ventTimer: 0,
+        killCooldown: 0,
+        reportCooldown: 0,
+        currentRoom: getCurrentRoom(px, py),
+        lastSeen: {}, // quem esse NPC viu recentemente
+        suspicion: {} // suspeita sobre outros
+      });
+      this.npcTaskProgress[i] = 0;
+    }
+    
+    const guardian = this.players.find(p => p.role === 'guardian' && p.isPlayer);
+    if (guardian) {
+      const others = this.players.filter(p => !p.isPlayer);
+      this.guardianTarget = others[Math.floor(Math.random() * others.length)];
+    }
+  }
+  
+  assignRoles() {
+    // Base: 1 impostor, resto crewmate
+    const roles = new Array(10).fill('crewmate');
+    roles[0] = this.playerRole;
+    
+    // Sempre ter pelo menos 1 impostor NPC se o jogador não for impostor/vampiro
+    if (this.playerRole !== 'impostor' && this.playerRole !== 'vampire') {
+      const impostorIdx = 1 + Math.floor(Math.random() * 8);
+      roles[impostorIdx] = 'impostor';
+    }
+    
+    return roles;
+  }
+  
+  setupInput() {
+    window.addEventListener('keydown', e => {
+      this.keys[e.key] = true;
+      // Enter para enviar mensagem no chat
+      if (e.key === 'Enter' && this.meetingActive) {
+        sendChatMessage();
+      }
+    });
+    window.addEventListener('keyup', e => { this.keys[e.key] = false; });
+    window.addEventListener('resize', () => this.resize());
+  }
+  
+  setupHUD() {
+    const roleData = ROLES.find(r => r.id === this.playerRole);
+    document.getElementById('roleInfo').innerHTML = `${roleData.icon} ${roleData.name} <span style="color:${roleData.color}">(${roleData.team === 'crew' ? 'Tripulação' : roleData.team === 'impostor' ? 'Impostor' : 'Neutro'})</span>`;
+    
+    let ability = '';
+    switch(this.playerRole) {
+      case 'crewmate': ability = 'Complete tarefas e vote!'; break;
+      case 'impostor': ability = 'Matar | Vent | Sabotar'; break;
+      case 'vampire': ability = 'Mordida com delay | Vent'; break;
+      case 'sheriff': ability = 'Atirar em impostores!'; break;
+      case 'medic': ability = 'Escudo - proteja um aliado'; break;
+      case 'glutton': ability = 'Coma corpos para ganhar poder!'; break;
+      case 'jester': ability = 'Seja ejetado! Use vents para fugir'; break;
+      case 'spy': ability = 'Visão ampla + vê vents'; break;
+      case 'guardian': ability = `Protegendo: ${this.guardianTarget ? this.guardianTarget.name : '?'}`; break;
+    }
+    document.getElementById('abilityInfo').textContent = ability;
+  }
+  
+  setupActionButtons() {
+    const container = document.getElementById('actionBtns');
+    container.innerHTML = '';
+    
+    // Glutão - botão COMER
+    if (this.playerRole === 'glutton') {
+      const btn = document.createElement('button');
+      btn.className = 'action-btn kill';
+      btn.id = 'eatBtn';
+      btn.textContent = 'COMER';
+      btn.onclick = () => this.eatBody();
+      container.appendChild(btn);
+    }
+    
+    // Impostor, Vampiro, Sheriff - botão de matar
+    if (['impostor','vampire','sheriff'].includes(this.playerRole)) {
+      const btn = document.createElement('button');
+      btn.className = 'action-btn kill';
+      btn.id = 'killBtn';
+      btn.textContent = this.playerRole === 'vampire' ? 'MORDER' : this.playerRole === 'sheriff' ? 'ATIRAR' : 'MATAR';
+      btn.onclick = () => this.doKill();
+      container.appendChild(btn);
+    }
+    
+    // Tripulantes e alguns outros fazem tasks
+    const canDoTasks = ['crewmate','medic','spy','guardian','sheriff','jester'].includes(this.playerRole);
+    if (canDoTasks) {
+      const btn = document.createElement('button');
+      btn.className = 'action-btn task';
+      btn.id = 'taskBtn';
+      btn.textContent = 'TAREFA';
+      btn.onclick = () => this.openTask();
+      container.appendChild(btn);
+    }
+    
+    if (this.playerRole === 'medic') {
+      const btn = document.createElement('button');
+      btn.className = 'action-btn ability';
+      btn.id = 'shieldBtn';
+      btn.textContent = 'ESCUDO';
+      btn.onclick = () => this.useShield();
+      container.appendChild(btn);
+    }
+    
+    // Reportar
+    const reportBtn = document.createElement('button');
+    reportBtn.className = 'action-btn report';
+    reportBtn.id = 'reportBtn';
+    reportBtn.textContent = 'REPORTAR';
+    reportBtn.onclick = () => this.reportBody();
+    container.appendChild(reportBtn);
+    
+    // Reunião
+    const meetingBtn = document.createElement('button');
+    meetingBtn.className = 'action-btn meeting';
+    meetingBtn.id = 'meetingBtn';
+    meetingBtn.textContent = 'REUNIÃO';
+    meetingBtn.onclick = () => this.callMeeting();
+    container.appendChild(meetingBtn);
+    
+    // Vent - impostor, vampiro E jester
+    if (['impostor','vampire','jester'].includes(this.playerRole)) {
+      const btn = document.createElement('button');
+      btn.className = 'action-btn ability';
+      btn.id = 'ventBtn';
+      btn.textContent = 'VENT';
+      btn.onclick = () => this.useVent();
+      container.appendChild(btn);
+    }
+    
+    if (['impostor','vampire'].includes(this.playerRole)) {
+      const btn = document.createElement('button');
+      btn.className = 'action-btn ability';
+      btn.id = 'sabotageBtn';
+      btn.textContent = 'SABOTAR';
+      btn.onclick = () => this.sabotage();
+      container.appendChild(btn);
+    }
+  }
+  
+  loop() {
+    if (this.gameOver) return;
+    const now = performance.now();
+    const dt = (now - this.lastTime) / 16.67;
+    this.lastTime = now;
+    
+    if (!this.meetingActive) {
+      this.update(dt);
+    }
+    this.render();
+    this.renderMinimap();
+    this.updateHUD();
+    
+    requestAnimationFrame(() => this.loop());
+  }
+  
+  update(dt) {
+    const player = this.players[0];
+    
+    // Player movement
+    if (player.alive) {
+      let dx = 0, dy = 0;
+      if (this.keys['w'] || this.keys['W'] || this.keys['ArrowUp']) dy = -1;
+      if (this.keys['s'] || this.keys['S'] || this.keys['ArrowDown']) dy = 1;
+      if (this.keys['a'] || this.keys['A'] || this.keys['ArrowLeft']) dx = -1;
+      if (this.keys['d'] || this.keys['D'] || this.keys['ArrowRight']) dx = 1;
+      
+      if (dx || dy) {
+        const len = Math.sqrt(dx*dx + dy*dy);
+        dx /= len; dy /= len;
+        const spd = player.speed * dt * (this.inVent ? 2 : 1);
+        const nx = player.x + dx * spd;
+        const ny = player.y + dy * spd;
+        
+        if (isWalkable(nx, ny)) {
+          player.x = nx; player.y = ny;
+        } else if (isWalkable(nx, player.y)) {
+          player.x = nx;
+        } else if (isWalkable(player.x, ny)) {
+          player.y = ny;
+        }
+      }
+      player.currentRoom = getCurrentRoom(player.x, player.y);
+    }
+    
+    this.camera.x = player.x - this.canvas.width / 2;
+    this.camera.y = player.y - this.canvas.height / 2;
+    
+    if (this.killCooldown > 0) this.killCooldown -= dt;
+    if (this.abilityCooldown > 0) this.abilityCooldown -= dt;
+    
+    // Forçar primeiro kill cedo para o Glutão ter corpos
+    if (!this.firstKillHappened && this.playerRole === 'glutton') {
+      const impostorNPC = this.players.find(p => !p.isPlayer && (p.role === 'impostor' || p.role === 'vampire'));
+      if (impostorNPC) {
+        impostorNPC.killCooldown = Math.min(impostorNPC.killCooldown, 100);
+      }
+    }
+    
+    // NPC AI
+    this.players.forEach(p => {
+      if (p.isPlayer || !p.alive) return;
+      
+      // Movimento
+      p.moveTimer -= dt;
+      if (p.moveTimer <= 0) {
+        // NPCs escolhem salas para ir - preferem salas com tasks ou alvos
+        let targetRoom;
+        if (p.role === 'impostor' || p.role === 'vampire') {
+          // Impostor procura jogadores isolados
+          const isolatedPlayer = this.players.find(o => !o.isPlayer && o.alive && o.id !== p.id &&
+            ['crewmate','medic','spy','guardian','sheriff'].includes(o.role) &&
+            Math.hypot(o.x - p.x, o.y - p.y) < 600 && Math.hypot(o.x - p.x, o.y - p.y) > 100);
+          if (isolatedPlayer) {
+            targetRoom = ROOMS.find(r => isolatedPlayer.x >= r.x && isolatedPlayer.x <= r.x+r.w && 
+              isolatedPlayer.y >= r.y && isolatedPlayer.y <= r.y+r.h);
+          }
+        }
+        if (!targetRoom) {
+          targetRoom = ROOMS[Math.floor(Math.random() * ROOMS.length)];
+        }
+        p.targetX = targetRoom.x + 80 + Math.random() * (targetRoom.w - 160);
+        p.targetY = targetRoom.y + 80 + Math.random() * (targetRoom.h - 160);
+        p.moveTimer = 120 + Math.random() * 200;
+      }
+      
+      const tdx = p.targetX - p.x;
+      const tdy = p.targetY - p.y;
+      const dist = Math.sqrt(tdx*tdx + tdy*tdy);
+      if (dist > 5) {
+        const mx = (tdx / dist) * p.speed * dt;
+        const my = (tdy / dist) * p.speed * dt;
+        const nx = p.x + mx;
+        const ny = p.y + my;
+        if (isWalkable(nx, ny)) {
+          p.x = nx; p.y = ny;
+        } else {
+          p.moveTimer = 0;
+        }
+      }
+      p.currentRoom = getCurrentRoom(p.x, p.y);
+      
+      // Cooldowns
+      if (p.killCooldown > 0) p.killCooldown -= dt;
+      if (p.reportCooldown > 0) p.reportCooldown -= dt;
+      
+      // NPC registra quem vê
+      this.players.forEach(other => {
+        if (other.id === p.id || !other.alive) return;
+        const d = Math.hypot(other.x - p.x, other.y - p.y);
+        if (d < 250) {
+          p.lastSeen[other.id] = { room: other.currentRoom, time: Date.now() };
+        }
+      });
+      
+      // NPCs crew fazem tasks
+      if (['crewmate','medic','spy','guardian','sheriff'].includes(p.role)) {
+        p.taskTimer -= dt;
+        if (p.taskTimer <= 0 && !p.doingTask) {
+          p.doingTask = true;
+          p.taskTimer = 300 + Math.random() * 200; // tempo para completar task
+        }
+        if (p.doingTask) {
+          p.taskTimer -= dt;
+          if (p.taskTimer <= 0) {
+            p.doingTask = false;
+            p.taskProgress++;
+            this.npcTaskProgress[p.id] = p.taskProgress;
+            p.taskTimer = 400 + Math.random() * 300;
+          }
+        }
+      }
+      
+      // NPC impostor mata
+      if (p.role === 'impostor' || p.role === 'vampire') {
+        p.ventTimer = (p.ventTimer || 0) + dt;
+        const nearbyPlayer = this.players.find(o => !o.isPlayer && o.alive && o.id !== p.id &&
+          ['crewmate','medic','spy','guardian','sheriff'].includes(o.role) &&
+          Math.hypot(o.x - p.x, o.y - p.y) < 70);
+        
+        if (nearbyPlayer && p.killCooldown <= 0) {
+          // Verifica se não há testemunhas
+          const witnesses = this.players.filter(o => o.id !== p.id && o.id !== nearbyPlayer.id && 
+            o.alive && Math.hypot(o.x - p.x, o.y - p.y) < 300);
+          
+          if (witnesses.length === 0 || Math.random() < 0.3) {
+            if (this.shieldedPlayer !== nearbyPlayer.id) {
+              nearbyPlayer.alive = false;
+              this.bodies.push({ x: nearbyPlayer.x, y: nearbyPlayer.y, color: nearbyPlayer.color, name: nearbyPlayer.name, id: nearbyPlayer.id });
+              
+              // Registra evento para os outros NPCs
+              this.players.forEach(o => {
+                if (o.alive && o.id !== p.id && Math.hypot(o.x - nearbyPlayer.x, o.y - nearbyPlayer.y) < 400) {
+                  o.lastSeen[p.id] = { room: p.currentRoom, time: Date.now(), suspicious: true };
+                }
+              });
+              
+              if (nearbyPlayer.isPlayer) {
+                this.showNotification('☠️ Você foi eliminado!', '#ff1744');
+              }
+              p.killCooldown = 400;
+              this.firstKillHappened = true;
+              setTimeout(() => this.checkWinCondition(), 500);
+            }
+          }
+        }
+        
+        // Impostor tenta usar vent
+        if (p.ventTimer > 500 && Math.random() < 0.001 * dt) {
+          const nearVent = this.vents.find(v => Math.hypot(v.x - p.x, v.y - p.y) < 50);
+          if (nearVent && witnesses.length === 0) {
+            const connectedVent = this.vents[nearVent.connected[Math.floor(Math.random() * nearVent.connected.length)]];
+            p.x = connectedVent.x;
+            p.y = connectedVent.y;
+            p.ventTimer = 0;
+          }
+        }
+      }
+      
+      // NPCs reportam corpos que encontram
+      if (p.reportCooldown <= 0) {
+        const nearbyBody = this.bodies.find(b => Math.hypot(b.x - p.x, b.y - p.y) < 80);
+        if (nearbyBody && !this.meetingActive) {
+          // NPC reporta!
+          p.reportCooldown = 1000;
+          setTimeout(() => {
+            if (!this.meetingActive && !this.gameOver) {
+              this.startMeeting(nearbyBody, p);
+            }
+          }, 500);
+        }
+      }
+    });
+    
+    // Vampire bites
+    this.vampireBites = this.vampireBites.filter(b => {
+      b.timer -= dt;
+      if (b.timer <= 0) {
+        const victim = this.players.find(p => p.id === b.targetId);
+        if (victim && victim.alive) {
+          victim.alive = false;
+          this.bodies.push({ x: victim.x, y: victim.y, color: victim.color, name: victim.name, id: victim.id });
+          if (victim.isPlayer) {
+            this.showNotification('☠️ Você morreu pela mordida do vampiro!', '#880e4f');
+          }
+          this.firstKillHappened = true;
+          this.checkWinCondition();
+        }
+        return false;
+      }
+      return true;
+    });
+    
+    if (this.sabotageActive) {
+      this.sabotageTimer -= dt;
+      if (this.sabotageTimer <= 0) {
+        this.sabotageActive = null;
+      }
+    }
+    
+    this.updateActionButtons();
+  }
+  
+  updateActionButtons() {
+    const player = this.players[0];
+    const killBtn = document.getElementById('killBtn');
+    const eatBtn = document.getElementById('eatBtn');
+    const reportBtn = document.getElementById('reportBtn');
+    const taskBtn = document.getElementById('taskBtn');
+    const meetingBtn = document.getElementById('meetingBtn');
+    const shieldBtn = document.getElementById('shieldBtn');
+    const ventBtn = document.getElementById('ventBtn');
+    
+    if (killBtn) {
+      const nearEnemy = this.getNearbyTarget();
+      const canUse = nearEnemy && this.killCooldown <= 0 && player.alive;
+      killBtn.classList.toggle('disabled', !canUse);
+      killBtn.classList.toggle('ready', canUse);
+    }
+    
+    // BOTÃO COMER DO GLUTÃO - verifica corpos próximos
+    if (eatBtn) {
+      const nearBody = this.getNearbyBody();
+      const canUse = nearBody && this.killCooldown <= 0 && player.alive;
+      eatBtn.classList.toggle('disabled', !canUse);
+      eatBtn.classList.toggle('ready', canUse);
+    }
+    
+    if (reportBtn) {
+      const nearBody = this.getNearbyBody();
+      const canUse = nearBody && player.alive;
+      reportBtn.classList.toggle('disabled', !canUse);
+      reportBtn.classList.toggle('ready', canUse);
+    }
+    
+    if (taskBtn) {
+      const canUse = player.alive && this.taskProgress < this.totalTasks;
+      taskBtn.classList.toggle('disabled', !canUse);
+    }
+    
+    if (meetingBtn) {
+      meetingBtn.classList.toggle('disabled', !player.alive);
+    }
+    
+    if (shieldBtn) {
+      const nearTarget = this.getNearbyTarget();
+      const canUse = nearTarget && this.abilityCooldown <= 0 && player.alive;
+      shieldBtn.classList.toggle('disabled', !canUse);
+      shieldBtn.classList.toggle('ready', canUse);
+    }
+    
+    if (ventBtn) {
+      const nearVent = this.vents.find(v => Math.hypot(v.x - player.x, v.y - player.y) < 60);
+      const canUse = (nearVent || this.inVent) && player.alive;
+      ventBtn.classList.toggle('disabled', !canUse);
+      ventBtn.classList.toggle('ready', canUse);
+    }
+  }
+  
+  getNearbyTarget() {
+    const player = this.players[0];
+    return this.players.find(p => !p.isPlayer && p.alive && Math.hypot(p.x - player.x, p.y - player.y) < 100);
+  }
+  
+  getNearbyBody() {
+    const player = this.players[0];
+    return this.bodies.find(b => Math.hypot(b.x - player.x, b.y - player.y) < 100);
+  }
+  
+  // ==================== AÇÕES ====================
+  eatBody() {
+    const player = this.players[0];
+    if (!player.alive) {
+      this.showNotification('Você está morto!', '#ff1744');
+      return;
+    }
+    if (this.killCooldown > 0) {
+      this.showNotification('Aguarde o cooldown!', '#ff1744');
+      return;
+    }
+    
+    const body = this.getNearbyBody();
+    if (!body) {
+      this.showNotification('👹 Chegue perto de um corpo para comer!', '#4a148c');
+      return;
+    }
+    
+    this.bodies = this.bodies.filter(b => b !== body);
+    this.gluttonPower++;
+    this.killCooldown = 150;
+    this.showNotification(`👹 Corpo devorado! Poder: ${this.gluttonPower}/3`, '#4a148c');
+    this.checkWinCondition();
+  }
+  
+  doKill() {
+    const player = this.players[0];
+    if (!player.alive || this.killCooldown > 0) return;
+    
+    const target = this.getNearbyTarget();
+    if (!target) {
+      this.showNotification('Chegue mais perto do alvo!', '#ff1744');
+      return;
+    }
+    
+    if (this.playerRole === 'impostor') {
+      if (this.shieldedPlayer === target.id) {
+        this.showNotification('🛡️ Alvo protegido por escudo!', '#00897b');
+        this.killCooldown = 100;
+        return;
+      }
+      target.alive = false;
+      this.bodies.push({ x: target.x, y: target.y, color: target.color, name: target.name, id: target.id });
+      this.showNotification('☠️ Eliminado!', '#ff1744');
+      this.killCooldown = 300;
+      this.firstKillHappened = true;
+    } else if (this.playerRole === 'vampire') {
+      if (this.shieldedPlayer === target.id) {
+        this.showNotification('🛡️ Alvo protegido por escudo!', '#00897b');
+        this.killCooldown = 100;
+        return;
+      }
+      this.vampireBites.push({ targetId: target.id, timer: 200 });
+      this.showNotification('🧛 Mordida aplicada!', '#880e4f');
+      this.killCooldown = 200;
+      this.firstKillHappened = true;
+    } else if (this.playerRole === 'sheriff') {
+      const isEvil = target.role === 'impostor' || target.role === 'vampire';
+      if (isEvil) {
+        target.alive = false;
+        this.bodies.push({ x: target.x, y: target.y, color: target.color, name: target.name, id: target.id });
+        this.showNotification('🔫 Impostor eliminado!', '#00e676');
+      } else {
+        player.alive = false;
+        this.bodies.push({ x: player.x, y: player.y, color: player.color, name: player.name, id: player.id });
+        this.showNotification('💀 Você atirou em um inocente!', '#ff1744');
+      }
+      this.killCooldown = 300;
+    }
+    
+    this.checkWinCondition();
+  }
+  
+  reportBody() {
+    const body = this.getNearbyBody();
+    if (!body || !this.players[0].alive) {
+      this.showNotification('Chegue perto de um corpo!', '#ffab00');
+      return;
+    }
+    this.startMeeting(body, this.players[0]);
+  }
+  
+  callMeeting() {
+    if (!this.players[0].alive) return;
+    this.startMeeting(null, this.players[0]);
+  }
+  
+  useShield() {
+    if (this.abilityCooldown > 0) return;
+    const target = this.getNearbyTarget();
+    if (!target) {
+      this.showNotification('Chegue perto de alguém!', '#00897b');
+      return;
+    }
+    this.shieldedPlayer = target.id;
+    this.abilityCooldown = 600;
+    this.showNotification(`🛡️ ${target.name} protegido!`, '#00897b');
+  }
+  
+  useVent() {
+    const player = this.players[0];
+    if (!player.alive) return;
+    
+    if (this.inVent) {
+      this.inVent = false;
+      this.showNotification('Saiu do vent', '#7c4dff');
+      return;
+    }
+    
+    const nearVent = this.vents.find(v => Math.hypot(v.x - player.x, v.y - player.y) < 60);
+    if (nearVent) {
+      const connectedVent = this.vents[nearVent.connected[Math.floor(Math.random() * nearVent.connected.length)]];
+      player.x = connectedVent.x;
+      player.y = connectedVent.y;
+      this.inVent = true;
+      this.showNotification('🌀 Teleportado pelo vent!', '#7c4dff');
+      setTimeout(() => { this.inVent = false; }, 3000);
+    } else {
+      this.showNotification('Chegue perto de um vent!', '#7c4dff');
+    }
+  }
+  
+  sabotage() {
+    if (this.abilityCooldown > 0) return;
+    const types = ['Reator','O2','Comunicações','Luzes'];
+    this.sabotageActive = types[Math.floor(Math.random() * types.length)];
+    this.sabotageTimer = 500;
+    this.abilityCooldown = 800;
+    this.showNotification(`💥 Sabotagem: ${this.sabotageActive}!`, '#ff6d00');
+  }
+  
+  openTask() {
+    if (this.taskProgress >= this.totalTasks) return;
+    const overlay = document.getElementById('taskOverlay');
+    overlay.style.display = 'block';
+    const tasks = ['Conectar fios','Esvaziar lixo','Escanear','Calibrar motor','Limpar filtros','Ajustar rota','Reparar placa','Abastecer','Trocar motor','Descarregar'];
+    document.getElementById('taskText').textContent = tasks[this.taskProgress % tasks.length];
+    document.getElementById('taskFill').style.width = (this.taskProgress / this.totalTasks * 100) + '%';
+    
+    // Mini-game variado
+    const miniGame = document.getElementById('taskMiniGame');
+    const taskType = this.taskProgress % 3;
+    
+    if (taskType === 0) {
+      // Conectar fios - clicar na cor correta
+      const colors = ['Vermelho','Azul','Amarelo','Verde'];
+      const target = colors[Math.floor(Math.random() * colors.length)];
+      const colorMap = { 'Vermelho':'#ff1744', 'Azul':'#2979ff', 'Amarelo':'#ffab00', 'Verde':'#00e676' };
+      miniGame.innerHTML = `<p style="margin-bottom:10px;">Conecte o fio ${target}</p><div class="task-wire">` +
+        colors.map(c => `<button class="task-wire-btn" style="background:${colorMap[c]}" onclick="completeWireTask('${c}','${target}')">${c}</button>`).join('') +
+        `</div>`;
+    } else if (taskType === 1) {
+      // Sequência de cliques
+      let clicks = 0;
+      const needed = 5;
+      miniGame.innerHTML = `<p>Clique ${needed} vezes rápido!</p><button class="task-wire-btn" id="clickTaskBtn" onclick="clickTask()">0/${needed}</button>`;
+      window._taskClicks = 0;
+      window._taskNeeded = needed;
+    } else {
+      // Simples - clicar para completar
+      miniGame.innerHTML = `<p>Segure para completar...</p><button class="task-wire-btn" onmousedown="startHoldTask()" onmouseup="stopHoldTask()" onmouseleave="stopHoldTask()">Segurar</button>`;
+      window._taskHoldProgress = 0;
+    }
+  }
+  
+  reportBody() {
+    const body = this.getNearbyBody();
+    if (!body || !this.players[0].alive) {
+      this.showNotification('Chegue perto de um corpo!', '#ffab00');
+      return;
+    }
+    this.startMeeting(body, this.players[0]);
+  }
+  
+  startMeeting(body, reporter) {
+    if (this.meetingActive) return;
+    this.meetingActive = true;
+    this.meetingTimer = 60 * 60; // 60 segundos
+    this.votes = {};
+    this.playerVoted = false;
+    this.chatMessages = [];
+    
+    if (body) {
+      this.reportedBody = body;
+    }
+    
+    const caf = ROOMS[1];
+    this.players.forEach(p => {
+      if (p.alive) {
+        p.x = caf.x + 100 + Math.random() * (caf.w - 200);
+        p.y = caf.y + 100 + Math.random() * (caf.h - 200);
+      }
+    });
+    
+    // Mensagem inicial
+    if (body && reporter) {
+      this.addChatMessage(reporter, `Encontrei o corpo de ${body.name}!`);
+    } else if (reporter) {
+      this.addChatMessage(reporter, 'Chamei uma reunião de emergência!');
+    }
+    
+    // NPCs enviam mensagens iniciais
+    setTimeout(() => this.npcChatMessages(body, reporter), 1500);
+    
+    this.renderVoteUI(body);
+    document.getElementById('meetingOverlay').classList.add('active');
+    document.getElementById('chatBox').innerHTML = '';
+    this.chatMessages.forEach(m => this.displayChatMessage(m));
+    
+    this.meetingInterval = setInterval(() => {
+      this.meetingTimer--;
+      document.getElementById('meetingTimer').textContent = Math.ceil(this.meetingTimer / 60);
+      
+      // NPCs votam gradualmente
+      if (this.meetingTimer === 40 * 60) {
+        this.npcVotes();
+      }
+      
+      // Mais mensagens de NPCs durante a reunião
+      if (this.meetingTimer === 45 * 60 || this.meetingTimer === 25 * 60) {
+        this.npcChatDuringMeeting();
+      }
+      
+      if (this.meetingTimer <= 0) {
+        this.endMeeting();
+      }
+    }, 1000/60);
+  }
+  
+  addChatMessage(sender, text) {
+    const msg = { sender: sender.name, color: sender.color, text: text, time: Date.now() };
+    this.chatMessages.push(msg);
+    this.displayChatMessage(msg);
+  }
+  
+  displayChatMessage(msg) {
+    const box = document.getElementById('chatBox');
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    div.innerHTML = `<span class="sender" style="color:${msg.color}">${msg.sender}:</span> ${msg.text}`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+  
+  npcChatMessages(body, reporter) {
+    const aliveNPCs = this.players.filter(p => !p.isPlayer && p.alive);
+    
+    aliveNPCs.forEach((npc, idx) => {
+      setTimeout(() => {
+        if (!this.meetingActive) return;
+        
+        let msg = '';
+        
+        if (body) {
+          // NPCs reagem ao corpo
+          const sawSomeone = npc.lastSeen && Object.keys(npc.lastSeen).length > 0;
+          const recentSighting = Object.values(npc.lastSeen).find(s => Date.now() - s.time < 30000);
+          
+          if (npc.role === 'impostor' || npc.role === 'vampire') {
+            // Impostor mente ou acusa inocentes
+            const innocent = this.players.find(p => p.alive && !p.isPlayer && p.id !== npc.id && 
+              ['crewmate','medic','spy','guardian','sheriff'].includes(p.role));
+            if (innocent && Math.random() < 0.5) {
+              msg = `Eu vi ${innocent.name} agindo suspeito!`;
+            } else {
+              const msgs = ['Não fui eu!', 'Eu estava fazendo task', 'Skip', 'Quem fez isso?'];
+              msg = msgs[Math.floor(Math.random() * msgs.length)];
+            }
+          } else if (recentSighting && recentSighting.suspicious) {
+            const suspiciousId = Object.keys(npc.lastSeen).find(k => npc.lastSeen[k].suspicious);
+            const suspiciousPlayer = this.players.find(p => p.id === parseInt(suspiciousId));
+            if (suspiciousPlayer) {
+              msg = `Eu vi ${suspiciousPlayer.name} perto do ${recentSighting.room}!`;
+            }
+          } else {
+            const msgs = ['Que triste...', 'Eu não vi nada', 'Eu estava no ' + npc.currentRoom, 'Skip', 'Quem é o impostor?'];
+            msg = msgs[Math.floor(Math.random() * msgs.length)];
+          }
+        } else {
+          // Reunião de emergência
+          if (npc.role === 'impostor' || npc.role === 'vampire') {
+            const msgs = ['Por que a reunião?', 'Eu estava fazendo task', 'Skip', 'Quem chamou?'];
+            msg = msgs[Math.floor(Math.random() * msgs.length)];
+          } else {
+            const msgs = ['Eu acho que vi algo estranho', 'Skip', 'Vamos votar em alguém', 'Eu estava no ' + npc.currentRoom];
+            msg = msgs[Math.floor(Math.random() * msgs.length)];
+          }
+        }
+        
+        this.addChatMessage(npc, msg);
+      }, 1000 + idx * 1500);
+    });
+  }
+  
+  npcChatDuringMeeting() {
+    const aliveNPCs = this.players.filter(p => !p.isPlayer && p.alive);
+    if (aliveNPCs.length === 0) return;
+    
+    const npc = aliveNPCs[Math.floor(Math.random() * aliveNPCs.length)];
+    const msgs = [
+      'Alguém viu algo?',
+      'Eu estava fazendo task',
+      'Skip',
+      'Quem é o impostor?',
+      `Eu votei em quem tava suspeito`,
+      'Vamos ter cuidado',
+      'Eu acho que sei quem é'
+    ];
+    this.addChatMessage(npc, msgs[Math.floor(Math.random() * msgs.length)]);
+  }
+  
+  renderVoteUI(body) {
+    const list = document.getElementById('voteList');
+    list.innerHTML = '';
+    
+    this.players.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'vote-card' + (!p.alive ? ' dead' : '');
+      card.innerHTML = `
+        <div class="vcolor" style="background:${p.color}"></div>
+        <div class="vname">${p.name}${!p.alive ? ' ☠️' : ''}</div>
+        <div class="votes-count" id="vc_${p.id}">0 votos</div>
+      `;
+      if (p.alive && !p.isPlayer) {
+        card.onclick = () => this.voteFor(p.id);
+      }
+      card.id = 'vcard_' + p.id;
+      list.appendChild(card);
+    });
+  }
+  
+  voteFor(targetId) {
+    if (this.playerVoted) return;
+    this.playerVoted = true;
+    this.votes[targetId] = (this.votes[targetId] || 0) + 1;
+    
+    document.querySelectorAll('.vote-card').forEach(c => c.classList.remove('voted'));
+    document.getElementById('vcard_' + targetId).classList.add('voted');
+    
+    this.addChatMessage(this.players[0], `Votou em ${this.players.find(p=>p.id===targetId).name}`);
+    this.updateVoteCounts();
+  }
+  
+  skipVote() {
+    if (this.playerVoted) return;
+    this.playerVoted = true;
+    this.votes['skip'] = (this.votes['skip'] || 0) + 1;
+    this.addChatMessage(this.players[0], 'Pulou o voto');
+    this.updateVoteCounts();
+  }
+  
+  npcVotes() {
+    const alivePlayers = this.players.filter(p => p.alive && !p.isPlayer);
+    const aliveIds = this.players.filter(p => p.alive).map(p => p.id);
+    
+    alivePlayers.forEach(p => {
+      let target;
+      if (p.role === 'impostor' || p.role === 'vampire') {
+        const crewTargets = aliveIds.filter(id => {
+          const pl = this.players.find(x => x.id === id);
+          return pl && ['crewmate','sheriff','medic','spy','guardian'].includes(pl.role) && id !== p.id;
+        });
+        target = crewTargets.length > 0 ? crewTargets[Math.floor(Math.random() * crewTargets.length)] : aliveIds[Math.floor(Math.random() * aliveIds.length)];
+      } else {
+        // Crew vota baseado em suspeitas
+        const suspiciousIds = Object.keys(p.lastSeen || {}).filter(k => p.lastSeen[k].suspicious).map(k => parseInt(k));
+        if (suspiciousIds.length > 0 && Math.random() < 0.6) {
+          target = suspiciousIds[Math.floor(Math.random() * suspiciousIds.length)];
+        } else {
+          const targets = aliveIds.filter(id => id !== p.id);
+          target = targets.length > 0 ? targets[Math.floor(Math.random() * targets.length)] : null;
+        }
+      }
+      
+      if (target !== undefined && target !== null) {
+        this.votes[target] = (this.votes[target] || 0) + 1;
+      } else if (Math.random() < 0.3) {
+        this.votes['skip'] = (this.votes['skip'] || 0) + 1;
+      }
+    });
+    
+    this.updateVoteCounts();
+  }
+  
+  updateVoteCounts() {
+    this.players.forEach(p => {
+      const el = document.getElementById('vc_' + p.id);
+      if (el) el.textContent = (this.votes[p.id] || 0) + ' votos';
+    });
+  }
+  
+  endMeeting() {
+    clearInterval(this.meetingInterval);
+    
+    let maxVotes = 0;
+    let ejected = null;
+    let tie = false;
+    
+    Object.entries(this.votes).forEach(([id, count]) => {
+      if (id === 'skip') return;
+      if (count > maxVotes) {
+        maxVotes = count;
+        ejected = parseInt(id);
+        tie = false;
+      } else if (count === maxVotes) {
+        tie = true;
+      }
+    });
+    
+    const skipVotes = this.votes['skip'] || 0;
+    if (skipVotes >= maxVotes) tie = true;
+    
+    if (this.reportedBody) {
+      this.bodies = this.bodies.filter(b => b !== this.reportedBody);
+      this.reportedBody = null;
+    }
+    
+    document.getElementById('meetingOverlay').classList.remove('active');
+    this.meetingActive = false;
+    
+    if (!tie && ejected !== null && !isNaN(ejected)) {
+      const player = this.players.find(p => p.id === ejected);
+      if (player) {
+        player.alive = false;
+        
+        if (player.role === 'jester') {
+          this.endGame('jester', `${player.name} era o Jester e venceu! 🃏`);
+          return;
+        }
+        
+        const isEvil = player.role === 'impostor' || player.role === 'vampire';
+        this.showNotification(`${player.name} foi ejetado. ${isEvil ? 'Era Impostor!' : 'Não era Impostor.'}`, isEvil ? '#00e676' : '#ff1744');
+        
+        if (this.guardianTarget && this.guardianTarget.id === ejected) {
+          const killer = this.players.find(p => (p.role === 'impostor' || p.role === 'vampire') && p.alive);
+          if (killer) {
+            this.showNotification(`🛡️ O Guardião sabe que ${killer.name} matou seu protegido!`, '#1b5e20');
+          }
+        }
+      }
+    } else {
+      this.showNotification('Ninguém foi ejetado (empate)', '#aaa');
+    }
+    
+    this.checkWinCondition();
+  }
+  
+  checkWinCondition() {
+    const alive = this.players.filter(p => p.alive);
+    const aliveImpostors = alive.filter(p => p.role === 'impostor' || p.role === 'vampire');
+    const aliveCrew = alive.filter(p => ['crewmate','sheriff','medic','spy','guardian'].includes(p.role));
+    
+    if (this.taskProgress >= this.totalTasks && ['crewmate','medic','spy','guardian','sheriff'].includes(this.playerRole)) {
+      this.endGame('crew', 'Tripulação venceu completando tarefas! ✅');
+      return;
+    }
+    
+    if (aliveImpostors.length >= aliveCrew.length && aliveCrew.length > 0) {
+      this.endGame('impostor', 'Impostores venceram! 🔪');
+      return;
+    }
+    
+    if (aliveImpostors.length === 0) {
+      this.endGame('crew', 'Tripulação venceu! 🎉');
+      return;
+    }
+    
+    if (this.playerRole === 'glutton' && this.gluttonPower >= 3) {
+      this.endGame('glutton', 'O Glutão devorou corpos suficientes! 👹');
+      return;
+    }
+  }
+  
+  endGame(winner, message) {
+    this.gameOver = true;
+    const overlay = document.getElementById('gameOverOverlay');
+    overlay.classList.add('active');
+    
+    const playerWon = (winner === 'crew' && ['crewmate','sheriff','medic','spy','guardian'].includes(this.playerRole)) ||
+                      (winner === 'impostor' && ['impostor','vampire'].includes(this.playerRole)) ||
+                      (winner === this.playerRole);
+    
+    document.getElementById('goTitle').textContent = playerWon ? '🏆 VITÓRIA!' : '💀 DERROTA';
+    document.getElementById('goTitle').style.color = playerWon ? '#00e676' : '#ff1744';
+    document.getElementById('goSubtitle').textContent = message;
+    
+    let rolesHtml = '<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">';
+    this.players.forEach(p => {
+      const r = ROLES.find(x => x.id === p.role);
+      rolesHtml += `<div style="background:rgba(255,255,255,0.05);padding:8px 12px;border-radius:8px;font-size:0.85em;">
+        <span style="color:${p.color}">●</span> ${p.name}: ${r.icon} ${r.name} ${!p.alive ? '☠️' : ''}
+      </div>`;
+    });
+    rolesHtml += '</div>';
+    document.getElementById('goRoles').innerHTML = rolesHtml;
+  }
+  
+  render() {
+    const ctx = this.ctx;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    
+    ctx.fillStyle = '#0d0d2b';
+    ctx.fillRect(0, 0, w, h);
+    
+    ctx.save();
+    ctx.translate(-this.camera.x, -this.camera.y);
+    
+    ROOMS.forEach(r => {
+      ctx.fillStyle = '#1a1a3e';
+      ctx.fillRect(r.x, r.y, r.w, r.h);
+      ctx.strokeStyle = '#2a2a5e';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(r.x, r.y, r.w, r.h);
+      
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.font = '16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(r.name, r.x + r.w/2, r.y + r.h/2);
+    });
+    
+    CORRIDORS.forEach(c => {
+      ctx.fillStyle = '#151535';
+      ctx.fillRect(c.x, c.y, c.w, c.h);
+    });
+    
+    const canSeeVents = ['impostor','vampire','spy'].includes(this.playerRole);
+    this.vents.forEach(v => {
+      if (canSeeVents) {
+        ctx.fillStyle = 'rgba(124,77,255,0.3)';
+        ctx.beginPath();
+        ctx.arc(v.x, v.y, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#7c4dff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#7c4dff';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('VENT', v.x, v.y + 4);
+      }
+    });
+    
+    if (this.sabotageActive) {
+      ctx.fillStyle = `rgba(255,100,0,${0.05 + Math.sin(Date.now()/200) * 0.03})`;
+      ctx.fillRect(0, 0, MAP_W, MAP_H);
+    }
+    
+    // Corpos
+    this.bodies.forEach(b => {
+      ctx.fillStyle = b.color;
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.ellipse(b.x, b.y + 5, 15, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = b.color;
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y - 5, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(b.x - 6, b.y - 8);
+      ctx.lineTo(b.x + 6, b.y + 2);
+      ctx.moveTo(b.x + 6, b.y - 8);
+      ctx.lineTo(b.x - 6, b.y + 2);
+      ctx.stroke();
+    });
+    
+    const hasImpostorVision = ['impostor','vampire','spy'].includes(this.playerRole);
+    const visionRadius = hasImpostorVision ? 400 : (this.sabotageActive === 'Luzes' ? 120 : 280);
+    
+    // Jogadores
+    this.players.forEach(p => {
+      if (!p.alive) return;
+      if (p.isPlayer && this.inVent) return;
+      
+      const distToPlayer = Math.hypot(p.x - this.players[0].x, p.y - this.players[0].y);
+      if (!p.isPlayer && distToPlayer > visionRadius && !hasImpostorVision) return;
+      
+      if (this.shieldedPlayer === p.id) {
+        ctx.strokeStyle = '#00e676';
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.5 + Math.sin(Date.now()/300) * 0.3;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 25, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      
+      // Barra de task do NPC (se estiver fazendo task)
+      if (!p.isPlayer && p.doingTask) {
+        const progress = 1 - (p.taskTimer / 300);
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(p.x - 15, p.y - 35, 30, 4);
+        ctx.fillStyle = '#00e676';
+        ctx.fillRect(p.x - 15, p.y - 35, 30 * Math.max(0, Math.min(1, progress)), 4);
+      }
+      
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y - 5, 15, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = '#a8d8ea';
+      ctx.beginPath();
+      ctx.ellipse(p.x + 5, p.y - 8, 8, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x - 18, p.y - 8, 6, 14);
+      ctx.beginPath();
+      ctx.arc(p.x - 18, p.y - 1, 3, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x - 8, p.y + 8, 7, 8);
+      ctx.fillRect(p.x + 1, p.y + 8, 7, 8);
+      
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(p.name, p.x, p.y - 25);
+      
+      const bite = this.vampireBites.find(b => b.targetId === p.id);
+      if (bite) {
+        ctx.fillStyle = '#880e4f';
+        ctx.font = '16px sans-serif';
+        ctx.fillText('🧛', p.x, p.y - 35);
+      }
+      
+      if (p.isPlayer) {
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y - 40);
+        ctx.lineTo(p.x - 5, p.y - 48);
+        ctx.lineTo(p.x + 5, p.y - 48);
+        ctx.closePath();
+        ctx.fill();
+      }
+    });
+    
+    // Indicadores de interação
+    const player = this.players[0];
+    if (player.alive) {
+      const nearBody = this.getNearbyBody();
+      if (nearBody) {
+        ctx.strokeStyle = this.playerRole === 'glutton' ? 'rgba(74,20,140,0.6)' : 'rgba(255,171,0,0.4)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5,5]);
+        ctx.beginPath();
+        ctx.arc(nearBody.x, nearBody.y, 30, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      
+      const nearTarget = this.getNearbyTarget();
+      if (nearTarget && this.playerRole !== 'glutton') {
+        ctx.strokeStyle = 'rgba(255,23,68,0.4)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5,5]);
+        ctx.beginPath();
+        ctx.arc(nearTarget.x, nearTarget.y, 30, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+    
+    // Visão
+    if (!hasImpostorVision && this.players[0].alive) {
+      const px = this.players[0].x;
+      const py = this.players[0].y;
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-in';
+      const gradient = ctx.createRadialGradient(px, py, visionRadius * 0.7, px, py, visionRadius);
+      gradient.addColorStop(0, 'rgba(255,255,255,1)');
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(this.camera.x, this.camera.y, this.canvas.width, this.canvas.height);
+      ctx.restore();
+    }
+    
+    ctx.restore();
+  }
+  
+  renderMinimap() {
+    const ctx = this.miniCtx;
+    const mw = 200, mh = 150;
+    const sx = mw / MAP_W, sy = mh / MAP_H;
+    
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillRect(0, 0, mw, mh);
+    
+    ROOMS.forEach(r => {
+      ctx.fillStyle = '#1a1a3e';
+      ctx.fillRect(r.x * sx, r.y * sy, r.w * sx, r.h * sy);
+    });
+    
+    CORRIDORS.forEach(c => {
+      ctx.fillStyle = '#151535';
+      ctx.fillRect(c.x * sx, c.y * sy, c.w * sx, c.h * sy);
+    });
+    
+    this.players.forEach(p => {
+      if (!p.alive) return;
+      ctx.fillStyle = p.isPlayer ? '#fff' : p.color;
+      ctx.beginPath();
+      ctx.arc(p.x * sx, p.y * sy, p.isPlayer ? 3 : 2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    
+    this.bodies.forEach(b => {
+      ctx.fillStyle = '#ff0';
+      ctx.fillRect(b.x * sx - 1, b.y * sy - 1, 3, 3);
+    });
+  }
+  
+  updateHUD() {
+    const alive = this.players.filter(p => p.alive).length;
+    document.getElementById('aliveCount').textContent = `👥 Vivos: ${alive}/10 | 📋 Tarefas: ${this.taskProgress}/${this.totalTasks}`;
+    
+    if (this.playerRole === 'glutton') {
+      document.getElementById('abilityInfo').textContent = `Poder: ${this.gluttonPower}/3 | Chegue perto de corpos e clique COMER`;
+    }
+    
+    if (this.killCooldown > 0) {
+      const killBtn = document.getElementById('killBtn') || document.getElementById('eatBtn');
+      if (killBtn) killBtn.textContent = Math.ceil(this.killCooldown / 60) + 's';
+    } else {
+      const killBtn = document.getElementById('killBtn');
+      if (killBtn) {
+        const labels = { impostor: 'MATAR', vampire: 'MORDER', sheriff: 'ATIRAR' };
+        killBtn.textContent = labels[this.playerRole] || 'MATAR';
+      }
+      const eatBtn = document.getElementById('eatBtn');
+      if (eatBtn) eatBtn.textContent = 'COMER';
+    }
+  }
+  
+  showNotification(text, color) {
+    const el = document.getElementById('notification');
+    el.textContent = text;
+    el.style.display = 'block';
+    el.style.borderColor = color || '#fff';
+    el.style.color = color || '#fff';
+    clearTimeout(this.notifTimeout);
+    this.notifTimeout = setTimeout(() => { el.style.display = 'none'; }, 3000);
+  }
+}
+
+// ==================== TASK HELPERS ====================
+function completeWireTask(chosen, target) {
+  if (!game) return;
+  if (chosen === target) {
+    game.taskProgress++;
+    document.getElementById('taskFill').style.width = (game.taskProgress / game.totalTasks * 100) + '%';
+    document.getElementById('taskOverlay').style.display = 'none';
+    game.showNotification('✅ Tarefa completa!', '#00e676');
+    if (game.taskProgress >= game.totalTasks) {
+      setTimeout(() => game.checkWinCondition(), 500);
+    }
+  } else {
+    game.showNotification('❌ Fio errado!', '#ff1744');
+  }
+}
+
+function clickTask() {
+  if (!game) return;
+  window._taskClicks++;
+  const btn = document.getElementById('clickTaskBtn');
+  if (btn) btn.textContent = `${window._taskClicks}/${window._taskNeeded}`;
+  if (window._taskClicks >= window._taskNeeded) {
+    game.taskProgress++;
+    document.getElementById('taskFill').style.width = (game.taskProgress / game.totalTasks * 100) + '%';
+    document.getElementById('taskOverlay').style.display = 'none';
+    game.showNotification('✅ Tarefa completa!', '#00e676');
+    if (game.taskProgress >= game.totalTasks) {
+      setTimeout(() => game.checkWinCondition(), 500);
+    }
+  }
+}
+
+function startHoldTask() {
+  window._taskHoldProgress = 0;
+  window._taskHoldInterval = setInterval(() => {
+    window._taskHoldProgress++;
+    if (window._taskHoldProgress >= 20 && game) {
+      stopHoldTask();
+      game.taskProgress++;
+      document.getElementById('taskFill').style.width = (game.taskProgress / game.totalTasks * 100) + '%';
+      document.getElementById('taskOverlay').style.display = 'none';
+      game.showNotification('✅ Tarefa completa!', '#00e676');
+      if (game.taskProgress >= game.totalTasks) {
+        setTimeout(() => game.checkWinCondition(), 500);
+      }
+    }
+  }, 100);
+}
+
+function stopHoldTask() {
+  clearInterval(window._taskHoldInterval);
+  window._taskHoldProgress = 0;
+}
+
+// ==================== CHAT ====================
+function sendChatMessage() {
+  if (!game || !game.meetingActive) return;
+  const input = document.getElementById('chatTextField');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  game.addChatMessage(game.players[0], text);
+  input.value = '';
+  
+  // NPCs reagem à mensagem do jogador
+  setTimeout(() => {
+    if (!game.meetingActive) return;
+    const aliveNPCs = game.players.filter(p => !p.isPlayer && p.alive);
+    if (aliveNPCs.length === 0) return;
+    const npc = aliveNPCs[Math.floor(Math.random() * aliveNPCs.length)];
+    const responses = [
+      'Concordo!', 'Não acho...', 'Hmm, interessante', 'Skip',
+      'Eu também vi isso', 'Mentira!', 'Vamos votar', 'Faz sentido'
+    ];
+    game.addChatMessage(npc, responses[Math.floor(Math.random() * responses.length)]);
+  }, 1500);
+}
+
+// ==================== START ====================
+function startGame() {
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('gameContainer').style.display = 'block';
+  game = new Game(selectedRole);
+  if (window.setTouchControlsActive) window.setTouchControlsActive(true);
+}
+
+initMenu();
+</script>
+
+<style id="tc-style">
+#tc-ov{position:fixed;left:0;right:0;bottom:0;z-index:999999;display:none;justify-content:space-between;align-items:flex-end;padding:14px;pointer-events:none;font-family:Arial,Helvetica,sans-serif}
+@media (pointer:coarse){#tc-ov.tc-active{display:flex}}
+#tc-ov .tc-pad{position:relative;width:150px;height:150px;pointer-events:auto;flex-shrink:0}
+#tc-ov .tc-pad button{position:absolute;width:50px;height:50px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.4);border-radius:12px;color:#fff;font-size:20px;line-height:1;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#tc-ov .tc-pad .tc-up{top:0;left:50px}
+#tc-ov .tc-pad .tc-down{bottom:0;left:50px}
+#tc-ov .tc-pad .tc-left{top:50px;left:0}
+#tc-ov .tc-pad .tc-right{top:50px;right:0}
+</style>
+<div id="tc-ov"></div>
+<script id="tc-script">
+(function(){
+  var DPAD=[{dir:'up',code:'ArrowUp',key:'ArrowUp'},{dir:'down',code:'ArrowDown',key:'ArrowDown'},{dir:'left',code:'ArrowLeft',key:'ArrowLeft'},{dir:'right',code:'ArrowRight',key:'ArrowRight'}];
+  var ov=document.getElementById('tc-ov');
+  var glyph={up:'▲',down:'▼',left:'◀',right:'▶'};
+  function fire(type,code,key){
+    var ev=new KeyboardEvent(type,{code:code,key:key,bubbles:true,cancelable:true});
+    window.dispatchEvent(ev); document.dispatchEvent(ev);
+  }
+  function bind(btn,code,key){
+    var isDown=false;
+    var down=function(e){ if(isDown)return; isDown=true; e.preventDefault(); e.stopPropagation(); fire('keydown',code,key); };
+    var up=function(e){ if(!isDown)return; isDown=false; e.preventDefault(); e.stopPropagation(); fire('keyup',code,key); };
+    btn.addEventListener('pointerdown',down);
+    btn.addEventListener('pointerup',up);
+    btn.addEventListener('pointercancel',up);
+    btn.addEventListener('pointerleave',up);
+    btn.addEventListener('touchstart',down,{passive:false});
+    btn.addEventListener('touchend',up,{passive:false});
+    btn.addEventListener('touchcancel',up,{passive:false});
+    btn.addEventListener('mousedown',down);
+    btn.addEventListener('mouseup',up);
+    btn.addEventListener('mouseleave',up);
+    btn.addEventListener('contextmenu',function(e){e.preventDefault();});
+  }
+  window.setTouchControlsActive=function(active){ ov.classList.toggle('tc-active',!!active); };
+  var pad=document.createElement('div'); pad.className='tc-pad';
+  DPAD.forEach(function(d){
+    var b=document.createElement('button'); b.className='tc-'+d.dir; b.textContent=glyph[d.dir];
+    bind(b,d.code,d.key); pad.appendChild(b);
+  });
+  ov.appendChild(pad);
+})();
+</script>
+</body>
+</html>
