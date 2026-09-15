@@ -119,7 +119,7 @@ canvas { display: block; }
     <p class="mouse-only">Mouse - Mirar | Clique Esquerdo - Atirar</p>
     <p class="mouse-only">Clique Direito - Zoom (Mira Telescópica)</p>
     <p class="mouse-only">R - Recarregar | WASD - Mover</p>
-    <p class="touch-only" style="display:none;">🕹️ Setas - Mover | Arraste a tela - Mirar</p>
+    <p class="touch-only" style="display:none;">🕹️ Setas - Mover | Arraste a tela - Mirar | Toque rápido na tela - Atirar</p>
     <p class="touch-only" style="display:none;">🎯 ATIRAR - Disparar | MIRA - Zoom | R - Recarregar</p>
     <p style="color:#ff0;margin-top:15px;">5 FASES • Mais de 70 inimigos • Boss Final!</p>
     <button class="btn" id="start-btn">INICIAR MISSÃO</button>
@@ -1534,12 +1534,20 @@ init();
   // has used this same pattern for over a decade.
   var zone=document.getElementById('tc-look-zone');
   var activeId=null, lastX=0, lastY=0;
+  // Tracks whether the current touch has moved enough to count as a drag.
+  // A touch that stays under the threshold and is released quickly fires
+  // a shot instead - so with the scope held down by one finger, a second
+  // finger can tap anywhere on screen to shoot without reaching for the
+  // small FOGO button, while a real drag still only aims and never fires.
+  var travel=0, downAt=0;
+  var TAP_MAX_TRAVEL=14, TAP_MAX_MS=300;
 
   zone.addEventListener('touchstart', function(e){
     if(activeId!==null)return;
     var t=e.changedTouches[0];
     activeId=t.identifier;
     lastX=t.clientX; lastY=t.clientY;
+    travel=0; downAt=Date.now();
     e.preventDefault();
     e.stopPropagation();
   }, {passive:false});
@@ -1551,6 +1559,7 @@ init();
     if(!t)return;
     var dx=t.clientX-lastX, dy=t.clientY-lastY;
     lastX=t.clientX; lastY=t.clientY;
+    travel+=Math.abs(dx)+Math.abs(dy);
     if(window.applyLookDelta) window.applyLookDelta(dx,dy);
     e.preventDefault();
     e.stopPropagation();
@@ -1559,7 +1568,11 @@ init();
   function endTouch(e){
     if(activeId===null)return;
     for(var i=0;i<e.changedTouches.length;i++){
-      if(e.changedTouches[i].identifier===activeId){ activeId=null; e.stopPropagation(); return; }
+      if(e.changedTouches[i].identifier===activeId){
+        activeId=null; e.stopPropagation();
+        if(travel<TAP_MAX_TRAVEL && (Date.now()-downAt)<TAP_MAX_MS && window.shoot) window.shoot();
+        return;
+      }
     }
   }
   zone.addEventListener('touchend', endTouch, {passive:false});
