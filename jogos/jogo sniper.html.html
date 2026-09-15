@@ -1180,7 +1180,10 @@ function restartGame() {
     loadPhase(0);
     gameStarted = true;
     if (window.setTouchControlsActive) window.setTouchControlsActive(true);
-    try { document.body.requestPointerLock(); } catch(e) {}
+    try {
+        const p = document.body.requestPointerLock();
+        if (p && p.catch) p.catch(() => {});
+    } catch(e) {}
 }
 
 // ============ PARTICLES ============
@@ -1388,14 +1391,20 @@ document.getElementById('start-btn').addEventListener('click', () => {
     gameStarted = true;
     loadPhase(0);
     if (window.setTouchControlsActive) window.setTouchControlsActive(true);
-    try { document.body.requestPointerLock(); } catch(e) {}
+    try {
+        const p = document.body.requestPointerLock();
+        if (p && p.catch) p.catch(() => {});
+    } catch(e) {}
 });
 
 document.getElementById('restart-btn').addEventListener('click', restartGame);
 
 document.addEventListener('click', () => {
     if (gameStarted && document.pointerLockElement !== document.body) {
-        try { document.body.requestPointerLock(); } catch(e) {}
+        try {
+            const p = document.body.requestPointerLock();
+            if (p && p.catch) p.catch(() => {});
+        } catch(e) {}
     }
 });
 
@@ -1428,8 +1437,8 @@ init();
   }
   function bind(btn,code,key){
     var isDown=false;
-    var down=function(e){ if(isDown)return; isDown=true; e.preventDefault(); fire('keydown',code,key); };
-    var up=function(e){ if(!isDown)return; isDown=false; e.preventDefault(); fire('keyup',code,key); };
+    var down=function(e){ if(isDown)return; isDown=true; e.preventDefault(); e.stopPropagation(); fire('keydown',code,key); };
+    var up=function(e){ if(!isDown)return; isDown=false; e.preventDefault(); e.stopPropagation(); fire('keyup',code,key); };
     btn.addEventListener('pointerdown',down);
     btn.addEventListener('pointerup',up);
     btn.addEventListener('pointercancel',up);
@@ -1482,8 +1491,8 @@ init();
 (function(){
   function bindPress(btn, onDown, onUp){
     var down=false;
-    var start=function(e){ e.preventDefault(); if(down)return; down=true; onDown && onDown(); };
-    var end=function(e){ e.preventDefault(); if(!down)return; down=false; onUp && onUp(); };
+    var start=function(e){ e.preventDefault(); e.stopPropagation(); if(down)return; down=true; onDown && onDown(); };
+    var end=function(e){ e.preventDefault(); e.stopPropagation(); if(!down)return; down=false; onUp && onUp(); };
     btn.addEventListener('pointerdown',start);
     btn.addEventListener('pointerup',end);
     btn.addEventListener('pointercancel',end);
@@ -1532,6 +1541,7 @@ init();
       try{ zone.setPointerCapture(activeId); }catch(err){}
     }
     e.preventDefault();
+    e.stopPropagation();
   }
   function move(e){
     var t=null;
@@ -1543,9 +1553,11 @@ init();
     lastX=t.clientX; lastY=t.clientY;
     if(window.applyLookDelta) window.applyLookDelta(dx,dy);
     e.preventDefault();
+    e.stopPropagation();
   }
   function end(e){
     if(activeId===null)return;
+    e.stopPropagation();
     if(e.changedTouches){
       for(var i=0;i<e.changedTouches.length;i++){ if(e.changedTouches[i].identifier===activeId){ activeId=null; return; } }
     } else if(e.pointerId===activeId){ activeId=null; }
