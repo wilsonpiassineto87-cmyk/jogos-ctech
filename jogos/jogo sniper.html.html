@@ -106,15 +106,21 @@ canvas { display: block; }
     background: radial-gradient(circle, transparent 40%, rgba(255,0,0,0.5) 100%);
     z-index: 90; pointer-events: none; opacity: 0; transition: opacity 0.3s;
 }
+@media (pointer: coarse) {
+    .mouse-only { display: none !important; }
+    .touch-only { display: block !important; }
+}
 </style>
 </head>
 <body>
 
 <div id="start-screen">
     <h1>🎯 SNIPER 3D</h1>
-    <p>Mouse - Mirar | Clique Esquerdo - Atirar</p>
-    <p>Clique Direito - Zoom (Mira Telescópica)</p>
-    <p>R - Recarregar | WASD - Mover</p>
+    <p class="mouse-only">Mouse - Mirar | Clique Esquerdo - Atirar</p>
+    <p class="mouse-only">Clique Direito - Zoom (Mira Telescópica)</p>
+    <p class="mouse-only">R - Recarregar | WASD - Mover</p>
+    <p class="touch-only" style="display:none;">🕹️ Setas - Mover | Arraste a tela - Mirar</p>
+    <p class="touch-only" style="display:none;">🎯 ATIRAR - Disparar | MIRA - Zoom | R - Recarregar</p>
     <p style="color:#ff0;margin-top:15px;">5 FASES • Mais de 70 inimigos • Boss Final!</p>
     <button class="btn" id="start-btn">INICIAR MISSÃO</button>
 </div>
@@ -933,6 +939,7 @@ function shoot() {
 
         showHitMarker(isHeadshot);
         spawnParticles(hitPoint.point, isHeadshot ? 0xff0000 : 0xcc0000);
+        vibrate(isHeadshot ? [15, 40, 15] : 15);
 
         if (hitEnemy.userData.health <= 0) {
             killEnemy(hitEnemy, isHeadshot);
@@ -1118,6 +1125,7 @@ function spawnEnemyBullet(enemy) {
 function takeDamage(amount) {
     playerHealth -= amount;
     updateHealthBar();
+    vibrate(80);
 
     const overlay = document.getElementById('damage-overlay');
     overlay.style.opacity = '1';
@@ -1137,6 +1145,7 @@ function updateHealthBar() {
 // ============ GAME OVER / VICTORY ============
 function gameOver() {
     gameStarted = false;
+    if (window.setTouchControlsActive) window.setTouchControlsActive(false);
     document.exitPointerLock();
     document.getElementById('gameover-title').textContent = 'GAME OVER';
     document.getElementById('gameover-title').style.color = '#f00';
@@ -1148,6 +1157,7 @@ function gameOver() {
 
 function showVictory() {
     gameStarted = false;
+    if (window.setTouchControlsActive) window.setTouchControlsActive(false);
     document.exitPointerLock();
     document.getElementById('gameover-title').textContent = '🏆 VITÓRIA!';
     document.getElementById('gameover-title').style.color = '#0f0';
@@ -1169,7 +1179,8 @@ function restartGame() {
     updateAmmoDisplay();
     loadPhase(0);
     gameStarted = true;
-    document.body.requestPointerLock();
+    if (window.setTouchControlsActive) window.setTouchControlsActive(true);
+    try { document.body.requestPointerLock(); } catch(e) {}
 }
 
 // ============ PARTICLES ============
@@ -1282,28 +1293,49 @@ function onMouseMove(e) {
     pitch = Math.max(-Math.PI/2.5, Math.min(Math.PI/2.5, pitch));
 }
 
+function zoomIn() {
+    if (isZoomed || !gameStarted) return;
+    isZoomed = true;
+    document.getElementById('scope-overlay').style.display = 'block';
+    document.getElementById('crosshair').style.display = 'none';
+    camera.fov = 15;
+    camera.updateProjectionMatrix();
+    gunGroup.visible = false;
+}
+
+function zoomOut() {
+    if (!isZoomed) return;
+    isZoomed = false;
+    document.getElementById('scope-overlay').style.display = 'none';
+    document.getElementById('crosshair').style.display = 'block';
+    camera.fov = 60;
+    camera.updateProjectionMatrix();
+    gunGroup.visible = true;
+}
+
+// Touch-drag look: mobile browsers don't reliably support Pointer Lock,
+// so finger drags on the look zone rotate the camera directly instead of
+// going through onMouseMove's movementX/Y (which needs pointer lock).
+function applyLookDelta(dx, dy) {
+    if (!gameStarted || phaseTransitioning) return;
+    const sensitivity = isZoomed ? 0.0009 : 0.0028;
+    yaw -= dx * sensitivity;
+    pitch -= dy * sensitivity;
+    pitch = Math.max(-Math.PI/2.5, Math.min(Math.PI/2.5, pitch));
+}
+
+function vibrate(pattern) {
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
+}
+
 function onMouseDown(e) {
     if (!gameStarted) return;
     if (e.button === 0) shoot();
-    if (e.button === 2) {
-        isZoomed = true;
-        document.getElementById('scope-overlay').style.display = 'block';
-        document.getElementById('crosshair').style.display = 'none';
-        camera.fov = 15;
-        camera.updateProjectionMatrix();
-        gunGroup.visible = false;
-    }
+    if (e.button === 2) zoomIn();
 }
 
 function onMouseUp(e) {
-    if (e.button === 2) {
-        isZoomed = false;
-        document.getElementById('scope-overlay').style.display = 'none';
-        document.getElementById('crosshair').style.display = 'block';
-        camera.fov = 60;
-        camera.updateProjectionMatrix();
-        gunGroup.visible = true;
-    }
+    if (e.button === 2) zoomOut();
 }
 
 function onResize() {
@@ -1350,6 +1382,7 @@ document.getElementById('start-btn').addEventListener('click', () => {
     document.getElementById('start-screen').style.display = 'none';
     gameStarted = true;
     loadPhase(0);
+    if (window.setTouchControlsActive) window.setTouchControlsActive(true);
     try { document.body.requestPointerLock(); } catch(e) {}
 });
 
@@ -1424,38 +1457,88 @@ init();
 </script>
 <style id="tc-canvas-ta">canvas{touch-action:none}</style>
 
-<script id="tc-mouse-relay">
+<style id="tc-fps-style">
+#tc-look-zone{position:fixed;top:0;right:0;bottom:170px;left:42%;z-index:999998;touch-action:none;display:none}
+@media (pointer:coarse){#tc-look-zone.tc-active{display:block}}
+#tc-fire-cluster{position:fixed;right:14px;bottom:14px;z-index:999999;display:none;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none}
+@media (pointer:coarse){#tc-fire-cluster.tc-active{display:flex}}
+#tc-fire-cluster button{pointer-events:auto;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;border-radius:50%;font-weight:700;color:#fff;font-family:'Courier New',monospace}
+#tc-fire-btn{width:76px;height:76px;background:rgba(255,40,40,.3);border:3px solid rgba(255,70,70,.9);font-size:13px}
+#tc-scope-btn{width:58px;height:58px;background:rgba(0,220,120,.22);border:2px solid rgba(0,220,120,.8);font-size:10px}
+#tc-reload-btn{width:58px;height:58px;background:rgba(0,160,255,.22);border:2px solid rgba(0,160,255,.8);font-size:10px}
+</style>
+<div id="tc-look-zone"></div>
+<div id="tc-fire-cluster">
+  <button id="tc-scope-btn" type="button">MIRA</button>
+  <button id="tc-fire-btn" type="button">🎯<br>FOGO</button>
+  <button id="tc-reload-btn" type="button">🔄 R</button>
+</div>
+<script id="tc-fps-script">
 (function(){
-  function relay(type,t,el){
-    var ev;
-    try{ ev=new MouseEvent(type,{bubbles:true,cancelable:true,clientX:t.clientX,clientY:t.clientY,button:0,buttons:1,view:window}); }
-    catch(e){ ev=document.createEvent('MouseEvent'); ev.initMouseEvent(type,true,true,window,0,t.screenX,t.screenY,t.clientX,t.clientY,false,false,false,false,0,null); }
-    (el||document.elementFromPoint(t.clientX,t.clientY)||document).dispatchEvent(ev);
+  function bindPress(btn, onDown, onUp){
+    var down=false;
+    var start=function(e){ e.preventDefault(); if(down)return; down=true; onDown && onDown(); };
+    var end=function(e){ e.preventDefault(); if(!down)return; down=false; onUp && onUp(); };
+    btn.addEventListener('pointerdown',start);
+    btn.addEventListener('pointerup',end);
+    btn.addEventListener('pointercancel',end);
+    btn.addEventListener('pointerleave',end);
+    btn.addEventListener('touchstart',start,{passive:false});
+    btn.addEventListener('touchend',end,{passive:false});
+    btn.addEventListener('touchcancel',end,{passive:false});
+    btn.addEventListener('mousedown',start);
+    btn.addEventListener('mouseup',end);
+    btn.addEventListener('mouseleave',end);
+    btn.addEventListener('contextmenu',function(e){e.preventDefault();});
   }
-  // Only hijack touches that start on the game <canvas> itself, so real UI
-  // buttons (JOGAR, menus, etc.) keep receiving their native click event.
-  // Touch events keep the same e.target for the whole gesture, so checking
-  // touchstart's target is enough for touchmove/touchend too.
-  var onCanvas=false;
-  document.addEventListener('touchstart',function(e){
-    var t=e.touches[0]; if(!t)return;
-    onCanvas = e.target && e.target.tagName==='CANVAS';
-    if(!onCanvas)return;
+  bindPress(document.getElementById('tc-fire-btn'), function(){ if(window.shoot) window.shoot(); });
+  bindPress(document.getElementById('tc-scope-btn'),
+    function(){ if(window.zoomIn) window.zoomIn(); },
+    function(){ if(window.zoomOut) window.zoomOut(); });
+  bindPress(document.getElementById('tc-reload-btn'), function(){ if(window.reload) window.reload(); });
+
+  window.setTouchControlsActive = function(active){
+    document.getElementById('tc-look-zone').classList.toggle('tc-active', !!active);
+    document.getElementById('tc-fire-cluster').classList.toggle('tc-active', !!active);
+  };
+
+  // Drag-to-look: mobile can't rely on Pointer Lock, so track raw finger
+  // movement on the right-hand zone and feed the delta straight into the
+  // camera (see applyLookDelta in the main script).
+  var zone=document.getElementById('tc-look-zone');
+  var activeId=null, lastX=0, lastY=0;
+  function start(e){
+    if(activeId!==null)return;
+    var t=e.changedTouches?e.changedTouches[0]:e;
+    activeId = e.pointerId!==undefined ? e.pointerId : t.identifier;
+    lastX=t.clientX; lastY=t.clientY;
     e.preventDefault();
-    relay('mousemove',t,e.target); relay('mousedown',t,e.target);
-  },{passive:false});
-  document.addEventListener('touchmove',function(e){
-    if(!onCanvas)return;
-    var t=e.touches[0]; if(!t)return;
+  }
+  function move(e){
+    var t=null;
+    if(e.changedTouches){
+      for(var i=0;i<e.changedTouches.length;i++){ if(e.changedTouches[i].identifier===activeId){ t=e.changedTouches[i]; break; } }
+    } else if(e.pointerId===activeId){ t=e; }
+    if(!t)return;
+    var dx=t.clientX-lastX, dy=t.clientY-lastY;
+    lastX=t.clientX; lastY=t.clientY;
+    if(window.applyLookDelta) window.applyLookDelta(dx,dy);
     e.preventDefault();
-    relay('mousemove',t,e.target);
-  },{passive:false});
-  document.addEventListener('touchend',function(e){
-    if(!onCanvas)return;
-    var t=e.changedTouches[0]; if(!t)return;
-    relay('mouseup',t,e.target);
-    onCanvas=false;
-  },{passive:true});
+  }
+  function end(e){
+    if(activeId===null)return;
+    if(e.changedTouches){
+      for(var i=0;i<e.changedTouches.length;i++){ if(e.changedTouches[i].identifier===activeId){ activeId=null; return; } }
+    } else if(e.pointerId===activeId){ activeId=null; }
+  }
+  zone.addEventListener('touchstart',start,{passive:false});
+  zone.addEventListener('touchmove',move,{passive:false});
+  zone.addEventListener('touchend',end,{passive:false});
+  zone.addEventListener('touchcancel',end,{passive:false});
+  zone.addEventListener('pointerdown',start);
+  zone.addEventListener('pointermove',move);
+  zone.addEventListener('pointerup',end);
+  zone.addEventListener('pointercancel',end);
 })();
 </script>
 </body>
