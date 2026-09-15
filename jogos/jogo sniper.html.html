@@ -1318,7 +1318,12 @@ function zoomOut() {
 // going through onMouseMove's movementX/Y (which needs pointer lock).
 function applyLookDelta(dx, dy) {
     if (!gameStarted || phaseTransitioning) return;
-    const sensitivity = isZoomed ? 0.0009 : 0.0028;
+    // A mouse can be re-centered indefinitely under Pointer Lock, so
+    // cutting sensitivity hard while scoped (like the desktop mouse path
+    // does) still leaves room to swing the view. A finger drag is bounded
+    // by the screen's physical width - the same cut left almost no room
+    // to actually turn while zoomed, which read as "aiming doesn't work".
+    const sensitivity = isZoomed ? 0.0022 : 0.0028;
     yaw -= dx * sensitivity;
     pitch -= dy * sensitivity;
     pitch = Math.max(-Math.PI/2.5, Math.min(Math.PI/2.5, pitch));
