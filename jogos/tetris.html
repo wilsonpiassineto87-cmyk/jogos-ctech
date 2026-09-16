@@ -642,7 +642,7 @@ function bgLoop(t){
 let board, current=null, holdType=null, canHold=true;
 let bag=[], queue=[];
 let score=0, lines=0, level=1, combo=-1, storedBest=0;
-let running=false, paused=false, gameOverFlag=false;
+let running=false, paused=false, gameOverFlag=false, loopFrameId=null;
 let dropTimer=0, lastTs=0, downHeld=false;
 let clearAnim=null;      // {rows:[...], t, dur}
 let particles=[];
@@ -1001,7 +1001,7 @@ function loop(ts){
     updateParticles(dt/1000);
   }
   render();
-  requestAnimationFrame(loop);
+  loopFrameId = requestAnimationFrame(loop);
 }
 
 /* ---------------- TELAS / NAVEGAÇÃO ---------------- */
@@ -1041,7 +1041,8 @@ function startGame(){
   requestAnimationFrame(()=>{ fitBoard(); spawnNext(); updateHUD(); drawSidePanels(); });
   running = true; musicActive = true; mIdx = 0;
   lastTs = performance.now();
-  requestAnimationFrame(loop);
+  if(loopFrameId!==null) cancelAnimationFrame(loopFrameId);
+  loopFrameId = requestAnimationFrame(loop);
   if(document.activeElement) document.activeElement.blur();
 }
 function togglePause(force){
