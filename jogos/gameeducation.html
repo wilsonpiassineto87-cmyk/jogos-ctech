@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gameducation — Aprenda Jogando</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/fredoka@latest/latin-500-normal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/fredoka@latest/latin-600-normal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/fredoka@latest/latin-700-normal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/nunito@latest/latin-400-normal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/nunito@latest/latin-600-normal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/nunito@latest/latin-700-normal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/nunito@latest/latin-800-normal.css">
+<style>
+:root{
+  --bg:#0e0a2a;--bg2:#151040;--card:#1b1447;--card2:#221a58;
+  --ink:#f5f2ff;--muted:#b6abe2;--line:rgba(255,255,255,.13);
+  --yellow:#ffd23f;--coral:#ff6b9d;--teal:#3fe0c5;--violet:#8b6bff;--sky:#5ac8ff;--orange:#ff9f43;
+  --disp:'Fredoka',sans-serif;--body:'Nunito',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);color:var(--ink);background:var(--bg);overflow-x:hidden;
+  background-image:radial-gradient(1100px 500px at 85% -10%,rgba(139,107,255,.22),transparent 60%),
+  radial-gradient(900px 480px at -10% 30%,rgba(63,224,197,.10),transparent 60%),
+  radial-gradient(rgba(255,255,255,.045) 1px,transparent 1px);background-size:auto,auto,26px 26px;}
+::selection{background:var(--yellow);color:#221a00}
+img{display:block;max-width:100%}a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+section{scroll-margin-top:92px}.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+.orb{position:fixed;border-radius:50%;filter:blur(70px);opacity:.5;z-index:-1;animation:drift 14s ease-in-out infinite alternate}
+.orb.o1{width:340px;height:340px;background:#3a2a86;top:-80px;left:-90px}
+.orb.o2{width:280px;height:280px;background:#0f4d49;bottom:-60px;right:-70px;animation-delay:-5s}
+.orb.o3{width:200px;height:200px;background:#5a1e46;top:45%;right:12%;animation-delay:-9s}
+@keyframes drift{from{transform:translateY(-16px)}to{transform:translateY(22px)}}
+
+header{position:sticky;top:0;z-index:50;transition:.3s;border-bottom:1px solid transparent}
+header.scrolled{background:rgba(14,10,42,.85);backdrop-filter:blur(12px);border-color:var(--line)}
+.nav{display:flex;align-items:center;gap:20px;padding:14px 0}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--disp);font-weight:700;font-size:1.35rem}
+.logo-badge{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--violet),var(--coral));display:grid;place-items:center;font-size:1.3rem;box-shadow:4px 4px 0 rgba(0,0,0,.45);transform:rotate(-4deg)}
+.logo em{font-style:normal;color:var(--yellow)}
+.xp-chip{display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:800;font-size:.85rem;margin-left:auto}
+.xp-chip b{color:var(--yellow);font-family:var(--disp)}
+.xp-bar{width:86px;height:8px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+.xp-bar i{display:block;height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,var(--teal),var(--yellow));transition:width .8s cubic-bezier(.2,.9,.3,1.2)}
+.xp-num{color:var(--muted);font-size:.72rem;font-weight:700}
+.icon-btn{width:42px;height:42px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:1.05rem;transition:.2s}
+.icon-btn:hover{transform:translateY(-2px) rotate(-6deg);border-color:var(--yellow)}
+
+.hero{padding:64px 0 40px;display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:8px;background:rgba(139,107,255,.16);border:2px solid rgba(139,107,255,.45);color:#cfc0ff;border-radius:999px;padding:7px 16px;font-weight:800;font-size:.8rem;letter-spacing:.12em}
+.hero h1{font-family:var(--disp);font-weight:700;font-size:clamp(2.4rem,5.2vw,4rem);line-height:1.08;margin:20px 0 18px}
+.hl-y{color:var(--yellow);text-shadow:4px 4px 0 rgba(0,0,0,.4)}.hl-p{color:var(--teal);text-shadow:4px 4px 0 rgba(0,0,0,.4)}
+.hero p{color:var(--muted);font-size:1.1rem;line-height:1.65;max-width:520px}
+.cta-row{display:flex;gap:14px;margin:28px 0 26px;flex-wrap:wrap}
+.btn{border:none;border-radius:14px;padding:15px 26px;font-weight:800;font-size:1rem;font-family:var(--body);transition:.15s;display:inline-flex;align-items:center;gap:8px}
+.btn:active{transform:translateY(3px)}
+.btn-yellow{background:var(--yellow);color:#241a00;box-shadow:0 6px 0 #b98f00}
+.btn-yellow:hover{transform:translateY(-2px);box-shadow:0 8px 0 #b98f00}
+.btn-ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal);transform:translateY(-2px)}
+.hero-tags{display:flex;gap:10px;flex-wrap:wrap}
+.tag{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:8px 14px;font-weight:800;font-size:.85rem}
+.tag b{color:var(--teal)}
+.hero-art{position:relative}
+.hero-frame{border-radius:26px;overflow:hidden;border:3px solid var(--line);box-shadow:12px 12px 0 rgba(0,0,0,.4),0 0 60px rgba(139,107,255,.25);transform:rotate(2deg);transition:.4s}
+.hero-art:hover .hero-frame{transform:rotate(0deg) scale(1.015)}
+.stk{position:absolute;font-family:var(--disp);font-weight:700;padding:10px 16px;border-radius:14px;box-shadow:5px 5px 0 rgba(0,0,0,.45);animation:floaty 4s ease-in-out infinite}
+.stk1{background:var(--yellow);color:#241a00;top:-16px;left:-14px;transform:rotate(-8deg)}
+.stk2{background:var(--coral);color:#fff;bottom:34px;left:-26px;transform:rotate(6deg);animation-delay:-1.4s}
+.stk3{background:var(--teal);color:#00332a;top:22%;right:-18px;transform:rotate(8deg);animation-delay:-2.6s}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+.marquee{border-block:2px solid var(--line);background:var(--card);overflow:hidden;padding:14px 0;margin-top:30px}
+.track{display:flex;gap:38px;width:max-content;animation:mq 26s linear infinite;font-family:var(--disp);font-weight:600;letter-spacing:.18em;font-size:.95rem}
+.track span:nth-child(4n+1){color:var(--yellow)}.track span:nth-child(4n+2){color:var(--teal)}.track span:nth-child(4n+3){color:var(--coral)}.track span:nth-child(4n+4){color:var(--sky)}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding:56px 0 8px}
+.stat{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:22px;text-align:center;transition:.25s}
+.stat:hover{transform:translateY(-5px);border-color:var(--violet)}
+.stat b{display:block;font-family:var(--disp);font-weight:700;font-size:2rem;color:var(--yellow)}
+.stat:nth-child(2) b{color:var(--teal)}.stat:nth-child(3) b{color:var(--coral)}.stat:nth-child(4) b{color:var(--sky)}
+.stat span{color:var(--muted);font-weight:700;font-size:.9rem}
+
+.sec-head{margin:90px 0 40px;text-align:center}
+.kicker{display:inline-block;background:rgba(63,224,197,.12);border:2px solid rgba(63,224,197,.4);color:var(--teal);border-radius:999px;padding:6px 16px;font-weight:800;font-size:.78rem;letter-spacing:.14em;margin-bottom:14px}
+.sec-head h2{font-family:var(--disp);font-weight:700;font-size:clamp(1.8rem,3.6vw,2.7rem)}
+.sec-head p{color:var(--muted);margin-top:10px}
+
+.games-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.game-card{--ac:var(--yellow);background:var(--card);border:2px solid var(--line);border-radius:20px;padding:26px 22px;position:relative;transition:.25s;overflow:hidden}
+.game-card::after{content:"";position:absolute;inset:auto -30px -60px auto;width:150px;height:150px;border-radius:50%;background:var(--ac);opacity:.12;transition:.3s}
+.game-card:hover{transform:translateY(-8px) rotate(-1deg);border-color:var(--ac);box-shadow:0 18px 40px rgba(0,0,0,.45)}
+.gc-ic{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;font-size:1.9rem;background:var(--ac);box-shadow:5px 5px 0 rgba(0,0,0,.4);margin-bottom:18px;transform:rotate(-5deg);transition:.3s}
+.game-card:hover .gc-ic{transform:rotate(6deg) scale(1.08)}
+.game-card h3{font-family:var(--disp);font-size:1.25rem;font-weight:600;margin-bottom:8px}
+.game-card p{color:var(--muted);font-size:.92rem;line-height:1.55;min-height:58px}
+.gc-meta{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}
+.gc-meta span{font-size:.74rem;font-weight:800;background:rgba(255,255,255,.08);border-radius:8px;padding:5px 9px;color:var(--muted)}
+.play-btn{width:100%;border:none;border-radius:12px;padding:13px;font-weight:800;background:var(--ac);color:#160f38;transition:.15s;box-shadow:0 5px 0 rgba(0,0,0,.4)}
+.play-btn:hover{transform:translateY(-2px)}.play-btn:active{transform:translateY(2px);box-shadow:none}
+
+.trails-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.trail{background:var(--card);border:2px solid var(--line);border-radius:20px;overflow:hidden;transition:.3s}
+.trail:hover{transform:translateY(-8px);border-color:var(--violet);box-shadow:0 20px 44px rgba(0,0,0,.5)}
+.trail-img{position:relative;aspect-ratio:4/3;overflow:hidden}
+.trail-img img{width:100%;height:100%;object-fit:cover;transition:.6s}
+.trail:hover .trail-img img{transform:scale(1.08) rotate(1deg)}
+.trail-lvl{position:absolute;top:12px;left:12px;background:rgba(14,10,42,.8);backdrop-filter:blur(6px);border:2px solid var(--line);border-radius:999px;padding:5px 12px;font-size:.72rem;font-weight:800}
+.trail-body{padding:20px}
+.trail-body h3{font-family:var(--disp);font-weight:600;font-size:1.3rem}
+.trail-body .lessons{color:var(--muted);font-size:.85rem;font-weight:700;margin:6px 0 14px}
+.bar{height:10px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin-bottom:6px}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--violet),var(--coral));transition:width 1.2s .3s cubic-bezier(.2,.8,.3,1)}
+.reveal.in .bar i{width:var(--p)}
+.bar-lbl{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);font-weight:800;margin-bottom:16px}
+.trail-play{width:100%;border:2px solid var(--line);background:transparent;color:var(--ink);border-radius:12px;padding:12px;font-weight:800;transition:.2s}
+.trail-play:hover{border-color:var(--yellow);color:var(--yellow);transform:translateY(-2px)}
+
+.bento{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.btile{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:26px;transition:.25s}
+.btile:hover{transform:translateY(-5px);border-color:var(--teal)}
+.b1{grid-column:span 2;grid-row:span 2;background:linear-gradient(150deg,#241a5e,#1b1447)}
+.b2{grid-column:span 2}.b5{grid-column:span 2}.b6{grid-column:span 2}
+.btile h3{font-family:var(--disp);font-weight:600;font-size:1.35rem;margin-bottom:10px;line-height:1.25}
+.btile p{color:var(--muted);line-height:1.6;font-size:.95rem}
+.b1 ul{list-style:none;margin-top:18px;display:grid;gap:12px}
+.b1 li{display:flex;gap:10px;align-items:flex-start;font-weight:700;color:var(--muted)}
+.b1 li i{font-style:normal;flex:0 0 auto;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:.8rem}
+.big-num{font-family:var(--disp);font-weight:700;font-size:3.4rem;line-height:1}
+.b2 .big-num{color:var(--teal)}.b3 .big-num{color:var(--yellow)}.b4 .big-num{color:var(--coral)}
+.quote{font-size:1.05rem;font-weight:700;line-height:1.5}.quote small{display:block;margin-top:12px;color:var(--muted);font-weight:800}
+
+.ach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.ach{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:24px;text-align:center;transition:.25s;filter:grayscale(1);opacity:.55}
+.ach.on{filter:none;opacity:1;border-color:var(--yellow);box-shadow:0 0 30px rgba(255,210,63,.15)}
+.ach:hover{transform:translateY(-5px)}
+.ach-ic{width:70px;height:70px;margin:0 auto 14px;border-radius:50%;background:var(--card2);border:2px solid var(--line);display:grid;place-items:center;font-size:1.9rem}
+.ach.on .ach-ic{border-color:var(--yellow);background:rgba(255,210,63,.12)}
+.ach b{font-family:var(--disp);font-weight:600;display:block;margin-bottom:6px}
+.ach span{color:var(--muted);font-size:.85rem;font-weight:700}
+
+.cta-band{margin:100px 0 0;background:linear-gradient(120deg,var(--violet),var(--coral));border-radius:28px;padding:56px 40px;text-align:center;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(139,107,255,.35)}
+.cta-band::before{content:"🎮 ⭐ 🧠 🚀 ✦ 🎯";position:absolute;inset:0;display:flex;justify-content:space-around;align-items:center;font-size:5rem;opacity:.12;pointer-events:none}
+.cta-band h2{font-family:var(--disp);font-weight:700;font-size:clamp(1.7rem,3.4vw,2.6rem);color:#fff}
+.cta-band p{color:rgba(255,255,255,.9);margin:12px 0 26px;font-weight:700}
+.cta-band .btn-yellow{background:#fff;color:#3c1361;box-shadow:0 6px 0 rgba(0,0,0,.3)}
+
+footer{margin-top:90px;border-top:2px solid var(--line);padding:44px 0 30px;background:rgba(0,0,0,.25)}
+.foot{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;align-items:flex-start}
+.foot p{color:var(--muted);font-size:.9rem;max-width:340px;line-height:1.6;margin-top:10px}
+.copy{text-align:center;color:var(--muted);font-size:.82rem;margin-top:36px;font-weight:700}
+
+.modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(8,6,25,.82);backdrop-filter:blur(8px);padding:20px}
+.modal.open{display:flex}
+.panel{width:min(760px,96vw);max-height:92vh;overflow:auto;background:var(--card);border:2px solid var(--violet);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:pop-in .35s cubic-bezier(.2,1.2,.3,1)}
+@keyframes pop-in{from{transform:scale(.85) translateY(30px);opacity:0}}
+.panel-head{display:flex;align-items:center;gap:14px;padding:22px 26px;border-bottom:2px solid var(--line);position:sticky;top:0;background:var(--card);z-index:2}
+.panel-head h3{font-family:var(--disp);font-weight:600;font-size:1.35rem}
+.panel-head p{color:var(--muted);font-size:.85rem;font-weight:700}
+.m-close{margin-left:auto;width:40px;height:40px;border-radius:12px;border:2px solid var(--line);background:transparent;color:var(--ink);font-size:1.1rem;transition:.2s}
+.m-close:hover{background:var(--coral);border-color:var(--coral);transform:rotate(90deg)}
+.panel-body{padding:26px}
+
+.topic-wrap{background:rgba(255,255,255,.04);border:2px dashed var(--line);border-radius:16px;padding:22px;text-align:center}
+.topic-wrap label{display:block;font-weight:800;color:var(--teal);font-size:.95rem;margin-bottom:12px}
+.topic-wrap input{width:100%;max-width:400px;padding:13px 18px;border-radius:12px;border:2px solid var(--line);background:var(--card2);color:var(--ink);font-size:1.05rem;font-weight:700;font-family:var(--body);outline:none;transition:.2s;text-align:center}
+.topic-wrap input:focus{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(255,210,63,.15)}
+.topic-wrap input::placeholder{color:rgba(182,171,226,.55)}
+.topic-hint{margin-top:10px;font-size:.78rem;color:var(--muted);font-weight:700;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+.chip{border:2px solid var(--line);background:var(--card2);color:var(--muted);border-radius:999px;padding:8px 15px;font-weight:800;font-size:.85rem;transition:.2s}
+.chip:hover{border-color:var(--orange);color:var(--orange);transform:translateY(-2px)}
+.topic-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+
+.quiz-hud{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;font-weight:800;color:var(--muted)}
+.quiz-hud b{color:var(--ink)}
+.timebar{height:10px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin-bottom:22px}
+.timebar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--coral),var(--yellow));border-radius:99px}
+.quiz-q{font-family:var(--disp);font-weight:700;font-size:2.2rem;text-align:center;margin:10px 0 24px;color:var(--yellow)}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.opt{border:2px solid var(--line);background:var(--card2);color:var(--ink);border-radius:14px;padding:16px;font-size:1.15rem;font-weight:800;transition:.15s;text-align:center}
+.opt:hover{border-color:var(--sky);transform:translateY(-2px)}
+.opt.good{background:#1d5c46!important;border-color:var(--teal)!important;animation:pop .35s}
+.opt.bad{background:#6b1f36!important;border-color:var(--coral)!important;animation:shake .4s}
+.opt.dis{pointer-events:none;opacity:.85}
+@keyframes pop{50%{transform:scale(1.07)}}
+@keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+.quiz-msg{min-height:30px;text-align:center;margin-top:18px;font-weight:800;font-size:1.05rem}
+.quiz-msg .ok{color:var(--teal)}.quiz-msg .no{color:var(--coral)}
+.result{text-align:center;padding:20px 0}
+.r-emoji{font-size:3.4rem;margin-bottom:12px}
+.result h3{font-family:var(--disp);font-weight:700;font-size:1.7rem;margin-bottom:10px}
+.result p{color:var(--muted);font-weight:700}
+.r-xp{display:inline-block;margin:18px 0;background:rgba(255,210,63,.14);border:2px solid var(--yellow);color:var(--yellow);font-family:var(--disp);font-weight:700;font-size:1.3rem;border-radius:14px;padding:10px 26px;animation:pop .5s}
+.r-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+.memo-theme{text-align:center;margin-bottom:12px}
+.memo-theme span{display:inline-block;background:rgba(255,159,67,.15);border:2px solid var(--orange);color:var(--orange);border-radius:999px;padding:7px 18px;font-weight:800;font-size:.9rem}
+.memo-hud{display:flex;gap:22px;justify-content:center;font-weight:800;color:var(--muted);margin-bottom:18px}
+.memo-hud b{color:var(--ink)}
+.memo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.mem{perspective:600px;background:none;border:none;aspect-ratio:3/3.4;padding:0}
+.mem-in{position:relative;display:block;width:100%;height:100%;transform-style:preserve-3d;transition:transform .45s}
+.mem.up .mem-in{transform:rotateY(180deg)}
+.mem-back,.mem-front{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:6px;text-align:center;font-weight:800}
+.mem-back{background:linear-gradient(135deg,var(--violet),#5b3fd4);border:2px solid rgba(255,255,255,.25);font-family:var(--disp);font-size:1.5rem;color:rgba(255,255,255,.8)}
+.mem-front{transform:rotateY(180deg);background:var(--card2);border:2px solid var(--teal);color:var(--ink);font-size:.82rem;line-height:1.25}
+.mem.q .mem-front{border-color:var(--yellow);color:var(--yellow)}
+.mem.done .mem-front{border-color:var(--teal);background:rgba(63,224,197,.14);box-shadow:0 0 16px rgba(63,224,197,.35)}
+.mem.done{pointer-events:none}
+
+.forca-wrap{display:grid;grid-template-columns:200px 1fr;gap:26px;align-items:start}
+.hang-svg{width:100%}
+.hp{stroke:var(--yellow);stroke-width:5;stroke-linecap:round;fill:none;opacity:0;transition:.3s}
+.hp.on{opacity:1}
+.hearts{font-size:1.2rem;letter-spacing:2px;margin-top:8px;text-align:center}
+.hint{background:rgba(90,200,255,.12);border:2px solid rgba(90,200,255,.4);color:var(--sky);border-radius:12px;padding:10px 14px;font-weight:800;font-size:.9rem;margin-bottom:18px}
+.word{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:22px}
+.slot{width:34px;height:44px;border-bottom:3px solid var(--violet);display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:1.4rem}
+.slot.on{color:var(--teal);animation:pop .3s}.slot.gap{border:none;width:14px}
+.keys{display:flex;flex-wrap:wrap;gap:7px}
+.key{width:38px;height:38px;border-radius:10px;border:2px solid var(--line);background:var(--card2);color:var(--ink);font-weight:800;transition:.15s}
+.key:hover{border-color:var(--yellow);transform:translateY(-2px)}
+.key.ok{background:#1d5c46;border-color:var(--teal)}.key.bad{background:#6b1f36;border-color:var(--coral)}
+.key:disabled{pointer-events:none;opacity:.8}
+
+.seq-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0 26px}
+.seq-chip{background:var(--card2);border:2px solid var(--line);border-radius:12px;padding:12px 18px;font-family:var(--disp);font-weight:600;font-size:1.25rem}
+.seq-chip.q{background:rgba(255,210,63,.14);border-color:var(--yellow);color:var(--yellow);animation:floaty 2s ease-in-out infinite}
+
+#toasts{position:fixed;top:86px;right:20px;z-index:200;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{background:var(--card);border:2px solid var(--violet);border-radius:14px;padding:12px 18px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.5);transform:translateX(120%);transition:.4s cubic-bezier(.2,1,.3,1);max-width:300px;pointer-events:auto}
+.toast.show{transform:none}.toast.xp{border-color:var(--yellow)}.toast.ach{border-color:var(--teal)}.toast.level{border-color:var(--coral)}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:300}
+.reveal{opacity:0;transform:translateY(28px);transition:.7s ease;transition-delay:var(--d,0s)}
+.reveal.in{opacity:1;transform:none}
+
+@media(max-width:1000px){
+  .games-grid{grid-template-columns:1fr 1fr}.trails-grid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}
+  .bento{grid-template-columns:1fr 1fr}.b1{grid-column:span 2}.b2,.b5,.b6{grid-column:span 2}
+  .hero{grid-template-columns:1fr;padding-top:40px}.hero-art{max-width:520px;margin:20px auto 0}
+}
+@media(max-width:720px){
+  .xp-chip .xp-num{display:none}
+  .games-grid,.trails-grid,.ach-grid{grid-template-columns:1fr}.bento{grid-template-columns:1fr}.b1,.b2,.b5,.b6{grid-column:span 1}
+  .forca-wrap{grid-template-columns:1fr}.hang-svg{max-width:170px;margin:0 auto}.quiz-opts{grid-template-columns:1fr}
+  .memo-grid{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+<body>
+
+<canvas id="fx"></canvas>
+<div id="toasts"></div>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+
+<header id="topo">
+  <div class="wrap nav">
+    <a class="logo" href="#"><span class="logo-badge">🎮</span>Game<em>ducation</em></a>
+    <div class="xp-chip"><b id="xpLvl">Nv. 1</b><div class="xp-bar"><i id="xpFill"></i></div><span class="xp-num" id="xpNum">0/250</span></div>
+    <button class="icon-btn" id="sndBtn" type="button" title="Som">🔊</button>
+  </div>
+</header>
+
+<main>
+  <section class="wrap hero">
+    <div>
+      <span class="pill">🕹️ PLAYER 1 · MODO APRENDIZADO ATIVADO</span>
+      <h1>Aperte o <span class="hl hl-y">start</span> e aprenda <span class="hl hl-p">jogando</span> de verdade.</h1>
+      <p>Digite exatamente o que você quer estudar — como "Nome de Países" — e o jogo usa somente esse conteúdo. Saiu e voltou? As perguntas continuam de onde pararam, nunca repetidas.</p>
+      <div class="cta-row">
+        <a href="#jogos" class="btn btn-yellow">▶ Jogar agora</a>
+        <a href="#trilhas" class="btn btn-ghost">Explorar trilhas</a>
+      </div>
+      <div class="hero-tags">
+        <span class="tag">🎯 <b>4</b> jogos arcade</span>
+        <span class="tag">🧠 <b>6</b> trilhas de estudo</span>
+        <span class="tag">🔁 <b>Zero</b> repetição</span>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="hero-frame"><img src="https://image.qwenlm.ai/public_source/c98a0e7f-d180-4a91-b291-4c28e82dc464/1cb75172c-7850-4ed7-8e68-ef2461cb87ba.png" alt="Universo mágico de estudos"></div>
+      <span class="stk stk1">+120 XP</span><span class="stk stk2">COMBO ×5 🔥</span><span class="stk stk3">Lv 12 🏆</span>
+    </div>
+  </section>
+
+  <div class="marquee"><div class="track" id="track"><span>MATEMÁTICA ✦</span><span>CIÊNCIAS ✦</span><span>GEOGRAFIA ✦</span><span>HISTÓRIA ✦</span><span>PORTUGUÊS ✦</span><span>INGLÊS ✦</span><span>ARTES ✦</span><span>LÓGICA ✦</span></div></div>
+
+  <div class="wrap stats">
+    <div class="stat reveal"><b data-count="12480">0</b><span>estudantes jogando</span></div>
+    <div class="stat reveal" style="--d:.1s"><b data-count="350000">0</b><span>questões resolvidas</span></div>
+    <div class="stat reveal" style="--d:.2s"><b data-count="96">0</b><span>% aprendem mais rápido</span></div>
+    <div class="stat reveal" style="--d:.3s"><b data-count="40">0</b><span>desafios e fases</span></div>
+  </div>
+
+  <section id="jogos" class="wrap">
+    <div class="sec-head"><span class="kicker">🎮 ARCADE DO SABER</span><h2>Escolha seu jogo e ganhe XP</h2><p>Você digita o tema — o jogo usa SOMENTE ele, e nunca repete as últimas perguntas!</p></div>
+    <div class="games-grid">
+      <div class="game-card reveal" style="--ac:var(--yellow)"><div class="gc-ic">⚡</div><h3>Quiz Relâmpago</h3><p>Perguntas contra o relógio com combos e vidas. Rotação salva: nunca repete!</p><div class="gc-meta"><span>⏱ 2 min</span><span>🔥 combos</span><span>🔁 não repete</span></div><button class="play-btn" data-game="quiz" type="button">JOGAR ▶</button></div>
+      <div class="game-card reveal" style="--ac:var(--teal);--d:.1s"><div class="gc-ic">🃏</div><h3>Memória do Saber</h3><p>Combine pares da matéria. A cada rodada completa, um tema novo com cartas novas!</p><div class="gc-meta"><span>🧠 8 pares</span><span>🎨 temas</span><span>🔁 não repete</span></div><button class="play-btn" data-game="memo" type="button">JOGAR ▶</button></div>
+      <div class="game-card reveal" style="--ac:var(--coral);--d:.2s"><div class="gc-ic">🔤</div><h3>Forca do Saber</h3><p>Descubra palavras da matéria. Palavras novas sempre — mesmo saindo e voltando!</p><div class="gc-meta"><span>💡 dicas</span><span>❤️ 6 vidas</span><span>🔁 não repete</span></div><button class="play-btn" data-game="forca" type="button">JOGAR ▶</button></div>
+      <div class="game-card reveal" style="--ac:var(--sky);--d:.3s"><div class="gc-ic">🧩</div><h3>Sequência Genial</h3><p>Decifre padrões numéricos e lógicos da matéria. Ordem sempre diferente!</p><div class="gc-meta"><span>🔢 lógica</span><span>🧠 raciocínio</span><span>🔁 não repete</span></div><button class="play-btn" data-game="seq" type="button">JOGAR ▶</button></div>
+    </div>
+  </section>
+
+  <section id="trilhas" class="wrap">
+    <div class="sec-head"><span class="kicker">🗺️ MAPAS DE AVENTURA</span><h2>Trilhas de estudo</h2><p>Cada matéria é um mundo. Jogue a trilha e veja sua barra de progresso encher.</p></div>
+    <div class="trails-grid">
+      <div class="trail reveal"><div class="trail-img"><img src="https://image.qwenlm.ai/public_source/c98a0e7f-d180-4a91-b291-4c28e82dc464/1be03e569-ee41-4d91-9725-98f1ddc7e96f.png" alt="Matemática"><span class="trail-lvl">🟢 Iniciante</span></div><div class="trail-body"><h3>Matemática</h3><p class="lessons">📚 Tabuada, frações, geometria e lógica</p><div class="bar"><i style="--p:72%"></i></div><div class="bar-lbl"><span>Progresso</span><span>72%</span></div><button class="trail-play" data-subject="mat" type="button">Abrir jogos de Matemática</button></div></div>
+      <div class="trail reveal" style="--d:.08s"><div class="trail-img"><img src="https://image.qwenlm.ai/public_source/c98a0e7f-d180-4a91-b291-4c28e82dc464/140ec1059-4aba-42e2-bd41-f2e3331f6fb6.png" alt="Ciências"><span class="trail-lvl">🟡 Intermediário</span></div><div class="trail-body"><h3>Ciências</h3><p class="lessons">🧪 Corpo humano, átomos, ecossistemas</p><div class="bar"><i style="--p:45%"></i></div><div class="bar-lbl"><span>Progresso</span><span>45%</span></div><button class="trail-play" data-subject="cie" type="button">Abrir jogos de Ciências</button></div></div>
+      <div class="trail reveal" style="--d:.16s"><div class="trail-img"><img src="https://image.qwenlm.ai/public_source/c98a0e7f-d180-4a91-b291-4c28e82dc464/120369b1a-3bac-41a6-962e-83577c9cc93f.png" alt="Geografia"><span class="trail-lvl">🟢 Iniciante</span></div><div class="trail-body"><h3>Geografia</h3><p class="lessons">🌍 Capitais, mapas, biomas e continentes</p><div class="bar"><i style="--p:58%"></i></div><div class="bar-lbl"><span>Progresso</span><span>58%</span></div><button class="trail-play" data-subject="geo" type="button">Abrir jogos de Geografia</button></div></div>
+      <div class="trail reveal"><div class="trail-img"><img src="https://image.qwenlm.ai/public_source/c98a0e7f-d180-4a91-b291-4c28e82dc464/1bf9b8561-7fed-4030-af54-2d2958cf4ff1.png" alt="História"><span class="trail-lvl">🟡 Intermediário</span></div><div class="trail-body"><h3>História</h3><p class="lessons">🏺 Civilizações, descobertas e eras</p><div class="bar"><i style="--p:30%"></i></div><div class="bar-lbl"><span>Progresso</span><span>30%</span></div><button class="trail-play" data-subject="his" type="button">Abrir jogos de História</button></div></div>
+      <div class="trail reveal" style="--d:.08s"><div class="trail-img"><img src="https://image.qwenlm.ai/public_source/c98a0e7f-d180-4a91-b291-4c28e82dc464/19fc2bb45-9463-4255-a791-33a00d51dec1.png" alt="Português"><span class="trail-lvl">🟢 Iniciante</span></div><div class="trail-body"><h3>Português</h3><p class="lessons">✍️ Gramática, literatura e interpretação</p><div class="bar"><i style="--p:64%"></i></div><div class="bar-lbl"><span>Progresso</span><span>64%</span></div><button class="trail-play" data-subject="por" type="button">Abrir jogos de Português</button></div></div>
+      <div class="trail reveal" style="--d:.16s"><div class="trail-img"><img src="https://image.qwenlm.ai/public_source/c98a0e7f-d180-4a91-b291-4c28e82dc464/1cb75172c-7850-4ed7-8e68-ef2461cb87ba.png" alt="Inglês"><span class="trail-lvl">🔴 Avançado</span></div><div class="trail-body"><h3>Inglês</h3><p class="lessons">🇬🇧 Vocabulário, verbos e expressões</p><div class="bar"><i style="--p:80%"></i></div><div class="bar-lbl"><span>Progresso</span><span>80%</span></div><button class="trail-play" data-subject="ing" type="button">Abrir jogos de Inglês</button></div></div>
+    </div>
+  </section>
+
+  <section id="porque" class="wrap">
+    <div class="sec-head"><span class="kicker">🧠 CIÊNCIA DO APRENDIDO</span><h2>Por que aprender jogando funciona?</h2></div>
+    <div class="bento">
+      <div class="btile b1 reveal"><h3>Seu cérebro libera dopamina a cada acerto — e ela fixa a memória 🎉</h3><p>Recompensas, combos e níveis transformam a revisão em algo que você quer repetir.</p><ul><li><i style="background:rgba(255,210,63,.2)">⚡</i> Feedback instantâneo: errou, aprendeu, seguiu.</li><li><i style="background:rgba(63,224,197,.2)">🔁</i> Repetição espaçada disfarçada de diversão.</li><li><i style="background:rgba(255,107,157,.2)">🎯</i> Desafios que crescem no seu ritmo.</li></ul></div>
+      <div class="btile b2 reveal" style="--d:.1s"><div class="big-num">89%</div><p style="margin-top:8px">de retenção quando aprendemos praticando.</p></div>
+      <div class="btile b3 reveal" style="--d:.15s"><div class="big-num">15m</div><p>por dia já criam um hábito sólido.</p></div>
+      <div class="btile b4 reveal" style="--d:.2s"><div class="big-num">×2</div><p>mais revisão sem tédio.</p></div>
+      <div class="btile b5 reveal" style="--d:.1s"><p class="quote">“Gabaritei frações sem perceber que estava estudando!”<small>— Lari, 11 anos 🏆</small></p></div>
+      <div class="btile b6 reveal" style="--d:.15s"><h3>Errar aqui não tira nota — tira só vidas. 💜</h3><p>Sem medo de tentar, o cérebro testa e aprende mais rápido.</p></div>
+    </div>
+  </section>
+
+  <section id="conquistas" class="wrap">
+    <div class="sec-head"><span class="kicker">🏆 SALA DE TROFÉUS</span><h2>Suas conquistas</h2><p>Jogue para desbloquear todos os badges.</p></div>
+    <div class="ach-grid" id="achGrid"></div>
+  </section>
+
+  <div class="wrap"><div class="cta-band reveal"><h2>Pronto para a sua primeira partida?</h2><p>Sem cadastro. Sem download. Só diversão e aprendizado.</p><a href="#jogos" class="btn btn-yellow">🚀 Começar agora</a></div></div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div><a class="logo" href="#"><span class="logo-badge">🎮</span>Game<em>ducation</em></a><p>O parque de diversões do conhecimento. Escolha uma matéria, digite seu tema e jogue sem repetir perguntas. Feito com 💜 e muita cafeína.</p></div>
+  </div>
+  <div class="copy">© 2026 Gameducation · Aprender é o melhor jogo que existe 🕹️</div>
+</footer>
+
+<div class="modal" id="modal">
+  <div class="panel">
+    <div class="panel-head"><div><h3 id="mTitle">Jogo</h3><p id="mSub"></p></div><button class="m-close" id="mClose" type="button">✕</button></div>
+    <div class="panel-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ===== UTIL ===== */
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const ri=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+const norm=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* palavras ignoradas ao interpretar o tema digitado */
+const STOPWORDS=new Set(['DE','DA','DO','DAS','DOS','E','A','O','EM','NO','NA','NOS','NAS','THE','OF','PARA','COM','UM','UMA','NOME','NOMES','QUAL','QUAIS','SOBRE']);
+/* variações singular/plural para casar com precisão (ex: "países" casa com "país") */
+function kwVariants(k){
+  const set=new Set([k]);
+  if(k.endsWith('ES')&&k.length>4)set.add(k.slice(0,-2));
+  if(k.endsWith('S')&&k.length>3)set.add(k.slice(0,-1));
+  if(k.length>3)set.add(k+'S');
+  if(k.endsWith('AO')&&k.length>3)set.add(k.slice(0,-2)+'OES');
+  return [...set];
+}
+/* nota de 0 a 1: quantas palavras do tema aparecem no texto */
+function topicScore(text,topic){
+  const hay=norm(text);
+  const kws=norm(topic).split(/\s+/).filter(k=>k.length>=2&&!STOPWORDS.has(k));
+  if(!kws.length)return 1;
+  let hit=0;
+  kws.forEach(k=>{if(kwVariants(k).some(v=>hay.includes(v)))hit++;});
+  return hit/kws.length;
+}
+/* FILTRO ESTRITO: mantém só os itens mais relacionados ao tema digitado */
+function strictFilter(items,topic,textOf){
+  if(!topic||!topic.trim())return items.slice();
+  const scored=items.map(it=>({it,s:topicScore(textOf(it),topic)})).filter(x=>x.s>0);
+  if(!scored.length)return[];
+  const best=Math.max(...scored.map(x=>x.s));
+  return scored.filter(x=>x.s>=best*0.6).map(x=>x.it);
+}
+
+/* ===== STATE (com rotação persistida) ===== */
+let state;
+try{state=Object.assign({xp:0,games:{},ach:{},muted:false,rot:{}},JSON.parse(localStorage.getItem('gamedu')||'{}'));}
+catch(e){state={xp:0,games:{},ach:{},muted:false,rot:{}};}
+if(!state.games)state.games={};
+if(!state.ach)state.ach={};
+if(!state.rot||typeof state.rot!=='object')state.rot={};
+const save=()=>{try{localStorage.setItem('gamedu',JSON.stringify(state));}catch(e){}};
+const levelOf=x=>Math.floor(x/250)+1;
+
+/* rotação persistida: lembra o que já saiu para NÃO repetir ao sair e voltar */
+function rotGet(k){return Array.isArray(state.rot[k])?state.rot[k].slice():[];}
+function rotSet(k,arr,maxLen){
+  if(maxLen>0&&arr.length>maxLen)arr=arr.slice(arr.length-maxLen);
+  state.rot[k]=arr;save();
+}
+
+/* ===== SOUND ===== */
+let AC=null;
+function beep(f,d,type,g){
+  if(state.muted)return;
+  try{
+    if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended')AC.resume();
+    const o=AC.createOscillator(),v=AC.createGain();
+    o.type=type||'sine';o.frequency.value=f;v.gain.value=g||.12;
+    o.connect(v);v.connect(AC.destination);
+    const t=AC.currentTime;
+    v.gain.setValueAtTime(g||.12,t);
+    v.gain.exponentialRampToValueAtTime(.001,t+d);
+    o.start(t);o.stop(t+d);
+  }catch(e){}
+}
+const sfxOk=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),90);};
+const sfxBad=()=>beep(200,.28,'sawtooth',.07);
+const sfxWin=()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.22,'triangle',.12),i*120));};
+
+/* ===== CONFETTI ===== */
+const fxCvs=$('#fx'),fctx=fxCvs.getContext('2d');
+let parts=[],fxRun=false;
+function fxSize(){fxCvs.width=innerWidth;fxCvs.height=innerHeight;}
+fxSize();addEventListener('resize',fxSize);
+function burst(x,y,n){
+  n=n||80;
+  const cols=['#ffd23f','#ff6b9d','#3fe0c5','#8b6bff','#5ac8ff','#ff9f43'];
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,s=Math.random()*6+2;
+    parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-3,g:.16,c:cols[i%6],sz:Math.random()*6+3,r:Math.random()*6.28,vr:(Math.random()-.5)*.3,l:60+Math.random()*40});
+  }
+  if(!fxRun){fxRun=true;requestAnimationFrame(fxLoop);}
+}
+function fxLoop(){
+  fctx.clearRect(0,0,fxCvs.width,fxCvs.height);
+  parts=parts.filter(p=>p.l>0);
+  parts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.vx*=.99;p.r+=p.vr;p.l--;
+    fctx.save();fctx.translate(p.x,p.y);fctx.rotate(p.r);
+    fctx.globalAlpha=Math.max(0,Math.min(1,p.l/30));
+    fctx.fillStyle=p.c;fctx.fillRect(-p.sz/2,-p.sz/2,p.sz,p.sz*.62);
+    fctx.restore();
+  });
+  if(parts.length){requestAnimationFrame(fxLoop);}
+  else{fxRun=false;fctx.clearRect(0,0,fxCvs.width,fxCvs.height);}
+}
+const burstCenter=()=>burst(innerWidth/2,innerHeight/3,130);
+const burstAt=el=>{if(!el)return;const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,36);};
+
+/* ===== TOAST ===== */
+function toast(msg,type){
+  const zone=$('#toasts');
+  if(!zone)return;
+  while(zone.children.length>=4)zone.removeChild(zone.firstChild);
+  const t=document.createElement('div');
+  t.className='toast '+(type||'');
+  t.innerHTML=msg;
+  zone.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>{if(t.parentNode)t.remove();},400);},2800);
+}
+
+/* ===== XP / ACH ===== */
+const ACH={
+  first:{icon:'🕹️',name:'Primeira Partida',desc:'Complete qualquer jogo'},
+  streak:{icon:'⚡',name:'Raio Matemático',desc:'5 acertos seguidos no Quiz'},
+  memo:{icon:'🃏',name:'Memória de Elefante',desc:'Vença a Memória em ≤14 jogadas'},
+  forca:{icon:'🔤',name:'Detetive de Palavras',desc:'Vença uma Forca'},
+  seq:{icon:'🧩',name:'Mestre das Sequências',desc:'8 vitórias na Sequência'},
+  level5:{icon:'🏆',name:'Lenda Gameducation',desc:'Alcance o nível 5'}
+};
+function renderAch(){
+  const box=$('#achGrid');if(!box)return;
+  box.innerHTML=Object.entries(ACH).map(([id,a])=>{
+    const on=!!state.ach[id];
+    return '<div class="ach '+(on?'on':'')+'"><div class="ach-ic">'+(on?a.icon:'🔒')+'</div><b>'+a.name+'</b><span>'+a.desc+'</span></div>';
+  }).join('');
+}
+function unlock(id){
+  if(state.ach[id]||!ACH[id])return;
+  state.ach[id]=1;save();renderAch();
+  toast(ACH[id].icon+' Conquista: <b>'+ACH[id].name+'</b>!','ach');
+  burst(innerWidth-160,140,50);sfxWin();
+}
+function renderXp(){
+  const lvl=$('#xpLvl'),fill=$('#xpFill'),num=$('#xpNum');
+  const cur=state.xp%250;
+  if(lvl)lvl.textContent='Nv. '+levelOf(state.xp);
+  if(fill)fill.style.width=(cur/250*100)+'%';
+  if(num)num.textContent=cur+'/250 XP';
+}
+function addXp(n){
+  if(n<=0)return;
+  const before=levelOf(state.xp);
+  state.xp+=n;
+  const after=levelOf(state.xp);
+  save();renderXp();
+  toast('✨ +'+n+' XP!','xp');
+  if(after>before){
+    setTimeout(()=>{toast('🎉 LEVEL UP! Nível '+after+'!','level');burstCenter();sfxWin();},500);
+  }
+  if(after>=5)unlock('level5');
+}
+
+/* ===== MODAL ===== */
+const modal=$('#modal'),mBody=$('#mBody');
+let cleanupFn=null,currentSubject=null,currentTopic='',currentGameId=null,session=0;
+
+function runCleanup(){if(cleanupFn){try{cleanupFn();}catch(e){}}cleanupFn=null;}
+function openGame(id,subject){
+  session++;runCleanup();
+  currentSubject=subject||null;
+  currentGameId=id;
+  const g=GAMES[id];
+  const t=$('#mTitle'),s=$('#mSub');
+  if(t)t.textContent=g.icon+' '+g.title+(currentSubject?' · '+SUBJECT_NAMES[currentSubject]:'')+(currentTopic?' · 🎯 '+currentTopic:'');
+  if(s)s.textContent=currentTopic?'Modo estrito: somente "'+currentTopic+'" · sem repetir as últimas':'Conteúdo variado · sem repetir as últimas';
+  mBody.innerHTML='';
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+  g.build(mBody);
+}
+function closeModal(){
+  if(!modal.classList.contains('open'))return;
+  session++;runCleanup();
+  modal.classList.remove('open');
+  document.body.style.overflow='';
+  currentSubject=null;currentTopic='';currentGameId=null;
+}
+$('#mClose').onclick=closeModal;
+modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+const alive=t=>t===session;
+
+/* tela quando o tema digitado não tem conteúdo na matéria */
+function showTopicNotFound(root,subject,topic){
+  const sug=(MEMO_DB[subject]||[]).map(t=>t.theme);
+  root.innerHTML=
+    '<div class="result"><div class="r-emoji">🔍</div>'+
+    '<h3>Nenhum conteúdo de "'+esc(topic)+'" em '+SUBJECT_NAMES[subject]+'</h3>'+
+    '<p>Nada de misturar outros assuntos: escolha um tema abaixo ou jogue com conteúdo variado.</p>'+
+    '<div class="chips" id="nfChips" style="margin-top:16px"></div>'+
+    '<div class="r-btns" style="margin-top:20px">'+
+    '<button class="btn btn-yellow" id="nfRetry" type="button">⌨️ Digitar outro tema</button>'+
+    '<button class="btn btn-ghost" id="nfRandom" type="button">🎲 Conteúdo variado</button>'+
+    '<button class="btn btn-ghost" id="nfClose" type="button">Fechar</button></div></div>';
+  const chips=root.querySelector('#nfChips');
+  sug.forEach(s=>{
+    const c=document.createElement('button');
+    c.type='button';c.className='chip';c.textContent=s;
+    c.onclick=()=>{currentTopic=s;openGame(currentGameId,subject);};
+    chips.appendChild(c);
+  });
+  root.querySelector('#nfRetry').onclick=()=>showTopicInput(currentGameId,()=>showModes(subject));
+  root.querySelector('#nfRandom').onclick=()=>{currentTopic='';openGame(currentGameId,subject);};
+  root.querySelector('#nfClose').onclick=closeModal;
+}
+
+/* ===== SUBJECT DATA ===== */
+const SUBJECT_NAMES={mat:'Matemática',cie:'Ciências',geo:'Geografia',his:'História',por:'Português',ing:'Inglês'};
+const TOPIC_EXAMPLES={
+  mat:'Ex: tabuada, frações, geometria, raízes...',
+  cie:'Ex: corpo humano, química, astronomia, células...',
+  geo:'Ex: nome de países, capitais, Brasil, relevo...',
+  his:'Ex: Brasil, personagens, civilizações, datas...',
+  por:'Ex: sinônimos, gramática, literatura, figuras...',
+  ing:'Ex: traduções, verbos, vocabulário, grammar...'
+};
+
+const QUIZ_DB={
+  mat:[
+    {q:'Quanto é 7 × 8?',opts:['48','54','56','64'],ans:2,theme:'Tabuada',tags:'multiplicação vezes'},{q:'Quanto é 144 ÷ 12?',opts:['10','11','12','14'],ans:2,theme:'Tabuada',tags:'divisão'},
+    {q:'Qual é a raiz quadrada de 81?',opts:['7','8','9','10'],ans:2,theme:'Potências e Raízes',tags:'raiz quadrada'},{q:'Quanto é 15% de 200?',opts:['20','25','30','35'],ans:2,theme:'Frações e Porcentagem',tags:'porcentagem percentual'},
+    {q:'Se x + 7 = 20, quanto vale x?',opts:['11','12','13','14'],ans:2,theme:'Equações',tags:'equação álgebra incógnita'},{q:'Quantos graus tem um ângulo reto?',opts:['45°','60°','90°','180°'],ans:2,theme:'Geometria e Medidas',tags:'ângulo geometria'},
+    {q:'Quanto é 3² + 4²?',opts:['14','25','35','49'],ans:1,theme:'Potências e Raízes',tags:'potência quadrado'},{q:'Qual fração equivale a 0,75?',opts:['1/2','2/3','3/4','4/5'],ans:2,theme:'Frações e Porcentagem',tags:'fração decimal'},
+    {q:'Perímetro de um quadrado de lado 6 cm?',opts:['18 cm','24 cm','30 cm','36 cm'],ans:1,theme:'Geometria e Medidas',tags:'perímetro geometria'},{q:'Quanto é 2⁵?',opts:['16','24','32','64'],ans:2,theme:'Potências e Raízes',tags:'potência'},
+    {q:'MMC de 4 e 6?',opts:['8','10','12','24'],ans:2,theme:'Múltiplos e Divisores',tags:'mmc múltiplos divisores'},{q:'Área de um retângulo 5×8?',opts:['13','26','40','45'],ans:2,theme:'Geometria e Medidas',tags:'área geometria'},
+    {q:'Quanto é √144?',opts:['10','11','12','14'],ans:2,theme:'Potências e Raízes',tags:'raiz quadrada'},{q:'3/4 + 1/4 = ?',opts:['1/2','3/4','1','5/4'],ans:2,theme:'Frações e Porcentagem',tags:'fração soma'},
+    {q:'Dobro de 37?',opts:['64','72','74','84'],ans:2,theme:'Operações Básicas',tags:'dobro multiplicação'},{q:'Metade de 150?',opts:['50','65','75','80'],ans:2,theme:'Frações e Porcentagem',tags:'metade fração divisão'},
+    {q:'Quanto é 9 × 9?',opts:['72','79','81','90'],ans:2,theme:'Tabuada',tags:'multiplicação vezes'},{q:'100 − 37 = ?',opts:['53','57','63','67'],ans:2,theme:'Operações Básicas',tags:'subtração menos'},
+    {q:'Qual número é primo? 15, 17, 21, 25',opts:['15','17','21','25'],ans:1,theme:'Múltiplos e Divisores',tags:'primo divisores'},{q:'Volume cubo aresta 3?',opts:['9','18','27','36'],ans:2,theme:'Geometria e Medidas',tags:'volume geometria'}
+  ],
+  cie:[
+    {q:'Qual gás as plantas liberam na fotossíntese?',opts:['CO₂','O₂','N₂','H₂'],ans:1,theme:'Seres Vivos',tags:'fotossíntese plantas'},{q:'Quantos ossos tem o corpo humano adulto?',opts:['186','206','226','256'],ans:1,theme:'Corpo Humano',tags:'ossos esqueleto anatomia'},
+    {q:'Qual órgão bombeia sangue?',opts:['Pulmão','Fígado','Coração','Rim'],ans:2,theme:'Corpo Humano',tags:'coração sangue órgãos'},{q:'H₂O é a fórmula de quê?',opts:['Sal','Açúcar','Água','Oxigênio'],ans:2,theme:'Química',tags:'água fórmula molécula'},
+    {q:'Qual planeta é conhecido como Planeta Vermelho?',opts:['Vênus','Marte','Júpiter','Saturno'],ans:1,theme:'Astronomia',tags:'planeta marte espaço'},{q:'O que mede a temperatura?',opts:['Barômetro','Termômetro','Anemômetro','Higrômetro'],ans:1,theme:'Física',tags:'temperatura termômetro'},
+    {q:'DNA significa:',opts:['Ácido desoxirribonucleico','Ácido ribonucleico','Proteína nuclear','Enzima dupla'],ans:0,theme:'Corpo Humano',tags:'dna genética células'},
+    {q:'Qual é o maior órgão do corpo?',opts:['Fígado','Pele','Coração','Intestino'],ans:1,theme:'Corpo Humano',tags:'pele órgãos corpo humano'},{q:'O que causa as marés?',opts:['Sol','Lua','Vento','Correntes'],ans:1,theme:'Astronomia',tags:'marés lua astronomia'},
+    {q:'Fotossíntese ocorre em qual organela?',opts:['Mitocôndria','Cloroplasto','Ribossomo','Núcleo'],ans:1,theme:'Células',tags:'célula cloroplasto fotossíntese'},{q:'Qual metal é líquido à temperatura ambiente?',opts:['Ferro','Mercúrio','Chumbo','Zinco'],ans:1,theme:'Química',tags:'metal mercúrio química'},
+    {q:'Camada de ozônio protege contra:',opts:['Calor','UV','Chuva','Vento'],ans:1,theme:'Terra e Ambiente',tags:'ozônio atmosfera terra'},{q:'Unidade de força no SI?',opts:['Joule','Watt','Newton','Pascal'],ans:2,theme:'Física',tags:'força newton física'},
+    {q:'Quantos estados da matéria existem classicamente?',opts:['2','3','4','5'],ans:2,theme:'Química',tags:'estados matéria química'},{q:'Qual animal é anfíbio?',opts:['Cobra','Sapo','Tartaruga','Lagarto'],ans:1,theme:'Seres Vivos',tags:'anfíbio animais seres vivos'},
+    {q:'O ar é composto principalmente por:',opts:['Oxigênio','Nitrogênio','CO₂','Hidrogênio'],ans:1,theme:'Química',tags:'ar gases química'},{q:'Velocidade da luz ≈ ?',opts:['300 km/s','3.000 km/s','300.000 km/s','3 milhões km/s'],ans:2,theme:'Física',tags:'luz velocidade física'},
+    {q:'Qual vitamina vem do sol?',opts:['A','B','C','D'],ans:3,theme:'Corpo Humano',tags:'vitamina corpo humano'},{q:'pH neutro é igual a:',opts:['0','5','7','14'],ans:2,theme:'Química',tags:'ph química ácido'},
+    {q:'Ecossistema aquático de água doce:',opts:['Mangue','Recife','Lago','Estuário'],ans:2,theme:'Seres Vivos',tags:'ecossistema ambiente seres vivos'}
+  ],
+  geo:[
+    {q:'Capital do Brasil?',opts:['Rio de Janeiro','São Paulo','Brasília','Salvador'],ans:2,theme:'Capitais',tags:'capital país brasil'},{q:'Maior oceano do mundo?',opts:['Atlântico','Índico','Pacífico','Ártico'],ans:2,theme:'Natureza e Relevo',tags:'oceano mar'},
+    {q:'Quantos continentes existem?',opts:['5','6','7','8'],ans:2,theme:'Continentes',tags:'continentes'},{q:'Maior país do mundo em área?',opts:['China','EUA','Canadá','Rússia'],ans:3,theme:'Países',tags:'país países nação área território'},
+    {q:'Rio mais longo do mundo?',opts:['Nilo','Amazonas','Yangtzé','Mississipi'],ans:1,theme:'Natureza e Relevo',tags:'rio relevo'},{q:'Capital da França?',opts:['Londres','Berlim','Madri','Paris'],ans:3,theme:'Capitais',tags:'capital país frança'},
+    {q:'Qual bioma é típico do Nordeste brasileiro?',opts:['Amazônia','Cerrado','Caatinga','Mata Atlântica'],ans:2,theme:'Brasil',tags:'brasil bioma nordeste'},{q:'Montanha mais alta do mundo?',opts:['K2','Everest','Kilimanjaro','Aconcágua'],ans:1,theme:'Natureza e Relevo',tags:'montanha relevo everest'},
+    {q:'Capital do Japão?',opts:['Seul','Pequim','Tóquio','Bangkok'],ans:2,theme:'Capitais',tags:'capital país japão'},{q:'Qual linha divide hemisférios Norte e Sul?',opts:['Meridiano de Greenwich','Trópico de Câncer','Equador','Trópico de Capricórnio'],ans:2,theme:'Mapas e Linhas',tags:'mapas linhas equador'},
+    {q:'País com maior população?',opts:['Índia','China','EUA','Indonésia'],ans:0,theme:'Países',tags:'país países nação população'},{q:'Deserto mais quente do mundo?',opts:['Gobi','Saara','Kalahari','Atacama'],ans:1,theme:'Natureza e Relevo',tags:'deserto relevo saara'},
+    {q:'Capital da Argentina?',opts:['Santiago','Lima','Buenos Aires','Bogotá'],ans:2,theme:'Capitais',tags:'capital país argentina'},{q:'Onde fica a Torre Eiffel?',opts:['Roma','Londres','Paris','Berlim'],ans:2,theme:'Capitais',tags:'capital país frança paris'},
+    {q:'Maior floresta tropical?',opts:['Congo','Amazônia','Bornéu','Daintree'],ans:1,theme:'Natureza e Relevo',tags:'floresta amazônia'},{q:'Fuso horário de referência mundial?',opts:['UTC−3','GMT','UTC+1','EST'],ans:1,theme:'Mapas e Linhas',tags:'fuso mapas'},
+    {q:'Capital de Portugal?',opts:['Porto','Coimbra','Lisboa','Braga'],ans:2,theme:'Capitais',tags:'capital país portugal'},{q:'Qual estado brasileiro faz fronteira com Uruguai?',opts:['SC','PR','RS','MS'],ans:2,theme:'Brasil',tags:'brasil estado fronteira país'},
+    {q:'Mar que banha o nordeste do Brasil?',opts:['Caribe','Mediterrâneo','Atlântico','Pacífico'],ans:2,theme:'Brasil',tags:'brasil mar oceano'},{q:'Ilha que pertence ao Brasil no Atlântico?',opts:['Galápagos','Fernando de Noronha','Maldivas','Açores'],ans:1,theme:'Brasil',tags:'brasil ilha país'}
+  ],
+  his:[
+    {q:'Quem descobriu o Brasil?',opts:['Colombo','Cabral','Vespúcio','Magalhães'],ans:1,theme:'Brasil',tags:'brasil descobrimento personagem'},{q:'Em que ano foi proclamada a República?',opts:['1822','1888','1889','1891'],ans:2,theme:'Brasil',tags:'brasil república data'},
+    {q:'Civilização que construiu pirâmides no Egito?',opts:['Romanos','Gregos','Egípcios','Persas'],ans:2,theme:'Civilizações',tags:'civilização egito'},{q:'Quem pintou a Mona Lisa?',opts:['Michelangelo','Da Vinci','Rafael','Donatello'],ans:1,theme:'Personagens',tags:'personagem artista'},
+    {q:'Revolução Francesa ocorreu em:',opts:['1776','1789','1804','1815'],ans:1,theme:'História Mundial',tags:'revolução data'},{q:'Primeiro presidente do Brasil?',opts:['Getúlio Vargas','Deodoro da Fonseca','Prudente de Morais','Floriano Peixoto'],ans:1,theme:'Brasil',tags:'brasil presidente personagem'},
+    {q:'Guerra Fria foi entre:',opts:['EUA e Alemanha','EUA e URSS','França e Inglaterra','China e Japão'],ans:1,theme:'História Mundial',tags:'guerra fria'},{q:'Abolição da escravatura no Brasil:',opts:['1822','1850','1888','1891'],ans:2,theme:'Brasil',tags:'brasil abolição data'},
+    {q:'Império Romano caiu em:',opts:['395','476','500','527'],ans:1,theme:'Civilizações',tags:'roma civilização data'},{q:'Quem liderou a independência da Índia?',opts:['Nehru','Gandhi','Bose','Patel'],ans:1,theme:'Personagens',tags:'personagem gandhi'},
+    {q:'Descobrimento da América por Colombo:',opts:['1492','1500','1498','1502'],ans:0,theme:'História Mundial',tags:'américa colombo data'},{q:'Muro de Berlim caiu em:',opts:['1985','1987','1989','1991'],ans:2,theme:'História Mundial',tags:'berlim muro data'},
+    {q:'Segunda Guerra Mundial terminou em:',opts:['1943','1944','1945','1946'],ans:2,theme:'História Mundial',tags:'guerra data'},{q:'Quem escreveu "O Príncipe"?',opts:['Maquiavel','Platão','Aristóteles','Locke'],ans:0,theme:'Personagens',tags:'personagem autor'},
+    {q:'Revolução Industrial começou em:',opts:['França','Alemanha','Inglaterra','Itália'],ans:2,theme:'História Mundial',tags:'revolução industrial país'},{q:'Independência dos EUA:',opts:['1776','1789','1812','1822'],ans:0,theme:'História Mundial',tags:'eua independência data'},
+    {q:'Quem foi Napoleão?',opts:['Rei da Espanha','Imperador da França','Papa','General inglês'],ans:1,theme:'Personagens',tags:'personagem napoleão'},{q:'Era Medieval também chamada de:',opts:['Idade Antiga','Idade Média','Renascimento','Iluminismo'],ans:1,theme:'Eras',tags:'era medieval'},
+    {q:'Tratado de Tordesilhas dividiu terras entre:',opts:['Espanha e França','Portugal e Espanha','Inglaterra e Holanda','Brasil e Argentina'],ans:1,theme:'Brasil',tags:'brasil tordesilhas países'},{q:'Quem foi Tiradentes?',opts:['Presidente','Inconfidente mineiro','Imperador','Padre'],ans:1,theme:'Brasil',tags:'brasil personagem tiradentes'}
+  ],
+  por:[
+    {q:'Sinônimo de "feliz":',opts:['Triste','Alegre','Bravo','Cansado'],ans:1,theme:'Sinônimos e Antônimos',tags:'sinônimo'},{q:'Antônimo de "claro":',opts:['Limpo','Escuro','Leve','Forte'],ans:1,theme:'Sinônimos e Antônimos',tags:'antônimo'},
+    {q:'Verbo "correr" está no infinitivo?',opts:['Sim','Não','Depende','NDA'],ans:0,theme:'Gramática',tags:'verbo gramática'},{q:'Plural de "cidadão":',opts:['Cidadãos','Cidadões','Cidadães','Cidadãoses'],ans:0,theme:'Gramática',tags:'plural gramática'},
+    {q:'Sujeito de "Os alunos estudaram":',opts:['estudaram','Os alunos','livros','escola'],ans:1,theme:'Gramática',tags:'sujeito oração gramática'},{q:'Figura de linguagem: "chorar rios de lágrimas"',opts:['Metáfora','Hipérbole','Comparação','Antítese'],ans:1,theme:'Figuras de Linguagem',tags:'figura hipérbole'},
+    {q:'Classe gramatical de "rapidamente":',opts:['Adjetivo','Advérbio','Substantivo','Verbo'],ans:1,theme:'Gramática',tags:'advérbio gramática'},{q:'Acentuação correta:',opts:['Ideía','Idéia','Ideia','Ideìa'],ans:2,theme:'Gramática',tags:'acentuação gramática'},
+    {q:'Autor de Dom Casmurro:',opts:['Jorge Amado','Machado de Assis','Clarice Lispector','Monteiro Lobato'],ans:1,theme:'Literatura',tags:'literatura autor livro'},{q:'Pronome oblíquo de "eu":',opts:['tu','me','nos','lhe'],ans:1,theme:'Gramática',tags:'pronome gramática'},
+    {q:'Tempo verbal: "cantarei"',opts:['Presente','Pretérito','Futuro do presente','Futuro do pretérito'],ans:2,theme:'Gramática',tags:'verbo tempo verbal'},{q:'Dígrafo é:',opts:['Duas vogais','Duas consoantes com um som','Encontro vocálico','Hiato'],ans:1,theme:'Gramática',tags:'dígrafo gramática'},
+    {q:'Paroxítona é acentuada quando termina em:',opts:['A','E','L, N, R, X','Todas anteriores'],ans:2,theme:'Gramática',tags:'acentuação paroxítona'},{q:'Oração subordinada adverbial causal:',opts:['Quando choveu','Como estava cansado','Embora tentasse','Que ele veio'],ans:1,theme:'Gramática',tags:'oração gramática'},
+    {q:'Regência nominal: "amor ___ música"',opts:['à','a','na','da'],ans:0,theme:'Gramática',tags:'regência gramática'},{q:'Concordância: "Fazem dois anos" ou "Faz dois anos"?',opts:['Fazem','Faz','Ambas','Nenhuma'],ans:1,theme:'Gramática',tags:'concordância gramática'},
+    {q:'Predicado nominal tem:',opts:['Verbo transitivo','Verbo de ligação','Verbo intransitivo','Objeto direto'],ans:1,theme:'Gramática',tags:'predicado oração'},{q:'Hiato é:',opts:['Vogais juntas','Vogais separadas em sílabas','Consoantes juntas','Ditongo'],ans:1,theme:'Gramática',tags:'hiato sílabas'},
+    {q:'Gênero do substantivo "a criança":',opts:['Masculino','Feminino','Comum de dois gêneros','Sobrecomum'],ans:2,theme:'Gramática',tags:'substantivo gênero'},{q:'Interjeição de dor:',opts:['Eba!','Ai!','Ufa!','Psiu!'],ans:1,theme:'Gramática',tags:'interjeição'}
+  ],
+  ing:[
+    {q:'Translate: "gato"',opts:['Dog','Cat','Bird','Fish'],ans:1,theme:'Traduções',tags:'translate tradução animals'},{q:'Past tense of "go":',opts:['Goed','Gone','Went','Going'],ans:2,theme:'Verbos',tags:'verb past irregular'},
+    {q:'Opposite of "happy":',opts:['Sad','Angry','Tired','Excited'],ans:0,theme:'Vocabulário',tags:'opposite antonym vocabulary'},{q:'Plural of "child":',opts:['Childs','Children','Childrens','Childes'],ans:1,theme:'Grammar',tags:'plural grammar'},
+    {q:'Which is a fruit?',opts:['Carrot','Apple','Potato','Onion'],ans:1,theme:'Vocabulário',tags:'food fruit vocabulary'},{q:'"She ___ to school every day."',opts:['go','goes','going','gone'],ans:1,theme:'Grammar',tags:'grammar present simple'},
+    {q:'Color of the sky?',opts:['Green','Red','Blue','Yellow'],ans:2,theme:'Vocabulário',tags:'colors vocabulary'},{q:'How many days in a week?',opts:['5','6','7','8'],ans:2,theme:'Vocabulário',tags:'days week vocabulary'},
+    {q:'Translate: "livro"',opts:['Table','Book','Pen','Chair'],ans:1,theme:'Traduções',tags:'translate tradução'},{q:'Superlative of "good":',opts:['Gooder','Better','Best','Goodest'],ans:2,theme:'Grammar',tags:'superlative grammar'},
+    {q:'"I am ___ student."',opts:['a','an','the','—'],ans:0,theme:'Grammar',tags:'articles grammar'},{q:'Month after March?',opts:['February','April','May','June'],ans:1,theme:'Vocabulário',tags:'months vocabulary'},
+    {q:'"They ___ playing soccer now."',opts:['is','am','are','was'],ans:2,theme:'Grammar',tags:'verb to be grammar'},{q:'Translate: "obrigado"',opts:['Sorry','Please','Thank you','Hello'],ans:2,theme:'Traduções',tags:'translate tradução'},
+    {q:'Antonym of "big":',opts:['Large','Small','Tall','Wide'],ans:1,theme:'Vocabulário',tags:'antonym opposite vocabulary'},{q:'"He ___ pizza yesterday."',opts:['eat','eats','ate','eaten'],ans:2,theme:'Verbos',tags:'verb past'},
+    {q:'Number after twelve?',opts:['Eleven','Thirteen','Fourteen','Fifteen'],ans:1,theme:'Vocabulário',tags:'numbers vocabulary'},{q:'"Water" in Portuguese:',opts:['Fogo','Terra','Água','Ar'],ans:2,theme:'Traduções',tags:'translate tradução'},
+    {q:'Verb "to be" – I ___:',opts:['is','are','am','be'],ans:2,theme:'Verbos',tags:'verb to be'},{q:'Season with snow?',opts:['Summer','Spring','Winter','Autumn'],ans:2,theme:'Vocabulário',tags:'seasons vocabulary'}
+  ]
+};
+
+/* ===== ROTAÇÃO PERSISTENTE DO QUIZ ===== */
+function pickQuizPool(subject,topic){
+  let all=(QUIZ_DB[subject]||[]).slice();
+  if(!all.length)return[];
+  if(topic){
+    all=strictFilter(all,topic,q=>((q.theme||'')+' '+(q.tags||'')+' '+q.q+' '+q.opts.join(' ')));
+  }
+  if(!all.length)return[];
+  const key='quiz|'+subject+'|'+(topic||'*');
+  let recent=rotGet(key);
+  let avail=all.filter(q=>!recent.includes(q.q));
+  if(avail.length===0){recent=[];avail=all.slice();}
+  const chosen=shuffle(avail.slice()).slice(0,Math.min(10,avail.length));
+  chosen.forEach(q=>recent.push(q.q));
+  rotSet(key,recent,all.length);
+  return shuffle(chosen);
+}
+
+const FORCA_DB={
+  mat:[{w:'TEOREMA',h:'Proposição matemática demonstrável',theme:'Geometria e Medidas',tags:'geometria'},{w:'FRAÇÃO',h:'Parte de um inteiro',theme:'Frações e Porcentagem',tags:'frações'},{w:'GEOMETRIA',h:'Estudo das formas',theme:'Geometria e Medidas',tags:'geometria formas'},{w:'EQUAÇÃO',h:'Igualdade com incógnita',theme:'Equações',tags:'equações álgebra'},{w:'PERÍMETRO',h:'Soma dos lados',theme:'Geometria e Medidas',tags:'geometria'},{w:'DIVISÃO',h:'Operação inversa da multiplicação',theme:'Tabuada',tags:'tabuada operações'},{w:'PARALELO',h:'Linhas que nunca se cruzam',theme:'Geometria e Medidas',tags:'geometria linhas'},{w:'RAIZ',h:'Operação inversa da potência',theme:'Potências e Raízes',tags:'raízes potências'},{w:'ÂNGULO',h:'Abertura entre duas semirretas',theme:'Geometria e Medidas',tags:'geometria ângulos'},{w:'POLÍGONO',h:'Figura plana fechada com lados retos',theme:'Geometria e Medidas',tags:'geometria formas'},{w:'MULTIPLICAÇÃO',h:'Operação de vezes',theme:'Tabuada',tags:'tabuada'},{w:'PORCENTAGEM',h:'Fração de cem partes',theme:'Frações e Porcentagem',tags:'frações porcentagem'},{w:'VOLUME',h:'Espaço ocupado por um corpo',theme:'Geometria e Medidas',tags:'geometria medidas'},{w:'SIMETRIA',h:'Equilíbrio entre os lados',theme:'Geometria e Medidas',tags:'geometria'}],
+  cie:[{w:'FOTOSSÍNTESE',h:'Processo das plantas para criar energia',theme:'Seres Vivos',tags:'plantas seres vivos'},{w:'GRAVIDADE',h:'Força que atrai corpos',theme:'Física',tags:'física força'},{w:'MITOCÔNDRIA',h:'Organela que produz energia celular',theme:'Células',tags:'células'},{w:'OXIGÊNIO',h:'Gás essencial para respirar',theme:'Química',tags:'química gás'},{w:'ECOSSISTEMA',h:'Conjunto de seres vivos e ambiente',theme:'Seres Vivos',tags:'ambiente seres vivos'},{w:'CÉLULA',h:'Unidade básica da vida',theme:'Células',tags:'células'},{w:'VACINA',h:'Prevenção contra doenças',theme:'Corpo Humano',tags:'corpo humano saúde'},{w:'ÁTOMO',h:'Menor unidade da matéria',theme:'Química',tags:'química matéria'},{w:'EVOLUÇÃO',h:'Mudança das espécies ao longo do tempo',theme:'Seres Vivos',tags:'seres vivos evolução'},{w:'BIOMA',h:'Grande comunidade ecológica',theme:'Seres Vivos',tags:'ambiente biomas'},{w:'RESPIRAÇÃO',h:'Troca de gases do corpo',theme:'Corpo Humano',tags:'corpo humano'},{w:'NEURÔNIO',h:'Célula do sistema nervoso',theme:'Corpo Humano',tags:'corpo humano células'},{w:'GALÁXIA',h:'Grande conjunto de estrelas',theme:'Astronomia',tags:'astronomia espaço'},{w:'BACTÉRIA',h:'Microrganismo unicelular',theme:'Células',tags:'células seres vivos'}],
+  geo:[{w:'CONTINENTE',h:'Grande massa de terra',theme:'Continentes',tags:'continentes'},{w:'MERIDIANO',h:'Linha imaginária norte-sul',theme:'Mapas e Linhas',tags:'mapas linhas'},{w:'PLANALTO',h:'Terreno elevado e plano',theme:'Natureza e Relevo',tags:'relevo natureza'},{w:'LATITUDE',h:'Distância em relação ao Equador',theme:'Mapas e Linhas',tags:'mapas linhas'},{w:'CLIMA',h:'Condições atmosféricas de longo prazo',theme:'Natureza e Relevo',tags:'clima natureza'},{w:'URBANIZAÇÃO',h:'Crescimento das cidades',theme:'Brasil',tags:'brasil cidades'},{w:'FRONTEIRA',h:'Limite entre países',theme:'Países',tags:'países fronteira'},{w:'RELEVO',h:'Formas da superfície terrestre',theme:'Natureza e Relevo',tags:'relevo natureza'},{w:'HIDROGRAFIA',h:'Estudo das águas',theme:'Natureza e Relevo',tags:'rios águas natureza'},{w:'BIODIVERSIDADE',h:'Variedade de seres vivos',theme:'Natureza e Relevo',tags:'natureza ambiente'},{w:'ARQUIPÉLAGO',h:'Conjunto de ilhas',theme:'Natureza e Relevo',tags:'ilhas natureza'},{w:'PENÍNSULA',h:'Terra quase cercada de água',theme:'Natureza e Relevo',tags:'relevo natureza'},{w:'ALTITUDE',h:'Altura acima do nível do mar',theme:'Mapas e Linhas',tags:'mapas relevo'},{w:'DENSIDADE',h:'Habitantes por área',theme:'Países',tags:'países população'}],
+  his:[{w:'REVOLUÇÃO',h:'Grande transformação social',theme:'Eras',tags:'eras revoluções'},{w:'IMPÉRIO',h:'Domínio extenso sob um imperador',theme:'Civilizações',tags:'civilizações império'},{w:'COLÔNIA',h:'Território dominado por outro país',theme:'Brasil',tags:'brasil colônia países'},{w:'REPÚBLICA',h:'Forma de governo eletiva',theme:'Brasil',tags:'brasil república'},{w:'FEUDALISMO',h:'Sistema medieval de servidão',theme:'Eras',tags:'eras medieval'},{w:'INCONFIDÊNCIA',h:'Movimento pela independência',theme:'Brasil',tags:'brasil inconfidência'},{w:'ESCRAVIDÃO',h:'Trabalho forçado sem liberdade',theme:'Brasil',tags:'brasil escravidão'},{w:'RENASCIMENTO',h:'Movimento cultural europeu',theme:'Eras',tags:'eras renascimento'},{w:'DEMOCRACIA',h:'Governo do povo',theme:'Civilizações',tags:'civilizações política'},{w:'ABOLIÇÃO',h:'Fim da escravidão',theme:'Brasil',tags:'brasil abolição'},{w:'SARCÓFAGO',h:'Caixão dos faraós',theme:'Civilizações',tags:'civilizações egito'},{w:'GLADIADOR',h:'Lutador da Roma antiga',theme:'Civilizações',tags:'civilizações roma'},{w:'MANIFESTO',h:'Documento público de ideias',theme:'História Mundial',tags:'história mundial'},{w:'SUFRÁGIO',h:'Direito de votar',theme:'História Mundial',tags:'história mundial política'}],
+  por:[{w:'METÁFORA',h:'Comparação implícita',theme:'Figuras de Linguagem',tags:'figuras'},{w:'ADJETIVO',h:'Classe que caracteriza o substantivo',theme:'Gramática',tags:'gramática classes'},{w:'SINÔNIMO',h:'Palavra de sentido semelhante',theme:'Sinônimos e Antônimos',tags:'sinônimos'},{w:'PARÁGRAFO',h:'Unidade de texto',theme:'Gramática',tags:'gramática texto'},{w:'CRÔNICA',h:'Texto narrativo curto do cotidiano',theme:'Literatura',tags:'literatura gêneros'},{w:'PREDICADO',h:'Aquilo que se diz do sujeito',theme:'Gramática',tags:'gramática oração'},{w:'HIATO',h:'Vogais em sílabas diferentes',theme:'Gramática',tags:'gramática sílabas'},{w:'CONJUNÇÃO',h:'Palavra que liga orações',theme:'Gramática',tags:'gramática classes'},{w:'DISSERTAÇÃO',h:'Texto argumentativo',theme:'Literatura',tags:'literatura texto'},{w:'PROSA',h:'Texto corrido, não versificado',theme:'Literatura',tags:'literatura'},{w:'ONOMATOPEIA',h:'Palavra que imita um som',theme:'Figuras de Linguagem',tags:'figuras sons'},{w:'PLEONASMO',h:'Repetição de uma ideia',theme:'Figuras de Linguagem',tags:'figuras'},{w:'RIMA',h:'Som igual no fim dos versos',theme:'Figuras de Linguagem',tags:'figuras sons versos'},{w:'OXÍTONA',h:'Acento na última sílaba',theme:'Gramática',tags:'gramática acentuação'}],
+  ing:[{w:'LANGUAGE',h:'System of communication',theme:'Vocabulário',tags:'vocabulary'},{w:'GRAMMAR',h:'Rules of a language',theme:'Grammar',tags:'grammar'},{w:'VERB',h:'Action word',theme:'Verbos',tags:'verbs verbos'},{w:'SENTENCE',h:'Group of words with meaning',theme:'Grammar',tags:'grammar'},{w:'ALPHABET',h:'Set of letters',theme:'Vocabulário',tags:'vocabulary letters'},{w:'PRONOUN',h:'Word replacing a noun',theme:'Grammar',tags:'grammar pronouns'},{w:'ADJECTIVE',h:'Describes a noun',theme:'Grammar',tags:'grammar'},{w:'SYLLABLE',h:'Unit of pronunciation',theme:'Vocabulário',tags:'vocabulary'},{w:'TRANSLATION',h:'Converting between languages',theme:'Traduções',tags:'translation traduções'},{w:'FLUENCY',h:'Ability to speak easily',theme:'Vocabulário',tags:'vocabulary'},{w:'VOCABULARY',h:'Set of known words',theme:'Vocabulário',tags:'vocabulary vocabulário'},{w:'LISTENING',h:'Skill of hearing and understanding',theme:'Vocabulário',tags:'vocabulary skills'},{w:'READING',h:'Skill of understanding text',theme:'Vocabulário',tags:'vocabulary skills'},{w:'WRITING',h:'Skill of producing text',theme:'Vocabulário',tags:'vocabulary skills'}]
+};
+
+/* ===== MEMÓRIA: TEMAS POR MATÉRIA ===== */
+const MEMO_DB={
+  mat:[
+    {theme:'Tabuada',pairs:[['2 × 7','14'],['7 × 8','56'],['6 × 9','54'],['12 × 3','36'],['9 × 9','81'],['5 × 11','55'],['4 × 13','52'],['3 × 15','45']]},
+    {theme:'Frações e Porcentagem',pairs:[['Metade de 100','50'],['15% de 200','30'],['20% de 50','10'],['3/4 + 1/4','1'],['0,75','3/4'],['25% de 80','20'],['1/3 de 90','30'],['0,5','1/2']]},
+    {theme:'Geometria e Medidas',pairs:[['Perímetro quadrado l=6','24 cm'],['Área retângulo 5×8','40'],['Ângulo reto','90°'],['Volume cubo aresta 3','27'],['Soma dos ângulos do triângulo','180°'],['Perímetro do círculo','2πr'],['1 quilômetro','1.000 m'],['1 hora','60 minutos']]},
+    {theme:'Potências e Raízes',pairs:[['2⁵','32'],['3²','9'],['√81','9'],['√144','12'],['√49','7'],['10³','1.000'],['√100','10'],['4²','16']]}
+  ],
+  cie:[
+    {theme:'Corpo Humano',pairs:[['Bombeia sangue','Coração'],['Ossos do corpo adulto','206'],['Maior órgão','Pele'],['Gás que inspiramos','Oxigênio'],['Leva oxigênio no sangue','Hemácias'],['Digere os alimentos','Sistema digestório'],['Comanda o corpo','Cérebro'],['Gás que expiramos','CO₂']]},
+    {theme:'Química e Matéria',pairs:[['H₂O','Água'],['O₂','Oxigênio'],['Metal líquido','Mercúrio'],['Menor unidade da matéria','Átomo'],['pH neutro','7'],['Água em estado gasoso','Vapor'],['Tudo que tem massa','Matéria'],['Símbolo químico do ouro','Au']]},
+    {theme:'Astronomia e Terra',pairs:[['Planeta Vermelho','Marte'],['Satélite natural da Terra','Lua'],['O Sol é uma...','Estrela'],['Maior planeta','Júpiter'],['Protege contra raios UV','Camada de ozônio'],['Nossa galáxia','Via Láctea'],['Velocidade da luz','300.000 km/s'],['Causa das marés','Lua']]},
+    {theme:'Seres Vivos e Ambiente',pairs:[['Energia das plantas','Fotossíntese'],['Onde ocorre a fotossíntese','Cloroplasto'],['Animal anfíbio','Sapo'],['Ecossistema de água doce','Lago'],['Grande comunidade ecológica','Bioma'],['Respiração celular','Mitocôndria'],['Previne doenças','Vacina'],['Unidade da vida','Célula']]}
+  ],
+  geo:[
+    {theme:'Capitais e Países',pairs:[['Capital do Brasil','Brasília'],['Capital da França','Paris'],['Capital do Japão','Tóquio'],['Capital da Itália','Roma'],['Capital da Argentina','Buenos Aires'],['Capital de Portugal','Lisboa'],['Capital do Egito','Cairo'],['Capital do Canadá','Ottawa']]},
+    {theme:'Geografia do Brasil',pairs:[['Estado fronteira com Uruguai','RS'],['Mar que banha o Brasil','Atlântico'],['Bioma do Nordeste','Caatinga'],['Ilha brasileira famosa','F. de Noronha'],['Maior estado brasileiro','Amazonas'],['Maior região do Brasil','Norte'],['Maior rio brasileiro','Amazonas'],['Cidade mais populosa','São Paulo']]},
+    {theme:'Natureza e Relevo',pairs:[['Montanha mais alta','Everest'],['Maior floresta tropical','Amazônia'],['Deserto mais quente','Saara'],['Maior oceano','Pacífico'],['Continente gelado','Antártida'],['Conjunto de ilhas','Arquipélago'],['Terreno plano e elevado','Planalto'],['Rio mais longo do mundo','Nilo']]},
+    {theme:'Mapas e Linhas',pairs:[['Divide Norte e Sul','Equador'],['Linha norte-sul','Meridiano'],['Distância do Equador','Latitude'],['Fuso de referência','GMT'],['Altura acima do mar','Altitude'],['Limite entre países','Fronteira'],['Estudo das águas','Hidrografia'],['Coleção de mapas','Atlas']]}
+  ],
+  his:[
+    {theme:'Datas do Brasil',pairs:[['Descobrimento do Brasil','1500'],['Independência do Brasil','1822'],['Lei Áurea (abolição)','1888'],['Proclamação da República','1889'],['Semana de Arte Moderna','1922'],['Fim da Era Vargas','1945'],['Inauguração de Brasília','1960'],['Início da ditadura militar','1964']]},
+    {theme:'História Mundial',pairs:[['Revolução Francesa','1789'],['Independência dos EUA','1776'],['Fim da 2ª Guerra','1945'],['Queda do Muro de Berlim','1989'],['Mona Lisa','Da Vinci'],['Queda do Império Romano','476'],['Homem na Lua','1969'],['Rev. Industrial começou na','Inglaterra']]},
+    {theme:'Personagens Históricos',pairs:[['Independência da Índia','Gandhi'],['1º presidente do Brasil','Deodoro'],['Autor de O Príncipe','Maquiavel'],['Imperador francês','Napoleão'],['Inconfidente mineiro','Tiradentes'],['Filósofo grego','Sócrates'],['Líder sul-africano','Mandela'],['Pintor renascentista','Da Vinci']]},
+    {theme:'Eras e Civilizações',pairs:[['Construiu pirâmides','Egito'],['Sistema medieval','Feudalismo'],['Movimento cultural europeu','Renascimento'],['Governo do povo','Democracia'],['Era dos cavaleiros','Idade Média'],['Grande mudança social','Revolução'],['Civilização dos gladiadores','Roma'],['Civilização dos incas','Andes']]}
+  ],
+  por:[
+    {theme:'Sinônimos e Antônimos',pairs:[['Sinônimo de feliz','Alegre'],['Antônimo de claro','Escuro'],['Antônimo de rápido','Lento'],['Sinônimo de casa','Moradia'],['Antônimo de quente','Frio'],['Sinônimo de bonito','Belo'],['Antônimo de grande','Pequeno'],['Sinônimo de calmo','Tranquilo']]},
+    {theme:'Gramática',pairs:[['Plural de cidadão','Cidadãos'],['Rapidamente','Advérbio'],['Hiato','Vogais separadas'],['Cantarei','Futuro'],['Palavra que liga orações','Conjunção'],['Pronome oblíquo de eu','Me'],['Verbo de ligação','Ser'],['Plural de pão','Pães']]},
+    {theme:'Literatura',pairs:[['Dom Casmurro','Machado de Assis'],['Capitães da Areia','Jorge Amado'],['A Hora da Estrela','Clarice Lispector'],['Canção do Exílio','Gonçalves Dias'],['Sítio do Picapau Amarelo','Monteiro Lobato'],['O Guarani','José de Alencar'],['História curta do cotidiano','Crônica'],['Narrativa com animais','Fábula']]},
+    {theme:'Figuras e Sons',pairs:[['Chorar rios de lágrimas','Hipérbole'],['Comparação implícita','Metáfora'],['Imita sons','Onomatopeia'],['Ideias opostas','Antítese'],['Objetos com vida','Personificação'],['Ideia repetida','Pleonasmo'],['Som igual no fim do verso','Rima'],['Acento na última sílaba','Oxítona']]}
+  ],
+  ing:[
+    {theme:'Traduções',pairs:[['Gato','Cat'],['Livro','Book'],['Water','Água'],['Thank you','Obrigado'],['Blue','Azul'],['Dog','Cachorro'],['Eat','Comer'],['House','Casa']]},
+    {theme:'Verbos Irregulares',pairs:[['Go →','Went'],['See →','Saw'],['Eat →','Ate'],['Run →','Ran'],['Swim →','Swam'],['Write →','Wrote'],['Speak →','Spoke'],['Take →','Took']]},
+    {theme:'Vocabulário',pairs:[['Opposite of happy','Sad'],['Plural of child','Children'],['Number after twelve','Thirteen'],['Month after March','April'],['A fruit','Apple'],['Season with snow','Winter'],['Opposite of big','Small'],['Color of the sky','Blue']]},
+    {theme:'Grammar in English',pairs:[['I ___ (to be)','am'],['She ___ to school','goes'],['They ___ playing','are'],['I am ___ student','a'],['Superlative of good','Best'],['Comparative of big','Bigger'],['Question word for place','Where'],['Opposite of fast','Slow']]}
+  ]
+};
+
+const SEQ_DB={
+  mat:[
+    {shown:[2,4,8,16,32],ans:64,hint:'×2',theme:'Lógica'},{shown:[3,6,9,12,15],ans:18,hint:'+3',theme:'Tabuada'},{shown:[1,4,9,16,25],ans:36,hint:'quadrados',theme:'Potências e Raízes'},
+    {shown:[100,90,80,70,60],ans:50,hint:'−10',theme:'Operações Básicas'},{shown:[1,1,2,3,5],ans:8,hint:'Fibonacci',theme:'Lógica'},{shown:[5,10,20,40,80],ans:160,hint:'×2',theme:'Potências e Raízes'},
+    {shown:[2,5,10,17,26],ans:37,hint:'diferenças crescentes',theme:'Lógica'},{shown:[3,9,27,81,243],ans:729,hint:'×3',theme:'Potências e Raízes'},
+    {shown:[10,8,6,4,2],ans:0,hint:'−2',theme:'Operações Básicas'},{shown:[2,3,5,7,11],ans:13,hint:'números primos',theme:'Múltiplos e Divisores'},{shown:[1,8,27,64,125],ans:216,hint:'cubos',theme:'Potências e Raízes'},{shown:[4,9,14,19,24],ans:29,hint:'+5',theme:'Tabuada'}
+  ],
+  cie:[
+    {shown:[1,2,4,8,16],ans:32,hint:'Divisão celular dobra',theme:'Células'},{shown:['H','He','Li','Be','B'],ans:'C',hint:'Número atômico',theme:'Química'},
+    {shown:['Sol','Mercúrio','Vênus','Terra','Marte'],ans:'Júpiter',hint:'Ordem planetária',theme:'Astronomia'},{shown:[0,10,20,30,40],ans:50,hint:'Escala Celsius',theme:'Física'},
+    {shown:['Sólido','Líquido','Gasoso','Plasma','?'],ans:'Bose-Einstein',hint:'Estados da matéria',theme:'Química'},{shown:[1,2,3,5,8],ans:13,hint:'Fibonacci na natureza',theme:'Seres Vivos'},
+    {shown:['Átomo','Molécula','Célula','Tecido','Órgão'],ans:'Sistema',hint:'Níveis de organização',theme:'Células'},{shown:[7,14,21,28,35],ans:42,hint:'Múltiplos de 7',theme:'Física'},
+    {shown:[6,12,24,48,96],ans:192,hint:'×2',theme:'Células'},{shown:[50,45,40,35,30],ans:25,hint:'−5',theme:'Física'},
+    {shown:['Verão','Outono','Inverno','Primavera','?'],ans:'Verão',hint:'Ciclo das estações',theme:'Terra e Ambiente'},{shown:[4,5,7,10,14],ans:19,hint:'+1, +2, +3, +4',theme:'Física'}
+  ],
+  geo:[
+    {shown:['Equador','Trópico Câncer','Trópico Capricórnio','Círculo Polar Ártico','?'],ans:'Círculo Polar Antártico',hint:'Linhas imaginárias',theme:'Mapas e Linhas'},
+    {shown:['AM','PA','MT','BA','MG'],ans:'GO',hint:'Maiores estados BR',theme:'Brasil'},{shown:['Ásia','África','América','Europa','Oceania'],ans:'Antártida',hint:'Continentes',theme:'Continentes'},
+    {shown:['Nilo','Amazonas','Yangtzé','Mississipi','Ienissei'],ans:'Rio Amarelo',hint:'Rios mais longos',theme:'Natureza e Relevo'},
+    {shown:['Rússia','Canadá','China','EUA','Brasil'],ans:'Austrália',hint:'Maiores países',theme:'Países'},
+    {shown:['SP','RJ','MG','BA','PR'],ans:'RS',hint:'Estados mais populosos',theme:'Brasil'},
+    {shown:['Pacífico','Atlântico','Índico','Antártico','?'],ans:'Ártico',hint:'Oceanos',theme:'Natureza e Relevo'},
+    {shown:['UTC−5','UTC−4','UTC−3','UTC−2','UTC−1'],ans:'UTC+0',hint:'Fusos horários',theme:'Mapas e Linhas'},
+    {shown:['UTC+1','UTC+2','UTC+3','UTC+4','UTC+5'],ans:'UTC+6',hint:'Fusos subindo',theme:'Mapas e Linhas'},
+    {shown:['1º','2º','3º','4º','5º'],ans:'6º',hint:'Ordinais',theme:'Mapas e Linhas'},
+    {shown:['N','S','L','O','?'],ans:'NE',hint:'Pontos cardeais',theme:'Mapas e Linhas'},
+    {shown:['Vila','Cidade','Metrópole','Megalópole','?'],ans:'Cidade Global',hint:'Crescimento urbano',theme:'Brasil'}
+  ],
+  his:[
+    {shown:['1500','1822','1888','1889','1930'],ans:'1945',hint:'Marcos históricos BR',theme:'Brasil'},{shown:['Egito','Grécia','Roma','Idade Média','Renascimento'],ans:'Era Moderna',hint:'Períodos históricos',theme:'Eras'},
+    {shown:['Pedro I','Pedro II','Deodoro','Prudente','Campos Sales'],ans:'Rodrigues Alves',hint:'Presidentes BR',theme:'Brasil'},
+    {shown:['1914','1918','1939','1945','1989'],ans:'1991',hint:'Guerras e fim da URSS',theme:'História Mundial'},
+    {shown:['Suméria','Egito','Índia','China','Grécia'],ans:'Roma',hint:'Civilizações antigas',theme:'Civilizações'},
+    {shown:['Descobrimento','Colonização','Inconfidência','Independência','República'],ans:'Era Vargas',hint:'Períodos do Brasil',theme:'Brasil'},
+    {shown:['Feudalismo','Renascimento','Iluminismo','Revolução Industrial','?'],ans:'Era Digital',hint:'Eras',theme:'Eras'},
+    {shown:['1776','1789','1822','1889','1945'],ans:'1964',hint:'Datas marcantes',theme:'História Mundial'},
+    {shown:['1500','1600','1700','1800','1900'],ans:'2000',hint:'Séculos',theme:'Eras'},
+    {shown:['1000','1200','1400','1600','1800'],ans:'2000',hint:'+200',theme:'Eras'},
+    {shown:['1922','1930','1937','1945','1950'],ans:'1954',hint:'Era Vargas',theme:'Brasil'},
+    {shown:['Pedra Lascada','Pedra Polida','Bronze','Ferro','?'],ans:'Aço',hint:'Materiais da humanidade',theme:'Civilizações'}
+  ],
+  por:[
+    {shown:['Artigo','Substantivo','Adjetivo','Verbo','Advérbio'],ans:'Pronome',hint:'Classes gramaticais',theme:'Gramática'},
+    {shown:['Sujeito','Predicado','Objeto Direto','Objeto Indireto','?'],ans:'Adjunto Adnominal',hint:'Termos da oração',theme:'Gramática'},
+    {shown:['Narrativo','Descritivo','Dissertativo','Injuntivo','?'],ans:'Expositivo',hint:'Tipos textuais',theme:'Literatura'},
+    {shown:['Romantismo','Realismo','Naturalismo','Parnasianismo','Simbolismo'],ans:'Modernismo',hint:'Escolas literárias',theme:'Literatura'},
+    {shown:['Letra','Sílabas','Palavra','Frase','Oração'],ans:'Período',hint:'Unidades linguísticas',theme:'Gramática'},
+    {shown:['Agudo','Grave','Circunflexo','Til','Cedilha'],ans:'Apóstrofo',hint:'Acentos e sinais',theme:'Gramática'},
+    {shown:['Metáfora','Comparação','Personificação','Hipérbole','?'],ans:'Antítese',hint:'Figuras de linguagem',theme:'Figuras de Linguagem'},
+    {shown:['Conto','Crônica','Novela','Romance','?'],ans:'Fábula',hint:'Gêneros narrativos',theme:'Literatura'},
+    {shown:['Segunda','Terça','Quarta','Quinta','Sexta'],ans:'Sábado',hint:'Dias da semana',theme:'Vocabulário'},
+    {shown:['A','B','C','D','E'],ans:'F',hint:'Alfabeto',theme:'Vocabulário'},
+    {shown:['Eu','Tu','Ele','Nós','Vós'],ans:'Eles',hint:'Pronomes pessoais',theme:'Gramática'},
+    {shown:['Um','Dois','Três','Quatro','Cinco'],ans:'Seis',hint:'Numerais',theme:'Vocabulário'}
+  ],
+  ing:[
+    {shown:['One','Two','Three','Four','Five'],ans:'Six',hint:'Numbers',theme:'Vocabulário'},{shown:['Monday','Tuesday','Wednesday','Thursday','Friday'],ans:'Saturday',hint:'Days of the week',theme:'Vocabulário'},
+    {shown:['January','March','May','July','September'],ans:'November',hint:'Odd months',theme:'Vocabulário'},{shown:['Red','Orange','Yellow','Green','Blue'],ans:'Indigo',hint:'Rainbow colors',theme:'Vocabulário'},
+    {shown:['I','You','He','She','It'],ans:'We',hint:'Subject pronouns',theme:'Grammar'},{shown:['Go→Went','See→Saw','Eat→Ate','Run→Ran','?'],ans:'Swim→Swam',hint:'Irregular verbs',theme:'Verbos'},
+    {shown:['Happy→Happier','Big→Bigger','Fast→Faster','Tall→Taller','?'],ans:'Smart→Smarter',hint:'Comparatives',theme:'Grammar'},
+    {shown:['Spring','Summer','Autumn','Winter','?'],ans:'Spring',hint:'Seasons cycle',theme:'Vocabulário'},
+    {shown:['Cat','Dog','Bird','Fish','Horse'],ans:'Cow',hint:'Animals',theme:'Vocabulário'},
+    {shown:['Red','Blue','Green','Black','White'],ans:'Purple',hint:'Colors',theme:'Vocabulário'},
+    {shown:['Eat','Drink','Sleep','Run','?'],ans:'Jump',hint:'Action verbs',theme:'Verbos'},
+    {shown:['Sun','Moon','Star','Cloud','?'],ans:'Rain',hint:'In the sky',theme:'Vocabulário'}
+  ]
+};
+
+function topicChipHTML(){
+  if(!currentTopic)return'';
+  return '<div class="memo-theme"><span>🎯 Estudando somente: '+esc(currentTopic)+'</span></div>';
+}
+
+/* ===== GAME BUILDERS ===== */
+
+function buildQuiz(root){
+  const my=session;
+  const subject=currentSubject||'mat';
+  const topic=currentTopic||'';
+  const pool=pickQuizPool(subject,topic);
+  if(!pool.length){showTopicNotFound(root,subject,topic);return;}
+  const TOTAL=pool.length;
+  let round=1,score=0,streak=0,maxStreak=0,lives=3,locked=false,finished=false,tInt=null,cur=null;
+  root.innerHTML=topicChipHTML()+
+    '<div class="quiz-hud"><div>Rodada <b id="qRound">1/'+TOTAL+'</b></div><div>Pontos <b id="qScore">0</b></div><div>🔥 <b id="qStreak">0</b></div><div id="qHearts"></div></div>'+
+    '<div class="timebar"><i id="qTime"></i></div><div class="quiz-q" id="qText"></div><div class="quiz-opts" id="qOpts"></div><div class="quiz-msg" id="qMsg"></div>';
+  const Q=id=>root.querySelector(id);
+  const hearts=()=>{const h=Q('#qHearts');if(h)h.textContent='❤️'.repeat(Math.max(0,lives))+'🖤'.repeat(Math.max(0,3-lives));};
+  cleanupFn=()=>{if(tInt){clearInterval(tInt);tInt=null;}};
+  function stopTimer(){if(tInt){clearInterval(tInt);tInt=null;}}
+  function startTimer(){
+    stopTimer();
+    let t=15;
+    const bar=Q('#qTime');if(bar)bar.style.width='100%';
+    tInt=setInterval(()=>{
+      if(!alive(my)){stopTimer();return;}
+      t-=.1;
+      const b=Q('#qTime');if(b)b.style.width=Math.max(0,t/15*100)+'%';
+      if(t<=0){stopTimer();answer(null,null);}
+    },100);
+  }
+  function next(){
+    if(!alive(my)||finished)return;
+    if(lives<=0||round>TOTAL)return finish();
+    locked=false;cur=pool[round-1];
+    Q('#qRound').textContent=round+'/'+TOTAL;
+    Q('#qScore').textContent=score;
+    Q('#qStreak').textContent=streak;
+    hearts();
+    Q('#qText').textContent=cur.q;
+    Q('#qMsg').textContent='';
+    const box=Q('#qOpts');box.innerHTML='';
+    cur.opts.forEach((v,idx)=>{
+      const b=document.createElement('button');
+      b.className='opt';b.type='button';b.textContent=v;
+      b.onclick=()=>answer(b,idx);
+      box.appendChild(b);
+    });
+    startTimer();
+  }
+  function answer(btn,val){
+    if(locked||finished||!alive(my)||!cur)return;
+    locked=true;
+    stopTimer();
+    const good=val===cur.ans;
+    root.querySelectorAll('.opt').forEach((o,i)=>{
+      o.classList.add('dis');
+      if(i===cur.ans)o.classList.add('good');
+      else if(btn===o&&!good)o.classList.add('bad');
+    });
+    if(good){
+      streak++;maxStreak=Math.max(maxStreak,streak);
+      const pts=10+streak*2;score+=pts;
+      Q('#qMsg').innerHTML='<span class="ok">✔ Correto! +'+pts+' pts '+(streak>1?'· combo ×'+streak+' 🔥':'')+'</span>';
+      sfxOk();burstAt(btn);
+    }else{
+      lives--;streak=0;sfxBad();
+      Q('#qMsg').innerHTML='<span class="no">✖ '+(val==null?'Tempo esgotado!':'Errou!')+' Resposta: '+cur.opts[cur.ans]+'</span>';
+    }
+    Q('#qScore').textContent=score;Q('#qStreak').textContent=streak;hearts();
+    setTimeout(()=>{if(!alive(my)||finished)return;round++;next();},1150);
+  }
+  function finish(){
+    if(finished)return;
+    finished=true;stopTimer();
+    state.games.quiz=(state.games.quiz||0)+1;save();
+    const xp=score;
+    root.innerHTML=
+      '<div class="result"><div class="r-emoji">'+(score>=120?'🏆':score>=70?'🎉':'💪')+'</div>'+
+      '<h3>'+(score>=120?'Gênio de '+SUBJECT_NAMES[subject]+'!':score>=70?'Mandou muito bem!':'Continue treinando!')+'</h3>'+
+      '<p>Pontuação: <b>'+score+'</b> · Maior combo: <b>'+maxStreak+' 🔥</b>'+(topic?' · Tema: <b>'+esc(topic)+'</b>':'')+'</p>'+
+      '<div class="r-xp">+'+xp+' XP</div>'+
+      '<div class="r-btns"><button class="btn btn-yellow" id="again" type="button">↻ Novas perguntas (sem repetir)</button>'+
+      '<button class="btn btn-ghost" id="closeM" type="button">Fechar</button></div></div>';
+    root.querySelector('#again').onclick=()=>{if(alive(my))buildQuiz(root);};
+    root.querySelector('#closeM').onclick=closeModal;
+    addXp(xp);unlock('first');
+    if(maxStreak>=5&&subject==='mat')unlock('streak');
+    if(score>=100){burstCenter();sfxWin();}
+  }
+  next();
+}
+
+/* ===== MEMÓRIA — rotação de temas persistida ===== */
+function buildMemo(root){
+  const my=session;
+  const subject=currentSubject||'mat';
+  const topic=currentTopic||'';
+  let poolThemes=(MEMO_DB[subject]||[]).slice();
+  if(!poolThemes.length){root.innerHTML='<div class="result"><h3>Sem temas disponíveis 😕</h3></div>';return;}
+  if(topic){
+    poolThemes=strictFilter(poolThemes,topic,t=>t.theme+' '+t.pairs.flat().join(' '));
+    if(!poolThemes.length){showTopicNotFound(root,subject,topic);return;}
+  }
+  const rotKey='memo|'+subject+'|'+(topic||'*');
+  let wins=0,totalScore=0,tInt=null,advTimer=null;
+  cleanupFn=()=>{
+    if(tInt){clearInterval(tInt);tInt=null;}
+    if(advTimer){clearTimeout(advTimer);advTimer=null;}
+  };
+
+  function pickTheme(){
+    let recent=rotGet(rotKey);
+    let avail=poolThemes.filter(t=>!recent.includes(t.theme));
+    if(avail.length===0){recent=[];avail=poolThemes.slice();}
+    if(avail.length>1){
+      const last=recent[recent.length-1];
+      const nr=avail.filter(t=>t.theme!==last);
+      if(nr.length)avail=nr;
+    }
+    const t=avail[ri(0,avail.length-1)];
+    recent.push(t.theme);
+    rotSet(rotKey,recent,poolThemes.length);
+    return t;
+  }
+
+  function renderRound(){
+    if(!alive(my))return;
+    if(tInt){clearInterval(tInt);tInt=null;}
+    if(advTimer){clearTimeout(advTimer);advTimer=null;}
+    const T=pickTheme();
+    const pairs=shuffle(T.pairs.slice());
+    const cards=shuffle(pairs.flatMap((p,i)=>[{i,kind:'q',t:p[0]},{i,kind:'a',t:p[1]}]));
+    let open=[],lock=false,moves=0,matched=0,sec=0,started=false,roundDone=false;
+
+    root.innerHTML=
+      '<div style="text-align:center;margin-bottom:8px;font-weight:800;color:var(--muted);font-size:.85rem">'+
+      'Vitórias: <b style="color:var(--teal)">'+wins+'</b> · Pontos: <b style="color:var(--yellow)">'+totalScore+'</b> · '+SUBJECT_NAMES[subject]+
+      (topic?' · 🎯 '+esc(topic):'')+'</div>'+
+      '<div class="memo-theme"><span>🎨 Tema da rodada: '+T.theme+'</span></div>'+
+      '<div class="memo-hud"><div>⏱ <b id="mTime">00:00</b></div><div>Jogadas: <b id="mMoves">0</b></div><div>Pares: <b id="mPairs">0/'+pairs.length+'</b></div></div>'+
+      '<div class="memo-grid" id="mGrid"></div>';
+
+    const grid=root.querySelector('#mGrid');
+    if(!grid)return;
+    cards.forEach(c=>{
+      const el=document.createElement('button');
+      el.className='mem '+c.kind;el.type='button';
+      el.innerHTML='<span class="mem-in"><span class="mem-back">?</span><span class="mem-front">'+c.t+'</span></span>';
+      el.onclick=()=>flip(el,c);
+      grid.appendChild(el);
+    });
+
+    function flip(el,c){
+      if(lock||roundDone||!alive(my)||el.classList.contains('up')||el.classList.contains('done'))return;
+      if(!started){
+        started=true;
+        tInt=setInterval(()=>{
+          if(!alive(my)){if(tInt){clearInterval(tInt);tInt=null;}return;}
+          sec++;
+          const mt=root.querySelector('#mTime');
+          if(mt)mt.textContent=fmt(sec);
+        },1000);
+      }
+      el.classList.add('up');open.push({el,c});beep(500,.06,'sine',.05);
+      if(open.length===2){
+        lock=true;moves++;
+        const mm=root.querySelector('#mMoves');if(mm)mm.textContent=moves;
+        const a=open[0],b=open[1];
+        if(a.c.i===b.c.i){
+          setTimeout(()=>{
+            if(!alive(my)||roundDone)return;
+            a.el.classList.add('done');b.el.classList.add('done');
+            matched++;
+            const mp=root.querySelector('#mPairs');if(mp)mp.textContent=matched+'/'+pairs.length;
+            sfxOk();open=[];lock=false;
+            if(matched===pairs.length)win();
+          },380);
+        }else{
+          setTimeout(()=>{
+            if(!alive(my)||roundDone){open=[];lock=false;return;}
+            a.el.classList.remove('up');b.el.classList.remove('up');
+            sfxBad();open=[];lock=false;
+          },820);
+        }
+      }
+    }
+
+    function win(){
+      if(roundDone)return;
+      roundDone=true;
+      if(tInt){clearInterval(tInt);tInt=null;}
+      const stars=moves<=12?3:moves<=16?2:1;
+      const xp=Math.max(40,140-moves*4)+stars*15;
+      wins++;totalScore+=xp;
+      state.games.memo=(state.games.memo||0)+1;save();
+      burstCenter();sfxWin();addXp(xp);unlock('first');
+      if(moves<=14)unlock('memo');
+      let advanced=false;
+      const goNext=()=>{
+        if(advanced||!alive(my))return;
+        advanced=true;
+        if(advTimer){clearTimeout(advTimer);advTimer=null;}
+        renderRound();
+      };
+      root.innerHTML=
+        '<div class="result"><div class="r-emoji">'+'⭐'.repeat(stars)+'</div>'+
+        '<h3>Tema "'+T.theme+'" concluído!</h3>'+
+        '<p>Tempo: <b>'+fmt(sec)+'</b> · Jogadas: <b>'+moves+'</b></p>'+
+        '<div class="r-xp">+'+xp+' XP</div>'+
+        '<p style="color:var(--muted);font-weight:800;margin-top:6px">🔀 Trocando todas as cartas por um tema novo (sem repetir o anterior)...</p>'+
+        '<div class="r-btns" style="margin-top:16px">'+
+        '<button class="btn btn-yellow" id="nextNow" type="button">▶ Próximo tema agora</button>'+
+        '<button class="btn btn-ghost" id="stopM" type="button">Parar por aqui</button></div></div>';
+      const nx=root.querySelector('#nextNow');if(nx)nx.onclick=goNext;
+      const stop=root.querySelector('#stopM');if(stop)stop.onclick=closeModal;
+      advTimer=setTimeout(goNext,2600);
+    }
+  }
+  renderRound();
+}
+
+/* ===== FORCA — rotação de palavras persistida ===== */
+function buildForca(root){
+  const my=session;
+  const subject=currentSubject||'mat';
+  const topic=currentTopic||'';
+  let pool=(FORCA_DB[subject]||[]).slice();
+  if(!pool.length){root.innerHTML='<div class="result"><h3>Sem palavras disponíveis 😕</h3></div>';return;}
+  if(topic){
+    pool=strictFilter(pool,topic,w=>((w.theme||'')+' '+(w.tags||'')+' '+w.w+' '+w.h));
+    if(!pool.length){showTopicNotFound(root,subject,topic);return;}
+  }
+  const rotKey='forca|'+subject+'|'+(topic||'*');
+  let wins=0,totalScore=0,nextTimer=null;
+  cleanupFn=()=>{if(nextTimer){clearTimeout(nextTimer);nextTimer=null;}};
+  function pickWord(){
+    let recent=rotGet(rotKey);
+    let avail=pool.filter(w=>!recent.includes(w.w));
+    if(avail.length===0){recent=[];avail=pool.slice();}
+    const pick=avail[ri(0,avail.length-1)];
+    recent.push(pick.w);
+    rotSet(rotKey,recent,pool.length);
+    return pick;
+  }
+  function renderRound(){
+    if(!alive(my))return;
+    if(nextTimer){clearTimeout(nextTimer);nextTimer=null;}
+    const pick=pickWord();
+    const target=norm(pick.w);const guessed=new Set();let wrongs=0,done=false;
+    root.innerHTML=topicChipHTML()+
+      '<div style="text-align:center;margin-bottom:10px;font-weight:800;color:var(--muted)">Vitórias nesta sessão: <b style="color:var(--teal)">'+wins+'</b> · Pontos: <b style="color:var(--yellow)">'+totalScore+'</b></div>'+
+      '<div class="forca-wrap"><div><svg class="hang-svg" viewBox="0 0 140 160">'+
+      '<g stroke="#8b6bff" stroke-width="5" stroke-linecap="round" fill="none"><line x1="10" y1="152" x2="92" y2="152"/><line x1="40" y1="152" x2="40" y2="12"/><line x1="40" y1="12" x2="92" y2="12"/><line x1="92" y1="12" x2="92" y2="26"/></g>'+
+      '<circle class="hp" cx="92" cy="44" r="15"/><line class="hp" x1="92" y1="60" x2="92" y2="98"/><line class="hp" x1="92" y1="70" x2="74" y2="88"/><line class="hp" x1="92" y1="70" x2="110" y2="88"/><line class="hp" x1="92" y1="98" x2="76" y2="122"/><line class="hp" x1="92" y1="98" x2="108" y2="122"/>'+
+      '</svg><div class="hearts" id="fHearts"></div></div>'+
+      '<div><div class="hint">💡 '+pick.h+'</div><div class="word" id="fWord"></div><div class="keys" id="fKeys"></div><div class="quiz-msg" id="fMsg"></div></div></div>';
+    const F=id=>root.querySelector(id);
+    const renderHearts=()=>{const h=F('#fHearts');if(h)h.textContent='❤️'.repeat(Math.max(0,6-wrongs))+'🖤'.repeat(Math.max(0,wrongs));};
+    const renderWord=()=>{
+      const fw=F('#fWord');if(!fw)return;
+      fw.innerHTML=[...pick.w].map(ch=>{
+        if(ch===' ')return'<span class="slot gap"></span>';
+        const on=guessed.has(norm(ch));
+        return'<span class="slot '+(on?'on':'')+'">'+(on?ch:'')+'</span>';
+      }).join('');
+    };
+    renderWord();renderHearts();
+    const fk=F('#fKeys');
+    if(fk){
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L=>{
+        const b=document.createElement('button');
+        b.className='key';b.type='button';b.textContent=L;
+        b.onclick=()=>letter(L,b);
+        fk.appendChild(b);
+      });
+    }
+    function letter(L,btn){
+      if(done||!alive(my)||guessed.has(L))return;
+      guessed.add(L);btn.disabled=true;
+      if(target.includes(L)){
+        btn.classList.add('ok');sfxOk();renderWord();
+        if([...target].every(ch=>guessed.has(ch)))win();
+      }else{
+        btn.classList.add('bad');wrongs++;sfxBad();
+        const hp=root.querySelectorAll('.hp');
+        if(hp[wrongs-1])hp[wrongs-1].classList.add('on');
+        renderHearts();
+        if(wrongs>=6)lose();
+      }
+    }
+    function win(){
+      if(done)return;done=true;
+      const pts=60+(6-wrongs)*10;wins++;totalScore+=pts;
+      const fm=F('#fMsg');if(fm)fm.innerHTML='<span class="ok">🎉 Acertou! +'+pts+' pts · nova palavra chegando...</span>';
+      burstCenter();sfxWin();addXp(pts);unlock('first');unlock('forca');
+      nextTimer=setTimeout(renderRound,1800);
+    }
+    function lose(){
+      if(done)return;done=true;renderWord();
+      const fm=F('#fMsg');if(fm)fm.innerHTML='<span class="no">💀 A palavra era <b>'+pick.w+'</b>. Próxima em instantes...</span>';
+      addXp(10);unlock('first');
+      nextTimer=setTimeout(renderRound,2200);
+    }
+  }
+  renderRound();
+}
+
+/* ===== SEQUÊNCIA — rotação persistida ===== */
+function buildSeq(root){
+  const my=session;
+  const subject=currentSubject||'mat';
+  const topic=currentTopic||'';
+  let base=(SEQ_DB[subject]||[]).slice();
+  if(!base.length){root.innerHTML='<div class="result"><h3>Sem sequências disponíveis 😕</h3></div>';return;}
+  if(topic){
+    base=strictFilter(base,topic,s=>((s.theme||'')+' '+s.hint+' '+s.shown.join(' ')+' '+s.ans));
+    if(!base.length){showTopicNotFound(root,subject,topic);return;}
+  }
+  const rotKey='seq|'+subject+'|'+(topic||'*');
+  const idOf=s=>s.hint+'|'+String(s.ans)+'|'+String(s.shown[0]);
+  function buildQueue(){
+    let recent=rotGet(rotKey);
+    let unused=base.filter(s=>!recent.includes(idOf(s)));
+    if(unused.length===0){rotSet(rotKey,[],0);unused=base.slice();recent=[];}
+    const usedP=base.filter(s=>recent.includes(idOf(s)));
+    return shuffle(unused.slice()).concat(shuffle(usedP.slice()));
+  }
+  let queue=buildQueue();
+  let idx=0,score=0,wins=0,locked=false,nextTimer=null;
+  cleanupFn=()=>{if(nextTimer){clearTimeout(nextTimer);nextTimer=null;}};
+  function markUsed(s){
+    const recent=rotGet(rotKey);
+    recent.push(idOf(s));
+    rotSet(rotKey,recent,base.length);
+  }
+  function renderRound(){
+    if(!alive(my))return;
+    if(nextTimer){clearTimeout(nextTimer);nextTimer=null;}
+    if(idx>=queue.length||!queue[idx]){queue=buildQueue();idx=0;}
+    const c=queue[idx];
+    locked=false;
+    root.innerHTML=topicChipHTML()+
+      '<div style="text-align:center;margin-bottom:8px;font-weight:800;color:var(--muted)">Vitórias: <b style="color:var(--teal)">'+wins+'</b> · Pontos: <b style="color:var(--yellow)">'+score+'</b></div>'+
+      '<div class="quiz-hud"><div>Rodada <b>'+(wins+1)+'</b></div><div>Dica: <b style="color:var(--sky)">'+c.hint+'</b></div></div>'+
+      '<div class="seq-row" id="sRow"></div><div class="quiz-opts" id="sOpts"></div><div class="quiz-msg" id="sMsg"></div>';
+    const S=id=>root.querySelector(id);
+    S('#sRow').innerHTML=c.shown.map(n=>'<span class="seq-chip">'+n+'</span>').join('')+'<span class="seq-chip q">?</span>';
+    const opts=new Set([String(c.ans)]);let guard=0;
+    while(opts.size<4&&guard++<100){
+      let d;
+      if(typeof c.ans==='number'){d=c.ans+ri(-8,8);if(d!==c.ans&&d>0)opts.add(String(d));}
+      else{const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ';d=letters[ri(0,25)];if(d!==c.ans)opts.add(d);}
+    }
+    const optArr=shuffle([...opts]);
+    const box=S('#sOpts');box.innerHTML='';
+    optArr.forEach(v=>{
+      const b=document.createElement('button');
+      b.className='opt';b.type='button';b.textContent=v;
+      b.onclick=()=>answer(b,v);
+      box.appendChild(b);
+    });
+    S('#sMsg').textContent='';
+  }
+  function answer(btn,val){
+    if(locked||!alive(my))return;
+    locked=true;
+    const cur=queue[idx];
+    if(!cur)return;
+    const good=String(val)===String(cur.ans);
+    markUsed(cur);
+    root.querySelectorAll('.opt').forEach(o=>{
+      o.classList.add('dis');
+      if(String(o.textContent)===String(cur.ans))o.classList.add('good');
+      else if(o===btn&&!good)o.classList.add('bad');
+    });
+    if(good){
+      score+=15;wins++;sfxOk();burstAt(btn);
+      const m=root.querySelector('#sMsg');if(m)m.innerHTML='<span class="ok">✔ Padrão dominado! +15 pts</span>';
+      addXp(15);unlock('first');
+      if(wins>=8)unlock('seq');
+      idx++;
+      nextTimer=setTimeout(renderRound,1200);
+    }else{
+      sfxBad();
+      const m=root.querySelector('#sMsg');if(m)m.innerHTML='<span class="no">✖ Era '+cur.ans+'! Próxima...</span>';
+      idx++;
+      nextTimer=setTimeout(renderRound,1500);
+    }
+  }
+  renderRound();
+}
+
+/* ===== REGISTRY ===== */
+const GAMES={
+  quiz:{icon:'⚡',title:'Quiz Relâmpago',sub:'Perguntas novas a cada partida, sem repetir as anteriores.',build:buildQuiz},
+  memo:{icon:'🃏',title:'Memória do Saber',sub:'Completou a rodada? Cartas novas com tema diferente!',build:buildMemo},
+  forca:{icon:'🔤',title:'Forca do Saber',sub:'Acertou ou errou, sempre vem uma palavra diferente!',build:buildForca},
+  seq:{icon:'🧩',title:'Sequência Genial',sub:'Padrões infinitos sem repetir os últimos.',build:buildSeq}
+};
+
+/* ===== ETAPA: DIGITAR O TEMA ===== */
+function showTopicInput(gameId,backFn){
+  session++;runCleanup();
+  const subject=currentSubject;
+  const g=GAMES[gameId];
+  $('#mTitle').textContent=g.icon+' '+g.title+' · '+SUBJECT_NAMES[subject];
+  $('#mSub').textContent='Escolha o que você quer estudar:';
+  const suggestions=(MEMO_DB[subject]||[]).map(t=>t.theme);
+  const wrap=document.createElement('div');
+  wrap.innerHTML=
+    '<div class="topic-wrap">'+
+    '<label>⌨️ Digite um tema de '+SUBJECT_NAMES[subject]+' (opcional)</label>'+
+    '<input type="text" id="topicField" maxlength="40" autocomplete="off" placeholder="'+(TOPIC_EXAMPLES[subject]||'Digite um tema...')+'">'+
+    '<div class="topic-hint"><b style="color:var(--yellow)">Modo estrito:</b> se digitar algo específico (ex: "Nome de Países"), o jogo mostra SOMENTE perguntas que têm a ver com isso.<br><b style="color:var(--teal)">Memória salva:</b> ao sair e voltar no mesmo tema, você recebe perguntas diferentes das anteriores — nunca repete!</div>'+
+    '<div class="chips" id="topicChips"></div>'+
+    '</div>'+
+    '<div class="topic-btns">'+
+    '<button class="btn btn-yellow" id="startT" type="button">▶ Começar com esse tema</button>'+
+    '<button class="btn btn-ghost" id="randomT" type="button">🎲 Surpreenda-me</button>'+
+    '<button class="btn btn-ghost" id="backT" type="button">← Voltar</button>'+
+    '</div>';
+  mBody.innerHTML='';
+  mBody.appendChild(wrap);
+  cleanupFn=()=>{};
+
+  const input=$('#topicField');
+  const chipsBox=$('#topicChips');
+  suggestions.forEach(s=>{
+    const c=document.createElement('button');
+    c.type='button';c.className='chip';c.textContent=s;
+    c.onclick=()=>{input.value=s;input.focus();};
+    chipsBox.appendChild(c);
+  });
+  const start=()=>{currentTopic=input?input.value.trim():'';openGame(gameId,subject);};
+  $('#startT').onclick=start;
+  $('#randomT').onclick=()=>{currentTopic='';openGame(gameId,subject);};
+  $('#backT').onclick=()=>{if(backFn)backFn();};
+  if(input){
+    setTimeout(()=>input.focus(),120);
+    input.addEventListener('keydown',e=>{if(e.key==='Enter')start();});
+  }
+}
+
+/* ===== ETAPA: ESCOLHER MATÉRIA ===== */
+function showSubjects(gameId){
+  session++;runCleanup();
+  currentSubject=null;currentTopic='';
+  const g=GAMES[gameId];
+  $('#mTitle').textContent=g.icon+' '+g.title;
+  $('#mSub').textContent='Escolha a matéria:';
+  mBody.innerHTML='';
+  modal.classList.add('open');document.body.style.overflow='hidden';
+  const subjects=['mat','cie','geo','his','por','ing'];
+  const icons={mat:'📐',cie:'🔬',geo:'🌍',his:'🏺',por:'✍️',ing:'🇬🇧'};
+  const wrap=document.createElement('div');
+  wrap.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px';
+  subjects.forEach(s=>{
+    const b=document.createElement('button');
+    b.className='opt';b.type='button';
+    b.textContent=icons[s]+' '+SUBJECT_NAMES[s];
+    b.onclick=()=>{currentSubject=s;showTopicInput(gameId,()=>showSubjects(gameId));};
+    wrap.appendChild(b);
+  });
+  mBody.appendChild(wrap);
+  cleanupFn=()=>{};
+}
+$$('.play-btn[data-game]').forEach(b=>b.addEventListener('click',()=>showSubjects(b.dataset.game)));
+
+/* ===== ETAPA: MODO DE JOGO (a partir da trilha) ===== */
+function showModes(sub){
+  session++;runCleanup();
+  currentSubject=sub;currentTopic='';
+  $('#mTitle').textContent='🎮 Jogos de '+SUBJECT_NAMES[sub];
+  $('#mSub').textContent='Escolha o modo de jogo:';
+  mBody.innerHTML='';
+  modal.classList.add('open');document.body.style.overflow='hidden';
+  const games=['quiz','memo','forca','seq'];
+  const icons={quiz:'⚡',memo:'🃏',forca:'🔤',seq:'🧩'};
+  const names={quiz:'Quiz Relâmpago',memo:'Memória do Saber',forca:'Forca do Saber',seq:'Sequência Genial'};
+  const wrap=document.createElement('div');
+  wrap.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px';
+  games.forEach(g=>{
+    const btn=document.createElement('button');
+    btn.className='opt';btn.type='button';
+    btn.textContent=icons[g]+' '+names[g];
+    btn.onclick=()=>showTopicInput(g,()=>showModes(sub));
+    wrap.appendChild(btn);
+  });
+  mBody.appendChild(wrap);
+  cleanupFn=()=>{};
+}
+$$('.trail-play[data-subject]').forEach(b=>b.addEventListener('click',()=>showModes(b.dataset.subject)));
+
+/* ===== NAV / SCROLL ===== */
+addEventListener('scroll',()=>{$('#topo').classList.toggle('scrolled',scrollY>10);},{passive:true});
+const sndBtn=$('#sndBtn');
+sndBtn.textContent=state.muted?'🔇':'🔊';
+sndBtn.onclick=function(){
+  state.muted=!state.muted;save();
+  this.textContent=state.muted?'🔇':'🔊';
+  if(!state.muted)sfxOk();
+};
+$('#track').innerHTML+=$('#track').innerHTML;
+
+/* ===== REVEAL + COUNTERS ===== */
+function ease(p){return 1-Math.pow(1-p,3);}
+function animateCount(el){
+  const target=+el.dataset.count;const t0=performance.now();
+  function step(t){
+    const p=Math.min(1,(t-t0)/1500);
+    el.textContent=Math.round(target*ease(p)).toLocaleString('pt-BR');
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){
+    e.target.classList.add('in');
+    if(e.target.dataset.count!==undefined)animateCount(e.target);
+    io.unobserve(e.target);
+  }
+}),{threshold:.18});
+$$('.reveal,[data-count]').forEach(el=>io.observe(el));
+
+/* ===== INIT ===== */
+renderXp();renderAch();
+setTimeout(()=>toast('👾 Bem-vindo ao Gameducation! Digite um tema e jogue sem repetição.','level'),900);
+
+})();
+</script>
+</body>
+</html>
