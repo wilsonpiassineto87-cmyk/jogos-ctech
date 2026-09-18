@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floresta dos Mortos - Escape (3 Fases)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Roboto+Mono:wght@400;700&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            overflow: hidden; 
+            background: #000;
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        #gameCanvas { 
+            display: block; 
+            background: #0a0a0a;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            text-shadow: 0 0 10px #f00;
+            font-size: 16px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px 20px;
+            border: 2px solid #500;
+            border-radius: 10px;
+            line-height: 1.8;
+        }
+        
+        .hud .level-info {
+            color: #ff0;
+            font-weight: bold;
+            font-size: 20px;
+            border-bottom: 1px solid #500;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .hud .difficulty {
+            color: #f80;
+            font-size: 12px;
+        }
+        
+        .riddle-counter {
+            color: #0ff;
+            font-weight: bold;
+        }
+        
+        #riddleModal {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a0000 0%, #0d0d0d 100%);
+            border: 3px solid #8B0000;
+            border-radius: 15px;
+            padding: 30px;
+            width: 550px;
+            max-width: 90%;
+            text-align: center;
+            pointer-events: auto;
+            box-shadow: 0 0 50px rgba(139, 0, 0, 0.8), inset 0 0 50px rgba(0,0,0,0.8);
+            z-index: 100;
+        }
+        
+        #riddleModal h2 {
+            font-family: 'Creepster', cursive;
+            color: #ff3333;
+            font-size: 32px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px #f00;
+            letter-spacing: 2px;
+        }
+        
+        .riddle-text {
+            color: #ddd;
+            font-size: 18px;
+            margin: 15px 0;
+            line-height: 1.6;
+            min-height: 60px;
+            font-style: italic;
+        }
+        
+        .hint-box {
+            background: rgba(255, 200, 0, 0.1);
+            border: 1px dashed #fc0;
+            color: #fc0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            min-height: 20px;
+        }
+        
+        .hint-box.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #answerInput {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background: #0a0a0a;
+            border: 2px solid #500;
+            color: #fff;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Roboto Mono', monospace;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        #answerInput:focus {
+            outline: none;
+            border-color: #f00;
+            box-shadow: 0 0 15px rgba(255,0,0,0.5);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #8B0000 0%, #500 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: 'Creepster', cursive;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255,0,0,0.6);
+        }
+        
+        .btn-hint {
+            background: linear-gradient(135deg, #8B6500 0%, #504000 100%);
+        }
+        
+        .btn-hint:hover {
+            box-shadow: 0 0 20px rgba(255,200,0,0.6);
+        }
+        
+        #feedback {
+            margin-top: 10px;
+            font-weight: bold;
+            min-height: 20px;
+            font-size: 14px;
+        }
+        
+        .correct { color: #0f0; text-shadow: 0 0 10px #0f0; }
+        .wrong { color: #f00; text-shadow: 0 0 10px #f00; }
+        
+        #gameOver, #victory, #levelTransition {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            pointer-events: auto;
+            z-index: 200;
+        }
+        
+        #gameOver h1 {
+            font-family: 'Creepster', cursive;
+            color: #f00;
+            font-size: 80px;
+            text-shadow: 0 0 30px #f00;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        #victory h1 {
+            font-family: 'Creepster', cursive;
+            color: #0f0;
+            font-size: 80px;
+            text-shadow: 0 0 30px #0f0;
+            margin-bottom: 20px;
+        }
+        
+        #levelTransition {
+            background: radial-gradient(circle, rgba(0,50,0,0.9) 0%, rgba(0,0,0,0.98) 100%);
+        }
+        
+        #levelTransition h1 {
+            font-family: 'Creepster', cursive;
+            color: #0f0;
+            font-size: 70px;
+            text-shadow: 0 0 30px #0f0;
+            margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        #levelTransition .info {
+            color: #ddd;
+            font-size: 18px;
+            margin: 10px 0;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        
+        #levelTransition .warning {
+            color: #f80;
+            font-size: 16px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+        
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .dot {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #300;
+            border: 2px solid #600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .dot.active {
+            background: #f00;
+            box-shadow: 0 0 15px #f00;
+            border-color: #f00;
+            color: #fff;
+        }
+        
+        .dot.completed {
+            background: #0f0;
+            box-shadow: 0 0 15px #0f0;
+            border-color: #0f0;
+            color: #000;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            font-size: 13px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        
+        .shake {
+            animation: shake 0.3s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-5px, 5px); }
+            50% { transform: translate(5px, -5px); }
+            75% { transform: translate(-5px, -5px); }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="ui">
+        <div class="hud">
+            <div class="level-info">🌲 FASE <span id="levelNum">1</span>/3</div>
+            <div class="difficulty" id="difficultyText">Dificuldade: Fácil</div>
+            <div>🧟 Zumbis: <span id="zombieCount">0</span></div>
+            <div>🔦 Lanterna: <span id="battery">100</span>%</div>
+            <div class="riddle-counter">📝 Charadas: <span id="riddleSolved">0</span>/<span id="riddleTotal">3</span></div>
+        </div>
+        
+        <div class="instructions">
+            WASD ou Setas para mover • Aproxime-se da PORTA para resolver charadas • Use HINTS se precisar
+        </div>
+    </div>
+    
+    <div id="riddleModal">
+        <h2>🔐 PORTA TRANCADA</h2>
+        <div class="progress-dots" id="progressDots"></div>
+        <div class="riddle-text" id="riddleText"></div>
+        <div class="hint-box" id="hintBox">💡 Dica: <span id="hintText"></span></div>
+        <input type="text" id="answerInput" placeholder="Digite sua resposta..." autocomplete="off">
+        <br>
+        <button class="btn" onclick="checkAnswer()">DESBLOQUEAR</button>
+        <button class="btn btn-hint" onclick="showHint()">💡 VER DICA (-10% bateria)</button>
+        <div id="feedback"></div>
+    </div>
+    
+    <div id="gameOver">
+        <h1>VOCÊ MORREU</h1>
+        <p style="color: #888; font-size: 20px; margin-bottom: 30px;">Os zumbis te alcançaram na escuridão...</p>
+        <p style="color: #aaa; font-size: 16px; margin-bottom: 30px;">Chegou até a Fase <span id="finalLevel">1</span></p>
+        <button class="btn" onclick="location.reload()">Tentar Novamente</button>
+    </div>
+    
+    <div id="victory">
+        <h1>🏆 ESCAPE COMPLETO!</h1>
+        <p style="color: #888; font-size: 20px; margin-bottom: 30px;">Você sobreviveu a todas as 3 fases da floresta!</p>
+        <button class="btn" onclick="location.reload()">Jogar Novamente</button>
+    </div>
+    
+    <div id="levelTransition">
+        <h1 id="transitionTitle">FASE 2</h1>
+        <div class="info" id="transitionInfo"></div>
+        <div class="warning" id="transitionWarning"></div>
+        <button class="btn" onclick="startNextLevel()" style="margin-top: 20px;">CONTINUAR ▶</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // Configuração das 3 FASES
+        const levelConfig = [
+            { // FASE 1 - Fácil
+                level: 1,
+                riddlesNeeded: 3,
+                zombieCount: 2,
+                zombieSpeed: 1.2,
+                batteryDrain: 0.02,
+                glowRadius: 160,
+                difficulty: "Fácil",
+                warning: "A floresta está calma... por enquanto.",
+                info: "Resolva 3 charadas para abrir a porta e escapar desta área da floresta."
+            },
+            { // FASE 2 - Médio
+                level: 2,
+                riddlesNeeded: 4,
+                zombieCount: 4,
+                zombieSpeed: 1.8,
+                batteryDrain: 0.035,
+                glowRadius: 130,
+                difficulty: "Médio",
+                warning: "Os zumbis estão mais rápidos e a luz mais fraca!",
+                info: "Agora você precisa de 4 charadas. A floresta está ficando mais hostil."
+            },
+            { // FASE 3 - PESADELO (Final)
+                level: 3,
+                riddlesNeeded: 5,
+                zombieCount: 6,
+                zombieSpeed: 2.4,
+                batteryDrain: 0.05,
+                glowRadius: 100,
+                difficulty: "PESADELO",
+                warning: "☠️ FASE FINAL - A saída está próxima, mas os mortos também!",
+                info: "5 charadas finais. A escuridão quase total. Sobreviva e escape!"
+            }
+        ];
+        
+        // Banco de charadas com dicas
+        const allRiddles = [
+            // FÁCEIS
+            { q: "Quanto mais você tira de mim, maior eu fico. O que sou eu?", a: ["buraco", "um buraco"], hint: "Pense em algo que cresce quando você remove terra dele.", diff: 1 },
+            { q: "O que tem chaves mas não abre fechaduras?", a: ["piano", "um piano", "teclado"], hint: "É um instrumento musical.", diff: 1 },
+            { q: "O que sobe mas nunca desce?", a: ["idade", "minha idade", "sua idade", "a idade"], hint: "Cada ano que passa, aumenta.", diff: 1 },
+            { q: "O que tem boca mas não fala, tem leito mas não dorme?", a: ["rio", "um rio"], hint: "Corre pela natureza com água.", diff: 1 },
+            { q: "O que é que anda com os pés mas não tem pernas?", a: ["relogio", "relógio", "hora"], hint: "Marca o tempo na parede ou no pulso.", diff: 1 },
+            { q: "O que cai em pé mas corre deitado?", a: ["chuva", "a chuva", "agua", "água"], hint: "Vem do céu.", diff: 1 },
+            { q: "O que tem coroa mas não é rei?", a: ["abacaxi", "um abacaxi"], hint: "É uma fruta tropical.", diff: 1 },
+            { q: "O que é feito para andar mas não anda?", a: ["estrada", "rua", "uma estrada", "uma rua"], hint: "Veículos passam por ela.", diff: 1 },
+            
+            // MÉDIAS
+            { q: "Tenho cidades, mas não tenho casas. Tenho montanhas, mas não tenho árvores. Tenho água, mas não tenho peixes. O que sou eu?", a: ["mapa", "um mapa"], hint: "Usado para navegação e orientação.", diff: 2 },
+            { q: "O que pertence a você, mas outras pessoas usam mais do que você?", a: ["nome", "meu nome", "o seu nome", "seu nome"], hint: "As pessoas te chamam por isso.", diff: 2 },
+            { q: "Se você me mencionar, eu quebro. Quem sou eu?", a: ["silencio", "silêncio", "o silencio", "o silêncio"], hint: "Precisa de quietude para existir.", diff: 2 },
+            { q: "O que é que quanto mais se tira, maior fica?", a: ["buraco", "um buraco"], hint: "Cavado no chão.", diff: 2 },
+            { q: "O que tem cabeça mas não tem cérebro?", a: ["alfinete", "alho", "prego", "um alfinete"], hint: "Objeto pontiagudo pequeno.", diff: 2 },
+            { q: "O que é que tem dentes mas não morde?", a: ["pente", "alho", "cremalheira", "um pente"], hint: "Usado no cabelo.", diff: 2 },
+            { q: "O que é que todos têm dois, mas você só tem um?", a: ["sobrenome", "meu sobrenome"], hint: "Relacionado ao seu nome completo.", diff: 2 },
+            { q: "O que é que sobe e desce mas sempre permanece no mesmo lugar?", a: ["escada", "uma escada"], hint: "Usada para subir em construções.", diff: 2 },
+            
+            // DIFÍCEIS
+            { q: "Quanto mais seco, mais molhado fica. O que é?", a: ["toalha", "uma toalha"], hint: "Usada após o banho.", diff: 3 },
+            { q: "O que é que tem quatro pernas de manhã, duas ao meio-dia e três à noite?", a: ["homem", "o homem", "ser humano", "pessoa"], hint: "Representa as fases da vida.", diff: 3 },
+            { q: "Sou leve como uma pena, mas nem o homem mais forte consegue me segurar por muito tempo. O que sou?", a: ["respiracao", "respiração", "fôlego", "respiro"], hint: "Essencial para viver.", diff: 3 },
+            { q: "O que é que anda com a cabeça no chão?", a: ["cobra", "serpente", "uma cobra"], hint: "Réptil sem pernas.", diff: 3 },
+            { q: "O que é que quanto mais se lava, mais sujo fica?", a: ["agua", "água"], hint: "Líquido transparente.", diff: 3 },
+            { q: "O que é que se quebra sem ser tocado?", a: ["promessa", "jejum", "silencio", "silêncio"], hint: "Pode ser feito entre duas pessoas.", diff: 3 },
+            { q: "Tenho cidades sem casas, rios sem água e florestas sem árvores. O que sou?", a: ["mapa", "um mapa"], hint: "Representação geográfica.", diff: 3 },
+            { q: "O que é que nasce grande e morre pequeno?", a: ["vela", "lápis", "uma vela"], hint: "Derrete ou diminui com o uso.", diff: 3 },
+            { q: "O que é que tem um olho mas não vê?", a: ["agulha", "uma agulha"], hint: "Usada para costurar.", diff: 3 },
+            { q: "O que é que tem anéis mas não tem dedos?", a: ["arvore", "árvore", "tronco"], hint: "Cresce na floresta.", diff: 3 }
+        ];
+        
+        // Estado do jogo
+        let gameState = 'playing';
+        let currentLevel = 1;
+        let riddlesSolved = 0;
+        let battery = 100;
+        let currentRiddleIndex = 0;
+        let doorUnlocked = false;
+        let currentLevelRiddles = [];
+        let hintUsed = false;
+        let config = levelConfig[0];
+        
+        // Jogador (menina)
+        const player = {
+            x: 100,
+            y: 0,
+            size: 30,
+            speed: 4,
+            frame: 0
+        };
+        
+        // Zumbis
+        let zombies = [];
+        
+        // Porta
+        const door = { x: 0, y: 0, w: 80, h: 120 };
+        
+        // Árvores/fundo
+        let trees = [];
+        
+        function generateTrees() {
+            trees = [];
+            for(let i = 0; i < 25 + currentLevel * 5; i++) {
+                trees.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: 40 + Math.random() * 60
+                });
+            }
+        }
+        
+        function drawZombie(x, y, size, frame) {
+            // Corpo do zumbi
+            ctx.fillStyle = '#2d4a2d';
+            ctx.fillRect(x - size/2, y - size/2, size, size);
+            
+            // Cabeça
+            ctx.fillStyle = '#3d5a3d';
+            ctx.beginPath();
+            ctx.arc(x, y - size/2, size/2.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Olhos vermelhos brilhantes
+            ctx.fillStyle = '#f00';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#f00';
+            ctx.beginPath();
+            ctx.arc(x - 5, y - size/2 - 2, 3, 0, Math.PI * 2);
+            ctx.arc(x + 5, y - size/2 - 2, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // Boca
+            ctx.fillStyle = '#1a1a1a';
+            ctx.beginPath();
+            ctx.arc(x, y - size/2 + 5, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Dentes
+            ctx.fillStyle = '#ddd';
+            ctx.fillRect(x - 4, y - size/2 + 3, 2, 4);
+            ctx.fillRect(x + 2, y - size/2 + 3, 2, 4);
+            
+            // Braços esticados
+            ctx.fillStyle = '#2d4a2d';
+            const armOffset = Math.sin(frame * 0.15) * 5;
+            ctx.fillRect(x - size/2 - 10, y - 5 + armOffset, 12, 6);
+            ctx.fillRect(x + size/2 - 2, y - 5 - armOffset, 12, 6);
+        }
+        
+        function drawGirl(x, y, size, frame) {
+            // Corpo/vestido
+            ctx.fillStyle = '#8B4513';
+            ctx.beginPath();
+            ctx.moveTo(x, y - size/2);
+            ctx.lineTo(x - size/2, y + size/2);
+            ctx.lineTo(x + size/2, y + size/2);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Cabeça
+            ctx.fillStyle = '#FDBCB4';
+            ctx.beginPath();
+            ctx.arc(x, y - size/3, size/3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Cabelo
+            ctx.fillStyle = '#4a3000';
+            ctx.beginPath();
+            ctx.arc(x, y - size/3, size/3, Math.PI, 0);
+            ctx.fill();
+            
+            // Cabelo comprido
+            ctx.fillRect(x - size/3, y - size/3, size/6, size/2);
+            ctx.fillRect(x + size/6, y - size/3, size/6, size/2);
+            
+            // Olhos
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(x - 4, y - size/3 - 2, 2, 0, Math.PI * 2);
+            ctx.arc(x + 4, y - size/3 - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Mochila
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(x - size/2 - 5, y - 5, 8, 15);
+        }
+        
+        // Controles
+        const keys = {};
+        window.addEventListener('keydown', e => keys[e.key] = true);
+        window.addEventListener('keyup', e => keys[e.key] = false);
+        
+        function selectRiddlesForLevel() {
+            // Seleciona charadas baseado na dificuldade da fase
+            const targetDiff = Math.min(currentLevel, 3);
+            const available = allRiddles.filter(r => r.diff <= targetDiff);
+            const shuffled = [...available].sort(() => Math.random() - 0.5);
+            currentLevelRiddles = shuffled.slice(0, config.riddlesNeeded);
+            
+            // Se não tiver charadas suficientes, completa com qualquer uma
+            while(currentLevelRiddles.length < config.riddlesNeeded) {
+                const extra = allRiddles[Math.floor(Math.random() * allRiddles.length)];
+                if(!currentLevelRiddles.includes(extra)) {
+                    currentLevelRiddles.push(extra);
+                }
+            }
+        }
+        
+        function spawnZombies() {
+            zombies = [];
+            for(let i = 0; i < config.zombieCount; i++) {
+                let zx, zy, dist;
+                do {
+                    zx = Math.random() * (canvas.width - 400) + 300;
+                    zy = Math.random() * canvas.height;
+                    dist = Math.hypot(zx - player.x, zy - player.y);
+                } while(dist < 300);
+                
+                zombies.push({
+                    x: zx,
+                    y: zy,
+                    speed: config.zombieSpeed * (0.8 + Math.random() * 0.4),
+                    frame: Math.random() * 100
+                });
+            }
+        }
+        
+        function initLevel() {
+            config = levelConfig[currentLevel - 1];
+            riddlesSolved = 0;
+            currentRiddleIndex = 0;
+            doorUnlocked = false;
+            battery = 100;
+            
+            player.x = 100;
+            player.y = canvas.height / 2;
+            
+            door.x = canvas.width - 150;
+            door.y = canvas.height / 2 - 60;
+            
+            generateTrees();
+            selectRiddlesForLevel();
+            spawnZombies();
+            
+            updateHUD();
+        }
+        
+        function updateHUD() {
+            document.getElementById('levelNum').textContent = currentLevel;
+            document.getElementById('difficultyText').textContent = `Dificuldade: ${config.difficulty}`;
+            document.getElementById('riddleSolved').textContent = riddlesSolved;
+            document.getElementById('riddleTotal').textContent = config.riddlesNeeded;
+            document.getElementById('battery').textContent = Math.floor(battery);
+        }
+        
+        function update() {
+            if(gameState !== 'playing') return;
+            
+            // Movimento
+            if(keys['ArrowUp'] || keys['w'] || keys['W']) player.y -= player.speed;
+            if(keys['ArrowDown'] || keys['s'] || keys['S']) player.y += player.speed;
+            if(keys['ArrowLeft'] || keys['a'] || keys['A']) player.x -= player.speed;
+            if(keys['ArrowRight'] || keys['d'] || keys['D']) player.x += player.speed;
+            
+            // Limites
+            player.x = Math.max(50, Math.min(canvas.width - 50, player.x));
+            player.y = Math.max(50, Math.min(canvas.height - 50, player.y));
+            
+            player.frame++;
+            
+            // Atualizar zumbis
+            let closestZombie = Infinity;
+            zombies.forEach(z => {
+                const dx = player.x - z.x;
+                const dy = player.y - z.y;
+                const dist = Math.hypot(dx, dy);
+                
+                if(dist < closestZombie) closestZombie = dist;
+                
+                if(dist > 0) {
+                    z.x += (dx / dist) * z.speed;
+                    z.y += (dy / dist) * z.speed;
+                }
+                
+                z.frame++;
+                
+                // Colisão
+                if(dist < 30) {
+                    if(battery > 0) {
+                        const pushFactor = 15;
+                        z.x -= (dx / dist) * pushFactor;
+                        z.y -= (dy / dist) * pushFactor;
+                        battery -= 0.8;
+                    } else {
+                        gameOver();
+                    }
+                }
+            });
+            
+            document.getElementById('zombieCount').textContent = Math.floor(closestZombie / 50);
+            
+            // Drenar bateria
+            battery -= config.batteryDrain;
+            if(battery < 0) battery = 0;
+            document.getElementById('battery').textContent = Math.floor(battery);
+            
+            // Checar porta
+            if(!doorUnlocked && 
+               player.x > door.x - 50 && player.x < door.x + door.w + 50 &&
+               player.y > door.y - 50 && player.y < door.y + door.h + 50) {
+                if(riddlesSolved < config.riddlesNeeded) {
+                    showRiddle();
+                }
+            }
+            
+            // Vitória da fase
+            if(doorUnlocked && player.x > door.x + door.w) {
+                if(currentLevel >= levelConfig.length) {
+                    victory();
+                } else {
+                    showLevelTransition();
+                }
+            }
+        }
+        
+        function draw() {
+            // Fundo de floresta (mais escuro nas fases avançadas)
+            const darkness = Math.min(0.3, currentLevel * 0.1);
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, `rgb(${10 - darkness*20}, ${26 - darkness*40}, ${10 - darkness*20})`);
+            gradient.addColorStop(0.5, `rgb(${5 - darkness*10}, ${16 - darkness*30}, ${5 - darkness*10})`);
+            gradient.addColorStop(1, `rgb(${10 - darkness*20}, ${26 - darkness*40}, ${10 - darkness*20})`);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Árvores
+            ctx.fillStyle = '#0d260d';
+            trees.forEach(tree => {
+                ctx.fillRect(tree.x - 10, tree.y, 20, tree.size);
+                ctx.beginPath();
+                ctx.moveTo(tree.x - 30, tree.y + 20);
+                ctx.lineTo(tree.x, tree.y - tree.size + 20);
+                ctx.lineTo(tree.x + 30, tree.y + 20);
+                ctx.closePath();
+                ctx.fill();
+            });
+            
+            // Porta
+            ctx.fillStyle = doorUnlocked ? '#2d5a2d' : '#5a0000';
+            ctx.shadowBlur = doorUnlocked ? 30 : 20;
+            ctx.shadowColor = doorUnlocked ? '#0f0' : '#f00';
+            ctx.fillRect(door.x, door.y, door.w, door.h);
+            ctx.shadowBlur = 0;
+            
+            ctx.fillStyle = '#333';
+            ctx.fillRect(door.x + 10, door.y + 10, door.w - 20, door.h - 20);
+            
+            // Texto da porta
+            ctx.fillStyle = doorUnlocked ? '#0f0' : '#f00';
+            ctx.font = 'bold 14px Roboto Mono';
+            ctx.textAlign = 'center';
+            ctx.fillText(doorUnlocked ? "ABERTA" : `TRANCADA (${riddlesSolved}/${config.riddlesNeeded})`, door.x + door.w/2, door.y - 10);
+            
+            // Zumbis
+            zombies.forEach(z => drawZombie(z.x, z.y, 40, z.frame));
+            
+            // Personagem
+            drawGirl(player.x, player.y, player.size, player.frame);
+            
+            // Efeito de luz
+            const glowRadius = config.glowRadius + (battery/2);
+            ctx.globalCompositeOperation = 'multiply';
+            const lightGradient = ctx.createRadialGradient(
+                player.x, player.y, 30,
+                player.x, player.y, glowRadius
+            );
+            lightGradient.addColorStop(0, 'rgba(255, 255, 200, 0.3)');
+            lightGradient.addColorStop(0.5, 'rgba(255, 200, 100, 0.1)');
+            lightGradient.addColorStop(1, 'rgba(0, 0, 0, 0.95)');
+            
+            ctx.fillStyle = lightGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // Vinheta
+            const vignette = ctx.createRadialGradient(
+                canvas.width/2, canvas.height/2, canvas.height/3,
+                canvas.width/2, canvas.height/2, canvas.height
+            );
+            vignette.addColorStop(0, 'transparent');
+            vignette.addColorStop(1, 'rgba(0,0,0,0.8)');
+            ctx.fillStyle = vignette;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        function showRiddle() {
+            if(currentRiddleIndex >= config.riddlesNeeded) return;
+            
+            gameState = 'riddle';
+            hintUsed = false;
+            const riddle = currentLevelRiddles[currentRiddleIndex];
+            
+            document.getElementById('riddleModal').style.display = 'block';
+            document.getElementById('riddleText').textContent = riddle.q;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('hintBox').classList.remove('show');
+            document.getElementById('hintText').textContent = '';
+            document.getElementById('answerInput').focus();
+            
+            // Progress dots
+            const dotsContainer = document.getElementById('progressDots');
+            dotsContainer.innerHTML = '';
+            for(let i = 1; i <= config.riddlesNeeded; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.textContent = i;
+                if(i < currentRiddleIndex + 1) dot.classList.add('completed');
+                if(i === currentRiddleIndex + 1) dot.classList.add('active');
+                dotsContainer.appendChild(dot);
+            }
+        }
+        
+        window.showHint = function() {
+            if(hintUsed) return;
+            const riddle = currentLevelRiddles[currentRiddleIndex];
+            document.getElementById('hintText').textContent = riddle.hint;
+            document.getElementById('hintBox').classList.add('show');
+            hintUsed = true;
+            battery -= 10; // Penalidade
+            if(battery < 0) battery = 0;
+            updateHUD();
+        };
+        
+        window.checkAnswer = function() {
+            const input = document.getElementById('answerInput').value.toLowerCase().trim();
+            const riddle = currentLevelRiddles[currentRiddleIndex];
+            const feedback = document.getElementById('feedback');
+            
+            if(riddle.a.includes(input)) {
+                feedback.textContent = '✓ Correto! Avançando...';
+                feedback.className = 'correct';
+                riddlesSolved++;
+                currentRiddleIndex++;
+                updateHUD();
+                
+                setTimeout(() => {
+                    if(riddlesSolved >= config.riddlesNeeded) {
+                        doorUnlocked = true;
+                        document.getElementById('riddleModal').style.display = 'none';
+                        gameState = 'playing';
+                        battery = Math.min(100, battery + 30);
+                        updateHUD();
+                    } else {
+                        document.getElementById('riddleModal').style.display = 'none';
+                        gameState = 'playing';
+                        player.x -= 100;
+                        setTimeout(() => showRiddle(), 500);
+                    }
+                }, 1000);
+            } else {
+                feedback.textContent = '✗ Errado! Os zumbis se aproximam...';
+                feedback.className = 'wrong';
+                
+                zombies.forEach(z => {
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 200 + Math.random() * 100;
+                    z.x = player.x + Math.cos(angle) * dist;
+                    z.y = player.y + Math.sin(angle) * dist;
+                });
+                
+                battery -= 15;
+                if(battery < 0) battery = 0;
+                updateHUD();
+                
+                document.getElementById('riddleModal').classList.add('shake');
+                setTimeout(() => document.getElementById('riddleModal').classList.remove('shake'), 300);
+            }
+        };
+        
+        document.getElementById('answerInput').addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') checkAnswer();
+        });
+        
+        function showLevelTransition() {
+            gameState = 'transition';
+            const nextConfig = levelConfig[currentLevel]; // Próxima fase
+            
+            document.getElementById('transitionTitle').textContent = `FASE ${currentLevel + 1}`;
+            document.getElementById('transitionInfo').textContent = nextConfig.info;
+            document.getElementById('transitionWarning').textContent = `⚠️ ${nextConfig.warning}`;
+            document.getElementById('levelTransition').style.display = 'flex';
+        }
+        
+        window.startNextLevel = function() {
+            document.getElementById('levelTransition').style.display = 'none';
+            currentLevel++;
+            initLevel();
+            gameState = 'playing';
+        };
+        
+        function gameOver() {
+            gameState = 'gameover';
+            document.getElementById('finalLevel').textContent = currentLevel;
+            document.getElementById('gameOver').style.display = 'flex';
+        }
+        
+        function victory() {
+            gameState = 'victory';
+            document.getElementById('victory').style.display = 'flex';
+        }
+        
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+        
+        // Iniciar
+        initLevel();
+        loop();
+        
+        // Responsividade
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            door.x = canvas.width - 150;
+            door.y = canvas.height / 2 - 60;
+            generateTrees();
+        });
+    </script>
+</body>
+</html>
