@@ -180,32 +180,62 @@
             renderShop();
         }
 
-        function createTexture(type) {
+        function createTexture(type, mainColor, accentColor) {
             const canvas = document.createElement('canvas');
             canvas.width = 512; canvas.height = 512;
             const ctx = canvas.getContext('2d');
-            
+
             if (type === 'asphalt') {
-                ctx.fillStyle = '#2a2a2a'; ctx.fillRect(0,0,512,512);
-                for(let i=0; i<8000; i++) {
-                    ctx.fillStyle = Math.random() > 0.5 ? '#333' : '#222';
+                const grad = ctx.createLinearGradient(0,0,0,512);
+                grad.addColorStop(0,'#333333'); grad.addColorStop(1,'#242424');
+                ctx.fillStyle = grad; ctx.fillRect(0,0,512,512);
+                for(let i=0; i<9000; i++) {
+                    ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.2)';
                     ctx.fillRect(Math.random()*512, Math.random()*512, 2, 2);
                 }
+                ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 3;
+                for(let i=0;i<6;i++){ ctx.beginPath(); const y=Math.random()*512; ctx.moveTo(0,y); ctx.bezierCurveTo(170,y+20,340,y-20,512,y); ctx.stroke(); }
             } else if (type === 'container') {
-                ctx.fillStyle = '#cc3333'; ctx.fillRect(0,0,512,512);
-                ctx.strokeStyle = '#992222'; ctx.lineWidth = 8;
+                const base = mainColor || '#cc3333';
+                const edge = accentColor || '#992222';
+                ctx.fillStyle = base; ctx.fillRect(0,0,512,512);
+                for(let y=0;y<512;y+=64){
+                    const shade = ctx.createLinearGradient(0,y,0,y+64);
+                    shade.addColorStop(0,'rgba(255,255,255,0.12)'); shade.addColorStop(0.15,'rgba(0,0,0,0)');
+                    shade.addColorStop(0.85,'rgba(0,0,0,0)'); shade.addColorStop(1,'rgba(0,0,0,0.25)');
+                    ctx.fillStyle = shade; ctx.fillRect(0,y,512,64);
+                }
+                ctx.strokeStyle = edge; ctx.lineWidth = 6;
                 for(let i=0; i<512; i+=64) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,512); ctx.stroke(); }
-                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
-                ctx.strokeRect(10,10,492,492);
+                for(let i=0; i<6; i++) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                    ctx.beginPath(); ctx.ellipse(Math.random()*512, Math.random()*512, 30+Math.random()*40, 10+Math.random()*10, Math.random()*Math.PI, 0, Math.PI*2); ctx.fill();
+                }
+                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.globalAlpha = 0.8;
+                ctx.strokeRect(10,10,492,492); ctx.globalAlpha = 1;
             } else if (type === 'building') {
-                ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0,0,512,512);
-                for(let y=20; y<512; y+=40) {
-                    for(let x=20; x<512; x+=30) {
-                        if(Math.random() > 0.3) {
-                            ctx.fillStyle = Math.random() > 0.5 ? '#ffffaa' : '#223344';
-                            ctx.fillRect(x, y, 15, 25);
-                        }
+                const skyline = ctx.createLinearGradient(0,0,0,512);
+                skyline.addColorStop(0,'#12121c'); skyline.addColorStop(1,'#1c1c28');
+                ctx.fillStyle = skyline; ctx.fillRect(0,0,512,512);
+                for(let y=20; y<512; y+=34) {
+                    for(let x=16; x<512; x+=28) {
+                        const r = Math.random();
+                        if(r > 0.55) ctx.fillStyle = r > 0.85 ? '#fff2c4' : '#ffe9a3';
+                        else if(r > 0.4) ctx.fillStyle = '#7fb8ff';
+                        else ctx.fillStyle = '#161622';
+                        ctx.fillRect(x, y, 14, 22);
                     }
+                }
+            } else if (type === 'sky') {
+                const grad = ctx.createLinearGradient(0,0,0,512);
+                grad.addColorStop(0, '#0c1230');
+                grad.addColorStop(0.45, '#243a63');
+                grad.addColorStop(0.75, '#7a5a7a');
+                grad.addColorStop(1, '#e8a06b');
+                ctx.fillStyle = grad; ctx.fillRect(0,0,512,512);
+                for(let i=0;i<150;i++){
+                    ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.8})`;
+                    ctx.fillRect(Math.random()*512, Math.random()*280, 1.5, 1.5);
                 }
             }
             const tex = new THREE.CanvasTexture(canvas);
@@ -215,8 +245,10 @@
 
         function init() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x203040);
-            scene.fog = new THREE.FogExp2(0x203040, 0.012);
+            const skyTex = createTexture('sky');
+            skyTex.wrapS = THREE.ClampToEdgeWrapping; skyTex.wrapT = THREE.ClampToEdgeWrapping;
+            scene.background = skyTex;
+            scene.fog = new THREE.FogExp2(0x3a4468, 0.011);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
             camera.position.set(0, 5, 8);
@@ -229,10 +261,10 @@
             renderer.outputEncoding = THREE.sRGBEncoding;
             document.body.appendChild(renderer.domElement);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+            const ambientLight = new THREE.AmbientLight(0xffd9b3, 0.35);
             scene.add(ambientLight);
-            
-            const sunLight = new THREE.DirectionalLight(0xffaa88, 1.5);
+
+            const sunLight = new THREE.DirectionalLight(0xffb37a, 1.6);
             sunLight.position.set(50, 100, 50);
             sunLight.castShadow = true;
             sunLight.shadow.mapSize.width = 2048; sunLight.shadow.mapSize.height = 2048;
@@ -240,20 +272,25 @@
             sunLight.shadow.bias = -0.0005;
             scene.add(sunLight);
 
-            const hemiLight = new THREE.HemisphereLight(0x4488ff, 0x002244, 0.6);
+            const hemiLight = new THREE.HemisphereLight(0x8fa8ff, 0x241a2e, 0.7);
             scene.add(hemiLight);
 
             const asphaltTex = createTexture('asphalt');
             asphaltTex.repeat.set(2, 40);
             const planeGeo = new THREE.PlaneGeometry(50, 500);
-            const planeMat = new THREE.MeshStandardMaterial({ map: asphaltTex, roughness: 0.9 });
+            const planeMat = new THREE.MeshStandardMaterial({ map: asphaltTex, roughness: 0.85, metalness: 0.1 });
             const ground = new THREE.Mesh(planeGeo, planeMat);
             ground.rotation.x = -Math.PI / 2;
             ground.position.z = -200;
             ground.receiveShadow = true;
             scene.add(ground);
 
-            const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const curbMat = new THREE.MeshStandardMaterial({ color: 0x5a5a5a, roughness: 0.8 });
+            const curbGeo = new THREE.BoxGeometry(1.2, 0.25, 500);
+            const curbL = new THREE.Mesh(curbGeo, curbMat); curbL.position.set(-9, 0.1, -200); curbL.receiveShadow = true; scene.add(curbL);
+            const curbR = new THREE.Mesh(curbGeo, curbMat); curbR.position.set(9, 0.1, -200); curbR.receiveShadow = true; scene.add(curbR);
+
+            const lineMat = new THREE.MeshBasicMaterial({ color: 0xffdd88 });
             const lineGeo = new THREE.PlaneGeometry(0.2, 500);
             const line1 = new THREE.Mesh(lineGeo, lineMat); line1.rotation.x = -Math.PI/2; line1.position.set(-LANE_WIDTH/2, 0.02, -200); scene.add(line1);
             const line2 = new THREE.Mesh(lineGeo, lineMat); line2.rotation.x = -Math.PI/2; line2.position.set(LANE_WIDTH/2, 0.02, -200); scene.add(line2);
@@ -295,28 +332,40 @@
             if(playerGroup) scene.remove(playerGroup);
             playerGroup = new THREE.Group();
             
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa, roughness: 0.5 });
-            const shirtMat = new THREE.MeshStandardMaterial({ color: charData.shirt, roughness: 0.7 });
-            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1d3557, roughness: 0.8 });
-            const capMat = new THREE.MeshStandardMaterial({ color: charData.cap, roughness: 0.6 });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa, roughness: 0.45 });
+            const shirtMat = new THREE.MeshStandardMaterial({ color: charData.shirt, roughness: 0.55 });
+            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1d3557, roughness: 0.75 });
+            const capMat = new THREE.MeshStandardMaterial({ color: charData.cap, roughness: 0.4, metalness: 0.1 });
+            const shoeMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6 });
+            const bagMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.7 });
+            const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3 });
 
             const torso = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.8, 0.4), shirtMat);
             torso.position.y = 1.0; torso.castShadow = true; playerGroup.add(torso);
+            const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.5, 0.22), bagMat);
+            backpack.position.set(0, 1.05, -0.31); backpack.castShadow = true; playerGroup.add(backpack);
             const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.5), skinMat);
             head.position.y = 1.75; head.castShadow = true; playerGroup.add(head);
+            const eyeGeo = new THREE.BoxGeometry(0.07, 0.07, 0.03);
+            const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(0.12, 1.78, 0.26); playerGroup.add(eyeL);
+            const eyeR = new THREE.Mesh(eyeGeo, eyeMat); eyeR.position.set(-0.12, 1.78, 0.26); playerGroup.add(eyeR);
             const cap = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.15, 0.6), capMat);
-            cap.position.set(0, 2.0, 0.1); cap.rotation.x = 0.2; playerGroup.add(cap);
+            cap.position.set(0, 2.0, 0.1); cap.rotation.x = 0.2; cap.castShadow = true; playerGroup.add(cap);
 
-            function createLimb(w, h, d, mat, x, y, z) {
+            function createLimb(w, h, d, mat, x, y, z, shoeMat) {
                 const group = new THREE.Group(); group.position.set(x, y, z);
                 const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
                 mesh.position.y = -h / 2; mesh.castShadow = true; group.add(mesh);
+                if (shoeMat) {
+                    const shoe = new THREE.Mesh(new THREE.BoxGeometry(w+0.05, 0.14, d+0.14), shoeMat);
+                    shoe.position.set(0, -h, 0.03); shoe.castShadow = true; group.add(shoe);
+                }
                 return group;
             }
             playerParts.armL = createLimb(0.22, 0.7, 0.22, skinMat, 0.45, 1.3, 0);
             playerParts.armR = createLimb(0.22, 0.7, 0.22, skinMat, -0.45, 1.3, 0);
-            playerParts.legL = createLimb(0.28, 0.9, 0.28, pantsMat, 0.2, 0.6, 0);
-            playerParts.legR = createLimb(0.28, 0.9, 0.28, pantsMat, -0.2, 0.6, 0);
+            playerParts.legL = createLimb(0.28, 0.9, 0.28, pantsMat, 0.2, 0.6, 0, shoeMat);
+            playerParts.legR = createLimb(0.28, 0.9, 0.28, pantsMat, -0.2, 0.6, 0, shoeMat);
             playerGroup.add(playerParts.armL, playerParts.armR, playerParts.legL, playerParts.legR);
             scene.add(playerGroup);
         }
@@ -324,16 +373,19 @@
         function createGuardCharacter() {
             if(guardGroup) scene.remove(guardGroup);
             guardGroup = new THREE.Group();
-            const uniformMat = new THREE.MeshStandardMaterial({ color: 0x000033, roughness: 0.5 }); 
+            const uniformMat = new THREE.MeshStandardMaterial({ color: 0x0c0c3d, roughness: 0.45 });
             const skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa, roughness: 0.5 });
+            const capMat = new THREE.MeshStandardMaterial({ color: 0x08081f, roughness: 0.4 });
             const torso = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.85, 0.45), uniformMat);
-            torso.position.y = 1.0; guardGroup.add(torso);
+            torso.position.y = 1.0; torso.castShadow = true; guardGroup.add(torso);
             const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.5), skinMat);
-            head.position.y = 1.75; guardGroup.add(head);
+            head.position.y = 1.75; head.castShadow = true; guardGroup.add(head);
+            const cap = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.15, 0.6), capMat);
+            cap.position.set(0, 2.0, 0.1); cap.rotation.x = 0.2; cap.castShadow = true; guardGroup.add(cap);
             function createLimb(w, h, d, mat, x, y, z) {
                 const group = new THREE.Group(); group.position.set(x, y, z);
                 const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-                mesh.position.y = -h / 2; group.add(mesh); return group;
+                mesh.position.y = -h / 2; mesh.castShadow = true; group.add(mesh); return group;
             }
             guardParts.armL = createLimb(0.25, 0.7, 0.25, uniformMat, 0.48, 1.3, 0);
             guardParts.armR = createLimb(0.25, 0.7, 0.25, uniformMat, -0.48, 1.3, 0);
@@ -351,16 +403,16 @@
             let mesh;
 
             if (type < 0.25) {
-                const contTex = createTexture('container');
+                const contTex = createTexture('container', '#cc3333', '#992222');
                 const mat = new THREE.MeshStandardMaterial({ map: contTex, roughness: 0.6 });
-                
-                const length = 20; 
+
+                const length = 20;
                 const height = 2.5;
-                
+
                 mesh = new THREE.Mesh(new THREE.BoxGeometry(2.8, height, length), mat);
-                mesh.position.set(xPos, height / 2, zPos); 
+                mesh.position.set(xPos, height / 2, zPos);
                 mesh.userData = { type: 'container', height: height, length: length };
-                
+
                 spawnCoinLineOnContainer(xPos, zPos, length, height);
             } else if (type < 0.5) {
                 const depth = 0.6;
@@ -371,9 +423,17 @@
                 mesh = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.2, depth), new THREE.MeshStandardMaterial({color: 0x555555, metalness: 0.6}));
                 mesh.position.set(xPos, 2.8, zPos); mesh.userData = { type: 'high', depth: depth };
             } else {
-                const depth = 8;
-                mesh = new THREE.Mesh(new THREE.BoxGeometry(2.8, 3.5, depth), new THREE.MeshStandardMaterial({color: 0x3366cc, roughness: 0.5}));
-                mesh.position.set(xPos, 1.75, zPos); mesh.userData = { type: 'solid', depth: depth };
+                const blueTex = createTexture('container', '#2f6fd6', '#1a4a9e');
+                const mat = new THREE.MeshStandardMaterial({ map: blueTex, roughness: 0.55 });
+
+                const length = 8;
+                const height = 3.2;
+
+                mesh = new THREE.Mesh(new THREE.BoxGeometry(2.8, height, length), mat);
+                mesh.position.set(xPos, height / 2, zPos);
+                mesh.userData = { type: 'container', height: height, length: length };
+
+                spawnCoinLineOnContainer(xPos, zPos, length, height);
             }
             mesh.castShadow = true; mesh.receiveShadow = true;
             scene.add(mesh); obstacles.push(mesh);
@@ -480,7 +540,6 @@
                         } else {
                             // Outros obstáculos
                             let hit = false;
-                            if (obs.userData.type === 'solid') hit = true;
                             if (obs.userData.type === 'low' && playerGroup.position.y < 1.0) hit = true;
                             if (obs.userData.type === 'high' && !isSliding && playerGroup.scale.y > 0.7) hit = true;
                             if (hit) { gameOver(); return; }
