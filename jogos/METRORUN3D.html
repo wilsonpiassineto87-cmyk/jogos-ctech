@@ -180,6 +180,28 @@
             renderShop();
         }
 
+        function roundedBoxGeometry(width, height, depth, radius) {
+            const w = width / 2, h = height / 2;
+            const r = Math.min(radius, w, h);
+            const shape = new THREE.Shape();
+            shape.moveTo(-w + r, -h);
+            shape.lineTo(w - r, -h);
+            shape.quadraticCurveTo(w, -h, w, -h + r);
+            shape.lineTo(w, h - r);
+            shape.quadraticCurveTo(w, h, w - r, h);
+            shape.lineTo(-w + r, h);
+            shape.quadraticCurveTo(-w, h, -w, h - r);
+            shape.lineTo(-w, -h + r);
+            shape.quadraticCurveTo(-w, -h, -w + r, -h);
+            const bevel = Math.min(r * 0.6, depth / 2);
+            const geo = new THREE.ExtrudeGeometry(shape, {
+                depth: Math.max(depth - bevel * 2, 0.001),
+                bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 3, curveSegments: 4
+            });
+            geo.translate(0, 0, -depth / 2 + bevel);
+            return geo;
+        }
+
         function createTexture(type, mainColor, accentColor) {
             const canvas = document.createElement('canvas');
             canvas.width = 512; canvas.height = 512;
@@ -295,10 +317,11 @@
             const line1 = new THREE.Mesh(lineGeo, lineMat); line1.rotation.x = -Math.PI/2; line1.position.set(-LANE_WIDTH/2, 0.02, -200); scene.add(line1);
             const line2 = new THREE.Mesh(lineGeo, lineMat); line2.rotation.x = -Math.PI/2; line2.position.set(LANE_WIDTH/2, 0.02, -200); scene.add(line2);
 
+            obstacleAssets = buildObstacleAssets();
             createPlayerCharacter();
             createGuardCharacter();
             createCityBuildings();
-            
+
             window.addEventListener('resize', onResize);
             document.addEventListener('keydown', handleInput);
             setupTouchControls();
@@ -307,15 +330,16 @@
 
         function createCityBuildings() {
             const buildingTex = createTexture('building');
-            const buildingMat = new THREE.MeshStandardMaterial({ 
+            const buildingMat = new THREE.MeshStandardMaterial({
                 map: buildingTex, roughness: 0.2, emissive: 0x111111, emissiveMap: buildingTex, emissiveIntensity: 0.5
             });
+            const antennaMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.4, metalness: 0.6 });
             for(let side = -1; side <= 1; side += 2) {
                 for(let i=0; i<30; i++) {
                     const width = 10 + Math.random() * 10;
                     const depth = 10 + Math.random() * 10;
                     const height = 20 + Math.random() * 40;
-                    const geo = new THREE.BoxGeometry(width, height, depth);
+                    const geo = roundedBoxGeometry(width, height, depth, 0.7);
                     const mesh = new THREE.Mesh(geo, buildingMat);
                     const xPos = side * (15 + Math.random() * 10);
                     const zPos = -i * 25;
@@ -323,6 +347,18 @@
                     mesh.castShadow = true; mesh.receiveShadow = true;
                     scene.add(mesh);
                     buildings.push(mesh);
+
+                    if (Math.random() > 0.6) {
+                        const capH = 2 + Math.random() * 3;
+                        const cap = new THREE.Mesh(roundedBoxGeometry(width * 0.55, capH, depth * 0.55, 0.4), buildingMat);
+                        cap.position.set(0, height / 2 + capH / 2, 0);
+                        cap.castShadow = true; mesh.add(cap);
+                    }
+                    if (height > 45) {
+                        const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 8, 6), antennaMat);
+                        antenna.position.set(0, height / 2 + 4, 0);
+                        mesh.add(antenna);
+                    }
                 }
             }
         }
@@ -338,26 +374,22 @@
             const capMat = new THREE.MeshStandardMaterial({ color: charData.cap, roughness: 0.4, metalness: 0.1 });
             const shoeMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6 });
             const bagMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.7 });
-            const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3 });
 
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.8, 0.4), shirtMat);
+            const torso = new THREE.Mesh(roundedBoxGeometry(0.7, 0.8, 0.4, 0.12), shirtMat);
             torso.position.y = 1.0; torso.castShadow = true; playerGroup.add(torso);
-            const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.5, 0.22), bagMat);
+            const backpack = new THREE.Mesh(roundedBoxGeometry(0.42, 0.5, 0.22, 0.08), bagMat);
             backpack.position.set(0, 1.05, -0.31); backpack.castShadow = true; playerGroup.add(backpack);
-            const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.5), skinMat);
+            const head = new THREE.Mesh(roundedBoxGeometry(0.5, 0.55, 0.5, 0.14), skinMat);
             head.position.y = 1.75; head.castShadow = true; playerGroup.add(head);
-            const eyeGeo = new THREE.BoxGeometry(0.07, 0.07, 0.03);
-            const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(0.12, 1.78, 0.26); playerGroup.add(eyeL);
-            const eyeR = new THREE.Mesh(eyeGeo, eyeMat); eyeR.position.set(-0.12, 1.78, 0.26); playerGroup.add(eyeR);
-            const cap = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.15, 0.6), capMat);
+            const cap = new THREE.Mesh(roundedBoxGeometry(0.52, 0.15, 0.6, 0.06), capMat);
             cap.position.set(0, 2.0, 0.1); cap.rotation.x = 0.2; cap.castShadow = true; playerGroup.add(cap);
 
             function createLimb(w, h, d, mat, x, y, z, shoeMat) {
                 const group = new THREE.Group(); group.position.set(x, y, z);
-                const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+                const mesh = new THREE.Mesh(roundedBoxGeometry(w, h, d, Math.min(w, d) * 0.35), mat);
                 mesh.position.y = -h / 2; mesh.castShadow = true; group.add(mesh);
                 if (shoeMat) {
-                    const shoe = new THREE.Mesh(new THREE.BoxGeometry(w+0.05, 0.14, d+0.14), shoeMat);
+                    const shoe = new THREE.Mesh(roundedBoxGeometry(w+0.05, 0.14, d+0.14, 0.06), shoeMat);
                     shoe.position.set(0, -h, 0.03); shoe.castShadow = true; group.add(shoe);
                 }
                 return group;
@@ -376,15 +408,15 @@
             const uniformMat = new THREE.MeshStandardMaterial({ color: 0x0c0c3d, roughness: 0.45 });
             const skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa, roughness: 0.5 });
             const capMat = new THREE.MeshStandardMaterial({ color: 0x08081f, roughness: 0.4 });
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.85, 0.45), uniformMat);
+            const torso = new THREE.Mesh(roundedBoxGeometry(0.75, 0.85, 0.45, 0.12), uniformMat);
             torso.position.y = 1.0; torso.castShadow = true; guardGroup.add(torso);
-            const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.5), skinMat);
+            const head = new THREE.Mesh(roundedBoxGeometry(0.5, 0.55, 0.5, 0.14), skinMat);
             head.position.y = 1.75; head.castShadow = true; guardGroup.add(head);
-            const cap = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.15, 0.6), capMat);
+            const cap = new THREE.Mesh(roundedBoxGeometry(0.52, 0.15, 0.6, 0.06), capMat);
             cap.position.set(0, 2.0, 0.1); cap.rotation.x = 0.2; cap.castShadow = true; guardGroup.add(cap);
             function createLimb(w, h, d, mat, x, y, z) {
                 const group = new THREE.Group(); group.position.set(x, y, z);
-                const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+                const mesh = new THREE.Mesh(roundedBoxGeometry(w, h, d, Math.min(w, d) * 0.35), mat);
                 mesh.position.y = -h / 2; mesh.castShadow = true; group.add(mesh); return group;
             }
             guardParts.armL = createLimb(0.25, 0.7, 0.25, uniformMat, 0.48, 1.3, 0);
@@ -396,6 +428,16 @@
             scene.add(guardGroup);
         }
 
+        let obstacleAssets = null;
+        function buildObstacleAssets() {
+            return {
+                redContainer: { geo: roundedBoxGeometry(2.8, 2.5, 20, 0.15), mat: new THREE.MeshStandardMaterial({ map: createTexture('container', '#cc3333', '#992222'), roughness: 0.6 }) },
+                blueContainer: { geo: roundedBoxGeometry(2.8, 3.2, 8, 0.15), mat: new THREE.MeshStandardMaterial({ map: createTexture('container', '#2f6fd6', '#1a4a9e'), roughness: 0.55 }) },
+                low: { geo: roundedBoxGeometry(2.2, 0.9, 0.6, 0.12), mat: new THREE.MeshStandardMaterial({ color: 0xffaa00, roughness: 0.4 }) },
+                high: { geo: roundedBoxGeometry(2.5, 1.2, 0.4, 0.1), mat: new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.6 }) }
+            };
+        }
+
         function spawnObstacle(zPos) {
             const laneIndex = Math.floor(Math.random() * 3);
             const xPos = LANES[laneIndex];
@@ -403,33 +445,27 @@
             let mesh;
 
             if (type < 0.25) {
-                const contTex = createTexture('container', '#cc3333', '#992222');
-                const mat = new THREE.MeshStandardMaterial({ map: contTex, roughness: 0.6 });
-
                 const length = 20;
                 const height = 2.5;
 
-                mesh = new THREE.Mesh(new THREE.BoxGeometry(2.8, height, length), mat);
+                mesh = new THREE.Mesh(obstacleAssets.redContainer.geo, obstacleAssets.redContainer.mat);
                 mesh.position.set(xPos, height / 2, zPos);
                 mesh.userData = { type: 'container', height: height, length: length };
 
                 spawnCoinLineOnContainer(xPos, zPos, length, height);
             } else if (type < 0.5) {
                 const depth = 0.6;
-                mesh = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.9, depth), new THREE.MeshStandardMaterial({color: 0xffaa00, roughness: 0.4}));
+                mesh = new THREE.Mesh(obstacleAssets.low.geo, obstacleAssets.low.mat);
                 mesh.position.set(xPos, 0.45, zPos); mesh.userData = { type: 'low', depth: depth };
             } else if (type < 0.75) {
                 const depth = 0.4;
-                mesh = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.2, depth), new THREE.MeshStandardMaterial({color: 0x555555, metalness: 0.6}));
+                mesh = new THREE.Mesh(obstacleAssets.high.geo, obstacleAssets.high.mat);
                 mesh.position.set(xPos, 2.8, zPos); mesh.userData = { type: 'high', depth: depth };
             } else {
-                const blueTex = createTexture('container', '#2f6fd6', '#1a4a9e');
-                const mat = new THREE.MeshStandardMaterial({ map: blueTex, roughness: 0.55 });
-
                 const length = 8;
                 const height = 3.2;
 
-                mesh = new THREE.Mesh(new THREE.BoxGeometry(2.8, height, length), mat);
+                mesh = new THREE.Mesh(obstacleAssets.blueContainer.geo, obstacleAssets.blueContainer.mat);
                 mesh.position.set(xPos, height / 2, zPos);
                 mesh.userData = { type: 'container', height: height, length: length };
 
