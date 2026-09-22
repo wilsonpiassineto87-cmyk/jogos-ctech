@@ -363,14 +363,17 @@
                 
                 spawnCoinLineOnContainer(xPos, zPos, length, height);
             } else if (type < 0.5) {
-                mesh = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.9, 0.6), new THREE.MeshStandardMaterial({color: 0xffaa00, roughness: 0.4}));
-                mesh.position.set(xPos, 0.45, zPos); mesh.userData = { type: 'low' };
+                const depth = 0.6;
+                mesh = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.9, depth), new THREE.MeshStandardMaterial({color: 0xffaa00, roughness: 0.4}));
+                mesh.position.set(xPos, 0.45, zPos); mesh.userData = { type: 'low', depth: depth };
             } else if (type < 0.75) {
-                mesh = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.2, 0.4), new THREE.MeshStandardMaterial({color: 0x555555, metalness: 0.6}));
-                mesh.position.set(xPos, 2.8, zPos); mesh.userData = { type: 'high' };
+                const depth = 0.4;
+                mesh = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.2, depth), new THREE.MeshStandardMaterial({color: 0x555555, metalness: 0.6}));
+                mesh.position.set(xPos, 2.8, zPos); mesh.userData = { type: 'high', depth: depth };
             } else {
-                mesh = new THREE.Mesh(new THREE.BoxGeometry(2.8, 3.5, 8), new THREE.MeshStandardMaterial({color: 0x3366cc, roughness: 0.5}));
-                mesh.position.set(xPos, 1.75, zPos); mesh.userData = { type: 'solid' };
+                const depth = 8;
+                mesh = new THREE.Mesh(new THREE.BoxGeometry(2.8, 3.5, depth), new THREE.MeshStandardMaterial({color: 0x3366cc, roughness: 0.5}));
+                mesh.position.set(xPos, 1.75, zPos); mesh.userData = { type: 'solid', depth: depth };
             }
             mesh.castShadow = true; mesh.receiveShadow = true;
             scene.add(mesh); obstacles.push(mesh);
@@ -455,8 +458,9 @@
                     obsMinZ = obs.position.z - halfLength;
                     obsMaxZ = obs.position.z + halfLength;
                 } else {
-                    obsMinZ = obs.position.z - 1;
-                    obsMaxZ = obs.position.z + 1;
+                    const halfDepth = obs.userData.depth / 2;
+                    obsMinZ = obs.position.z - halfDepth;
+                    obsMaxZ = obs.position.z + halfDepth;
                 }
                 
                 // Verifica se o jogador (Z=0) está dentro dos limites do obstáculo
