@@ -134,10 +134,10 @@
         let musicMuted = false;
         let musicStep = 0;
         let nextNoteTime = 0;
-        const BPM = 132;
+        const BPM = 148;
         const STEP_DUR = 60 / BPM / 2;
-        const BASS_PATTERN = [0, null, 3, null, 0, null, 5, null, 0, null, 3, null, 7, 5, 3, null];
-        const LEAD_PATTERN  = [12, null, null, 15, 12, null, 19, null, 10, null, null, 14, 12, null, null, null];
+        const BASS_PATTERN = [0, 0, 3, 3, 0, 0, 5, 5, 0, 0, 3, 3, 7, 5, 3, 0];
+        const LEAD_PATTERN  = [12, null, 15, 12, 19, null, 15, 12, 10, null, 14, 12, 12, null, 19, 15];
 
         function noteFreq(base, semis) { return base * Math.pow(2, semis / 12); }
 
@@ -163,7 +163,7 @@
             osc.start(time); osc.stop(time + 0.15);
         }
 
-        function playHat(time) {
+        function playHat(time, accent) {
             const bufferSize = Math.floor(audioCtx.sampleRate * 0.04);
             const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const data = buffer.getChannelData(0);
@@ -171,9 +171,29 @@
             const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
             const hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7000;
             const g = audioCtx.createGain();
-            g.gain.setValueAtTime(0.12, time); g.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+            g.gain.setValueAtTime(accent ? 0.14 : 0.06, time); g.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
             noise.connect(hp); hp.connect(g); g.connect(audioCtx.destination);
             noise.start(time); noise.stop(time + 0.04);
+        }
+
+        function playSnare(time) {
+            const bufferSize = Math.floor(audioCtx.sampleRate * 0.15);
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
+            const bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 0.7;
+            const g = audioCtx.createGain();
+            g.gain.setValueAtTime(0.3, time); g.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
+            noise.connect(bp); bp.connect(g); g.connect(audioCtx.destination);
+            noise.start(time); noise.stop(time + 0.15);
+        }
+
+        function playCoinSound() {
+            if (musicMuted || !audioCtx) return;
+            const t = audioCtx.currentTime;
+            playTone(988, t, 0.08, 'square', 0.18);
+            playTone(1319, t + 0.06, 0.14, 'square', 0.18);
         }
 
         function musicScheduler() {
@@ -181,11 +201,12 @@
             while (nextNoteTime < audioCtx.currentTime + 0.15) {
                 const s = musicStep % 16;
                 if (s % 4 === 0) playKick(nextNoteTime);
-                if (s % 2 === 1) playHat(nextNoteTime);
+                if (s === 4 || s === 12) playSnare(nextNoteTime);
+                playHat(nextNoteTime, s % 2 === 1);
                 const bassNote = BASS_PATTERN[s];
-                if (bassNote !== null) playTone(noteFreq(110, bassNote), nextNoteTime, STEP_DUR * 0.9, 'triangle', 0.25);
+                if (bassNote !== null) playTone(noteFreq(110, bassNote), nextNoteTime, STEP_DUR * 0.9, 'triangle', 0.22);
                 const leadNote = LEAD_PATTERN[s];
-                if (leadNote !== null) playTone(noteFreq(220, leadNote), nextNoteTime, STEP_DUR * 0.8, 'square', 0.08);
+                if (leadNote !== null) playTone(noteFreq(220, leadNote), nextNoteTime, STEP_DUR * 0.8, 'square', 0.09);
                 nextNoteTime += STEP_DUR;
                 musicStep++;
             }
@@ -484,15 +505,16 @@
                 const mesh = new THREE.Mesh(roundedBoxGeometry(w, h, d, Math.min(w, d) * 0.35), mat);
                 mesh.position.y = -h / 2; mesh.castShadow = true; group.add(mesh);
                 if (shoeMat) {
-                    const shoe = new THREE.Mesh(roundedBoxGeometry(w+0.05, 0.14, d+0.14, 0.06), shoeMat);
-                    shoe.position.set(0, -h, 0.03); shoe.castShadow = true; group.add(shoe);
+                    const shoeH = 0.14;
+                    const shoe = new THREE.Mesh(roundedBoxGeometry(w+0.05, shoeH, d+0.14, 0.06), shoeMat);
+                    shoe.position.set(0, -h + shoeH / 2, 0.03); shoe.castShadow = true; group.add(shoe);
                 }
                 return group;
             }
             playerParts.armL = createLimb(0.22, 0.7, 0.22, skinMat, 0.45, 1.3, 0);
             playerParts.armR = createLimb(0.22, 0.7, 0.22, skinMat, -0.45, 1.3, 0);
-            playerParts.legL = createLimb(0.28, 0.9, 0.28, pantsMat, 0.2, 0.6, 0, shoeMat);
-            playerParts.legR = createLimb(0.28, 0.9, 0.28, pantsMat, -0.2, 0.6, 0, shoeMat);
+            playerParts.legL = createLimb(0.28, 0.9, 0.28, pantsMat, 0.2, 0.9, 0, shoeMat);
+            playerParts.legR = createLimb(0.28, 0.9, 0.28, pantsMat, -0.2, 0.9, 0, shoeMat);
             playerGroup.add(playerParts.armL, playerParts.armR, playerParts.legL, playerParts.legR);
             scene.add(playerGroup);
         }
@@ -516,8 +538,8 @@
             }
             guardParts.armL = createLimb(0.25, 0.7, 0.25, uniformMat, 0.48, 1.3, 0);
             guardParts.armR = createLimb(0.25, 0.7, 0.25, uniformMat, -0.48, 1.3, 0);
-            guardParts.legL = createLimb(0.3, 0.9, 0.3, uniformMat, 0.2, 0.6, 0);
-            guardParts.legR = createLimb(0.3, 0.9, 0.3, uniformMat, -0.2, 0.6, 0);
+            guardParts.legL = createLimb(0.3, 0.9, 0.3, uniformMat, 0.2, 0.9, 0);
+            guardParts.legR = createLimb(0.3, 0.9, 0.3, uniformMat, -0.2, 0.9, 0);
             guardGroup.add(guardParts.armL, guardParts.armR, guardParts.legL, guardParts.legR);
             guardGroup.position.set(0, 0, 4); 
             scene.add(guardGroup);
@@ -685,7 +707,7 @@
                 let c = coins[i]; c.position.z += speed; c.rotation.y += 0.15;
                 if (c.position.z > -1 && c.position.z < 1 && Math.abs(c.position.x - playerGroup.position.x) < 1.0) {
                      if (Math.abs(c.position.y - (playerGroup.position.y + 1)) < 1.5) {
-                        scene.remove(c); coins.splice(i, 1); coinCount++; saveGame(); continue;
+                        scene.remove(c); coins.splice(i, 1); coinCount++; saveGame(); playCoinSound(); continue;
                     }
                 }
                 if (c.position.z > 15) { scene.remove(c); coins.splice(i, 1); }
