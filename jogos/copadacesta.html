@@ -59,7 +59,7 @@ canvas{display:block}
     <div class="title">Copa<small>da Cesta</small></div>
     <div class="sub">Escolha sua seleção e vença o torneio mundial de arremessos! Cada fase guarda uma surpresa.</div>
     <button class="btn" id="btnPlay">🏀 JOGAR</button>
-    <div class="note">Arraste para trás e solte para arremessar · de longe vale 3 pontos</div>
+    <div class="note">Arraste na direção da cesta e solte para arremessar · de longe vale 3 pontos</div>
     <div class="note" id="trophies"></div>
   </div>
 
@@ -572,15 +572,26 @@ function drawHud(){
 
 function drawAim(){
   const me=M.me;if(!aim.on||!me.hasBall||M.count>0)return;
-  const v=aimVel(),h=handPos(me);
-  let x=h.x,y=h.y,vx=v.vx,vy=v.vy;
-  for(let i=1;i<=14;i++){const dt=.028;for(let k=0;k<2;k++){vy+=G*dt/2;x+=vx*dt/2;y+=vy*dt/2}
-    ctx.fillStyle=`rgba(255,255,255,${.95-i*.06})`;ctx.beginPath();ctx.arc(x,y,4.5-i*.22,0,7);ctx.fill()}
-  // força
-  const p=Math.min(1,Math.hypot(aim.sx-aim.x,aim.sy-aim.y)/PULL_MAX);
-  ctx.fillStyle='rgba(0,0,0,.4)';rr(me.x-30,me.y+14,60,8,4);ctx.fill();
-  ctx.fillStyle=p>.85?'#ff5a5a':p>.5?'#ffd35a':'#5aff7a';rr(me.x-30,me.y+14,60*p,8,4);ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,.4)';ctx.setLineDash([5,5]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(aim.sx,aim.sy);ctx.lineTo(aim.x,aim.y);ctx.stroke();ctx.setLineDash([]);
+  const v=aimVel(),h=handPos(me),p=Math.min(1,Math.hypot(aim.x-aim.sx,aim.y-aim.sy)/PULL_MAX);
+  if(p<.06)return;
+  const bx=h.x,by=h.y+6;
+  // anel pulsando na bola
+  ctx.strokeStyle='rgba(61,255,74,.85)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(bx,by,R+6+Math.sin(time*10)*1.5,0,7);ctx.stroke();
+  // trilha de bolinhas verdes (começo da trajetória) terminando numa seta
+  const n=5+Math.round(p*8),step=.022,pts=[];
+  let x=bx,y=by,vx=v.vx,vy=v.vy;
+  for(let i=0;i<n;i++){for(let k=0;k<3;k++){vy+=G*step/3;x+=vx*step/3;y+=vy*step/3}pts.push([x,y,vx,vy])}
+  for(let i=0;i<pts.length-1;i++){
+    const [px,py]=pts[i],r=7.5-i*.18;
+    ctx.fillStyle='rgba(0,70,0,.35)';ctx.beginPath();ctx.arc(px,py+1.5,r+1.5,0,7);ctx.fill();
+    ctx.fillStyle='#3dff4a';ctx.beginPath();ctx.arc(px,py,r,0,7);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.arc(px-r*.32,py-r*.32,r*.33,0,7);ctx.fill();
+  }
+  const [ax,ay,avx,avy]=pts[pts.length-1],s=14+p*8;
+  ctx.save();ctx.translate(ax,ay);ctx.rotate(Math.atan2(avy,avx));
+  ctx.fillStyle='#3dff4a';ctx.strokeStyle='rgba(0,70,0,.55)';ctx.lineWidth=2;ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(s,0);ctx.lineTo(-s*.6,-s*.78);ctx.lineTo(-s*.6,s*.78);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.restore();
 }
 
 let confetti=0;const confParts=[];
@@ -624,10 +635,10 @@ function render(){
     drawHud();
     if(M.count>0){const n=Math.ceil(M.count);txt(n>0?String(n):'JÁ!',W/2,260,90+(M.count%1)*30,'#ffd35a')}
     if(M.count<=0&&M.count>-0.6)txt('JÁ!',W/2,260,100,'#5aff7a');
-    if(T&&T.round===0&&M.shots===0&&M.count<=0){
+    if(T&&T.round===0&&M.shots===0&&M.count<=0&&!aim.on){
       const h=handPos(M.me),k=(time*1.2)%1;
-      ctx.globalAlpha=.85;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(h.x-k*60,h.y+k*50,10,0,7);ctx.fill();ctx.globalAlpha=1;
-      txt('Arraste para trás e solte!',h.x+40,h.y-60,20,'#fff');
+      ctx.globalAlpha=.85;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(h.x+k*80,h.y-k*60,10,0,7);ctx.fill();ctx.globalAlpha=1;
+      txt('Arraste na direção da cesta e solte!',h.x+60,h.y-95,20,'#fff');
     }
   }
   // confete do campeão
@@ -647,11 +658,11 @@ function loop(t){
 requestAnimationFrame(loop);
 
 /* ============================================================
-   👆 CONTROLES: arrastar para trás e soltar (estilingue)
+   👆 CONTROLES: arrastar na direção do arremesso e soltar
 ============================================================ */
 const PULL_MAX=170,POWER=7.4;
 function aimVel(){
-  let dx=aim.sx-aim.x,dy=aim.sy-aim.y;const l=Math.hypot(dx,dy);
+  let dx=aim.x-aim.sx,dy=aim.y-aim.sy;const l=Math.hypot(dx,dy); // arrasta na direção do arremesso
   if(l>PULL_MAX){dx*=PULL_MAX/l;dy*=PULL_MAX/l}
   return {vx:dx*POWER,vy:dy*POWER};
 }
