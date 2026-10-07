@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Trio Animal</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/baloo-2/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/baloo-2/800.css">
+<style>
+/* ============================================================
+   🎨 TEMA
+============================================================ */
+:root{
+  --sky1:#9fdcff; --sky2:#d8f5ff; --grass1:#8fdc6a; --grass2:#5fbf45;
+  --panel:#fffaf0; --wood:#c98b4f; --wood-dark:#9a6233;
+  --cell1:#b9ec95; --cell2:#a6e07f;
+  --text:#4a2f1a; --muted:#8a6a4f;
+  --gold:#ffc83d; --red:#ff5d5d;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;color:var(--text);
+  background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 55%,var(--grass1) 55%,var(--grass2) 100%);
+  touch-action:none;
+}
+/* nuvens decorativas */
+.cloud{position:fixed;font-size:60px;opacity:.85;pointer-events:none;animation:drift linear infinite}
+@keyframes drift{from{transform:translateX(-120px)}to{transform:translateX(110vw)}}
+
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
+.screen.active{display:flex}
+
+button{font-family:inherit;cursor:pointer;border:none}
+.btn{
+  background:linear-gradient(180deg,#ffd75e,#ffb020);color:#5a3200;font-weight:800;
+  font-size:22px;padding:10px 34px;border-radius:18px;
+  box-shadow:0 5px 0 #c97d00,0 8px 16px rgba(0,0,0,.18);transition:transform .08s
+}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #c97d00}
+.btn.green{background:linear-gradient(180deg,#8ff06a,#4cc23a);color:#123d05;box-shadow:0 5px 0 #2f8a22,0 8px 16px rgba(0,0,0,.18)}
+.btn.green:active{box-shadow:0 1px 0 #2f8a22}
+.btn.blue{background:linear-gradient(180deg,#8fd8ff,#3fa8ef);color:#06304d;box-shadow:0 5px 0 #1f78b8,0 8px 16px rgba(0,0,0,.18)}
+.btn.blue:active{box-shadow:0 1px 0 #1f78b8}
+.icon-btn{
+  width:44px;height:44px;border-radius:14px;font-size:22px;background:var(--panel);
+  box-shadow:0 4px 0 #d8c7a8,0 6px 10px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center
+}
+.icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #d8c7a8}
+.icon-btn:disabled{opacity:.4}
+
+/* ============================================================
+   🏠 TELA INICIAL
+============================================================ */
+#screenTitle{justify-content:center;gap:18px;padding:20px}
+.logo{
+  font-size:clamp(46px,13vw,86px);font-weight:800;line-height:.95;text-align:center;color:#fff;
+  -webkit-text-stroke:3px #7a3f12;paint-order:stroke fill;
+  text-shadow:0 6px 0 #7a3f12,0 10px 20px rgba(0,0,0,.2)
+}
+.logo span{color:var(--gold)}
+.subtitle{font-size:20px;font-weight:700;color:#3a5a1a;text-align:center;background:rgba(255,255,255,.7);padding:4px 16px;border-radius:14px}
+.parade{display:flex;gap:6px;font-size:clamp(34px,9vw,52px)}
+.parade span{display:inline-block;animation:hop 1s ease-in-out infinite}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+.title-btns{display:flex;flex-direction:column;gap:14px;align-items:center;margin-top:6px}
+.how{
+  max-width:360px;background:rgba(255,250,240,.92);border-radius:18px;padding:12px 16px;font-size:16px;line-height:1.25;
+  box-shadow:0 6px 16px rgba(0,0,0,.12);text-align:center
+}
+
+/* ============================================================
+   🗺️ SELEÇÃO DE FASES
+============================================================ */
+#screenLevels{padding:14px 14px 20px}
+.lv-head{width:100%;max-width:520px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.lv-head h2{font-size:30px;color:#fff;-webkit-text-stroke:2px #7a3f12;paint-order:stroke fill;text-shadow:0 3px 0 #7a3f12}
+.star-total{background:var(--panel);padding:4px 12px;border-radius:14px;font-weight:800;font-size:18px;box-shadow:0 4px 0 #d8c7a8}
+.lv-grid{
+  width:100%;max-width:520px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;
+  overflow-y:auto;padding:4px 4px 16px;align-content:start;flex:1;touch-action:pan-y
+}
+.lv{
+  aspect-ratio:1;border-radius:16px;background:var(--panel);font-weight:800;font-size:24px;color:var(--text);
+  box-shadow:0 5px 0 #d8c7a8,0 7px 12px rgba(0,0,0,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1
+}
+.lv:active{transform:translateY(3px)}
+.lv .st{font-size:12px;letter-spacing:-1px;margin-top:4px;color:#d9cbb3}
+.lv .st b{color:var(--gold);font-weight:400}
+.lv.done{background:#fff3c4}
+.lv.locked{background:#e6dccb;color:#a8987f;box-shadow:0 5px 0 #c4b496}
+.lv.next{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+
+/* ============================================================
+   🎮 TELA DO JOGO
+============================================================ */
+#screenGame{padding:10px 10px 12px}
+.topbar{width:100%;max-width:560px;display:flex;align-items:center;gap:8px}
+.hud{
+  flex:1;background:var(--panel);border-radius:16px;padding:4px 12px;display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 4px 0 #d8c7a8,0 6px 10px rgba(0,0,0,.12);min-height:44px
+}
+.hud .lvl{font-weight:800;font-size:20px;white-space:nowrap}
+.hud .mv{font-weight:800;font-size:15px;text-align:right;line-height:1.05}
+.hud .mv b{font-size:22px}
+.live-stars{font-size:18px;letter-spacing:-2px}
+.live-stars .off{filter:grayscale(1);opacity:.35}
+.goal{margin-top:8px;font-size:15px;font-weight:700;background:rgba(255,255,255,.75);padding:2px 14px;border-radius:12px;text-align:center}
+#boardWrap{flex:1;width:100%;display:flex;align-items:center;justify-content:center;min-height:0;padding:8px}
+#boardFrame{
+  padding:10px;border-radius:22px;background:linear-gradient(180deg,var(--wood),var(--wood-dark));
+  box-shadow:0 8px 0 #6e4220,0 14px 26px rgba(0,0,0,.25)
+}
+#board{position:relative;display:grid;border-radius:14px;overflow:hidden;touch-action:none}
+.cell{width:var(--cs);height:var(--cs);background:var(--cell1)}
+.cell.alt{background:var(--cell2)}
+.cell.rock{display:flex;align-items:center;justify-content:center;font-size:calc(var(--cs)*.66);background:#8f8f86;box-shadow:inset 0 0 0 3px rgba(0,0,0,.12)}
+.tile{
+  position:absolute;left:0;top:0;width:var(--cs);height:var(--cs);display:flex;align-items:center;justify-content:center;
+  transition:transform .17s ease-out;pointer-events:none;z-index:1
+}
+.noanim .tile{transition:none}
+.tile .bub{
+  position:absolute;inset:8%;border-radius:30%;background:rgba(255,255,255,.55);
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.08);transition:background .2s,box-shadow .2s
+}
+.tile .face{position:relative;font-size:calc(var(--cs)*.62);line-height:1;transition:transform .15s}
+.tile.happy .bub{background:var(--c);box-shadow:inset 0 -4px 0 rgba(0,0,0,.15),0 0 0 3px #fff}
+.tile.happy .face{animation:bob 1.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-6%) rotate(-5deg)}75%{transform:translateY(-6%) rotate(5deg)}}
+.tile.crowd .bub{background:#ffb3b3;box-shadow:inset 0 -4px 0 rgba(0,0,0,.12),0 0 0 3px var(--red)}
+.tile.crowd .face{animation:shiver .5s linear infinite}
+@keyframes shiver{0%,100%{transform:translateX(0)}25%{transform:translateX(-3%)}75%{transform:translateX(3%)}}
+.tile.crowd::after{
+  content:'!';position:absolute;top:2%;right:6%;width:30%;height:30%;border-radius:50%;background:var(--red);color:#fff;
+  font-weight:800;font-size:calc(var(--cs)*.2);display:flex;align-items:center;justify-content:center
+}
+.tile.sel{z-index:3}
+.tile.sel .bub{box-shadow:0 0 0 4px #fff,0 0 0 7px #ffb020}
+.tile.sel .face{transform:scale(1.15)}
+.tile.pop .face{animation:popin .45s ease-out}
+@keyframes popin{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.tile.nope .face{animation:nope .3s linear}
+@keyframes nope{0%,100%{transform:translateX(0)}20%{transform:translateX(-10%)}60%{transform:translateX(10%)}}
+.tip{width:100%;max-width:560px;font-size:15px;font-weight:700;text-align:center;background:rgba(255,250,240,.9);border-radius:14px;padding:6px 12px;box-shadow:0 4px 10px rgba(0,0,0,.1)}
+
+/* ============================================================
+   🏆 JANELA DE VITÓRIA
+============================================================ */
+.modal{position:fixed;inset:0;background:rgba(40,25,10,.45);display:none;align-items:center;justify-content:center;z-index:20;padding:20px}
+.modal.active{display:flex}
+.card{
+  background:var(--panel);border-radius:26px;padding:22px 24px;text-align:center;max-width:340px;width:100%;
+  box-shadow:0 8px 0 #d8c7a8,0 20px 40px rgba(0,0,0,.3);animation:cardin .35s cubic-bezier(.2,1.6,.4,1)
+}
+@keyframes cardin{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.card h3{font-size:34px;font-weight:800;color:#e07b00;line-height:1}
+.big-stars{font-size:54px;margin:10px 0 4px;display:flex;justify-content:center;gap:4px}
+.big-stars span{display:inline-block;transform:scale(0);animation:starin .4s cubic-bezier(.2,1.8,.4,1) forwards}
+.big-stars span.off{filter:grayscale(1);opacity:.3}
+@keyframes starin{to{transform:scale(1)}}
+.card p{font-size:18px;font-weight:700;margin-bottom:14px;color:var(--muted)}
+.card .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.card .row .btn{font-size:18px;padding:8px 18px}
+
+.confetti{position:fixed;top:-40px;font-size:26px;pointer-events:none;z-index:30;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+</style>
+</head>
+<body>
+
+<div class="cloud" style="top:4%;animation-duration:38s">☁️</div>
+<div class="cloud" style="top:14%;animation-duration:55s;animation-delay:-20s;font-size:44px">☁️</div>
+
+<!-- TELA INICIAL -->
+<section id="screenTitle" class="screen active">
+  <div class="parade" id="parade"></div>
+  <div class="logo">Trio<br><span>Animal</span></div>
+  <div class="subtitle">Junte os bichinhos de 3 em 3!</div>
+  <div class="how">
+    🐾 Os bichinhos só ficam felizes em <b>trios</b>: exatamente <b>3 iguais</b> encostados.<br>
+    Arraste um bichinho (ou toque nele e depois num vizinho) para trocar de lugar.
+  </div>
+  <div class="title-btns">
+    <button class="btn green" id="btnPlay">▶ JOGAR</button>
+    <button class="icon-btn" id="btnMuteTitle" title="Som">🔊</button>
+  </div>
+</section>
+
+<!-- FASES -->
+<section id="screenLevels" class="screen">
+  <div class="lv-head">
+    <button class="icon-btn" id="btnLvBack" title="Voltar">🏠</button>
+    <h2>Fases</h2>
+    <div class="star-total" id="starTotal">⭐ 0</div>
+  </div>
+  <div class="lv-grid" id="lvGrid"></div>
+</section>
+
+<!-- JOGO -->
+<section id="screenGame" class="screen">
+  <div class="topbar">
+    <button class="icon-btn" id="btnMenu" title="Fases">☰</button>
+    <div class="hud">
+      <div class="lvl" id="hudLevel">Fase 1</div>
+      <div class="live-stars" id="liveStars">⭐⭐⭐</div>
+      <div class="mv">movimentos<br><b id="hudMoves">0</b></div>
+    </div>
+    <button class="icon-btn" id="btnUndo" title="Desfazer">↩️</button>
+    <button class="icon-btn" id="btnRestart" title="Recomeçar">🔄</button>
+    <button class="icon-btn" id="btnMute" title="Som">🔊</button>
+  </div>
+  <div class="goal" id="goal"></div>
+  <div id="boardWrap"><div id="boardFrame"><div id="board"></div></div></div>
+  <div class="tip" id="tip"></div>
+</section>
+
+<!-- VITÓRIA -->
+<div class="modal" id="winModal">
+  <div class="card">
+    <h3 id="winTitle">Muito bem!</h3>
+    <div class="big-stars" id="winStars"></div>
+    <p id="winText"></p>
+    <div class="row">
+      <button class="btn blue" id="btnWinLevels">☰ Fases</button>
+      <button class="btn" id="btnWinRetry">🔄</button>
+      <button class="btn green" id="btnWinNext">Próxima ▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   🐾 BICHINHOS
+============================================================ */
+const SPECIES=[
+  {e:'🐱',c:'#ffc46b'},
+  {e:'🐶',c:'#d7b28a'},
+  {e:'🐰',c:'#c9b5ff'},
+  {e:'🐸',c:'#8ee86a'},
+  {e:'🐷',c:'#ff9fb5'},
+  {e:'🐼',c:'#c3ccd6'},
+  {e:'🐵',c:'#7fdcea'},
+  {e:'🐥',c:'#ffe46b'}
+];
+
+/* ============================================================
+   🗺️ FASES — [colunas, linhas, trios, espécies, pedras, embaralhadas]
+   Cada fase é gerada a partir de uma semente fixa, então é sempre igual.
+============================================================ */
+const LEVELS=[
+  [4,4,3,3,0,2],[4,4,3,3,0,3],[4,4,4,4,0,3],[4,5,4,3,0,3],[4,5,5,4,0,4],
+  [5,5,5,4,0,4],[5,5,5,3,1,4],[5,5,6,4,0,5],[5,5,6,4,1,5],[5,6,6,5,1,5],
+  [5,6,7,5,0,6],[5,6,7,4,1,6],[5,6,7,5,2,6],[6,6,8,5,1,6],[6,6,8,6,2,7],
+  [6,6,9,6,1,7],[6,6,9,5,2,7],[6,7,9,6,2,8],[6,7,10,6,2,8],[6,7,10,7,3,8],
+  [6,7,10,6,3,9],[6,7,10,7,2,9],[6,7,10,8,3,9],[6,7,10,6,3,10],[6,7,10,7,2,10],
+  [6,7,10,8,3,10],[6,7,10,7,3,11],[6,7,10,8,2,11],[6,7,10,8,3,12],[6,7,10,7,3,12]
+];
+const TIPS={
+  1:'Arraste um bichinho para o lado (ou toque nele e depois num vizinho) para trocar de lugar.',
+  2:'Cada troca conta 1 movimento. Poucos movimentos = mais estrelas!',
+  3:'Encostar na diagonal não vale: o trio precisa estar lado a lado ou em cima/embaixo.',
+  4:'Dois trios da mesma espécie não podem se encostar: 6 juntos fica apertado! ❗',
+  7:'Pedras 🪨 não saem do lugar. Dê a volta nelas!',
+  10:'Errou? Use ↩️ para desfazer o último movimento.'
+};
+const DEFAULT_TIP='Deixe todos os bichinhos felizes em trios!';
+
+const SHAPES=[
+  [[0,0],[1,0],[2,0]],[[0,0],[0,1],[0,2]],
+  [[0,0],[1,0],[0,1]],[[0,0],[1,0],[1,1]],[[0,0],[0,1],[1,1]],[[1,0],[0,1],[1,1]]
+];
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+// Verifica se todos os bichinhos estão em grupos de exatamente 3
+function makeSolvedCheck(cols,rows){
+  const N=cols*rows,mark=new Int32Array(N),stack=new Int32Array(N);let stamp=0;
+  return function(sp){
+    stamp++;
+    for(let i=0;i<N;i++){
+      const s=sp[i];if(s<0||mark[i]===stamp)continue;
+      let top=0,size=0;stack[top++]=i;mark[i]=stamp;
+      while(top){
+        const c=stack[--top];if(++size>3)return false;
+        const x=c%cols;
+        if(x>0&&sp[c-1]===s&&mark[c-1]!==stamp){mark[c-1]=stamp;stack[top++]=c-1}
+        if(x<cols-1&&sp[c+1]===s&&mark[c+1]!==stamp){mark[c+1]=stamp;stack[top++]=c+1}
+        if(c>=cols&&sp[c-cols]===s&&mark[c-cols]!==stamp){mark[c-cols]=stamp;stack[top++]=c-cols}
+        if(c+cols<N&&sp[c+cols]===s&&mark[c+cols]!==stamp){mark[c+cols]=stamp;stack[top++]=c+cols}
+      }
+      if(size!==3)return false;
+    }
+    return true;
+  };
+}
+
+// Tamanho do grupo de cada casa (para mostrar felizes / apertados)
+function groupSizes(sp,cols,rows){
+  const N=cols*rows,size=new Array(N).fill(0),seen=new Uint8Array(N);
+  for(let i=0;i<N;i++){
+    if(sp[i]<0||seen[i])continue;
+    const s=sp[i],comp=[i],stack=[i];seen[i]=1;
+    while(stack.length){
+      const c=stack.pop(),x=c%cols;
+      for(const n of [x>0?c-1:-1,x<cols-1?c+1:-1,c-cols,c+cols]){
+        if(n<0||n>=N||seen[n]||sp[n]!==s)continue;
+        seen[n]=1;stack.push(n);comp.push(n);
+      }
+    }
+    comp.forEach(c=>size[c]=comp.length);
+  }
+  return size;
+}
+
+function buildPairs(sp,cols,rows){
+  const pairs=[];
+  for(let i=0;i<cols*rows;i++){
+    if(sp[i]===-2)continue;
+    const x=i%cols,y=(i/cols)|0;
+    if(x+1<cols&&sp[i+1]!==-2)pairs.push([i,i+1]);
+    if(y+1<rows&&sp[i+cols]!==-2)pairs.push([i,i+cols]);
+  }
+  return pairs;
+}
+
+function generateLevel(n){
+  const [cols,rows,T,S,R,K]=LEVELS[n-1];
+  const N=cols*rows,rng=mulberry32(n*7919+13),ri=k=>Math.floor(rng()*k);
+  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=ri(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+  const solved=makeSolvedCheck(cols,rows);
+  let fallback=null;
+
+  for(let attempt=0;attempt<3000;attempt++){
+    // 1) encaixa os trios (peças de 3 casas) na grade
+    const owner=new Array(N).fill(-1);let ok=true;
+    for(let t=0;t<T&&ok;t++){
+      let placed=false;
+      for(let tries=0;tries<80&&!placed;tries++){
+        const sh=SHAPES[ri(6)],x=ri(cols),y=ri(rows),cells=[];let fit=true;
+        for(const [dx,dy] of sh){
+          const cx=x+dx,cy=y+dy;
+          if(cx>=cols||cy>=rows||owner[cy*cols+cx]!==-1){fit=false;break}
+          cells.push(cy*cols+cx);
+        }
+        if(fit){cells.forEach(c=>owner[c]=t);placed=true}
+      }
+      ok=placed;
+    }
+    if(!ok)continue;
+
+    // 2) escolhe as espécies sem deixar trios iguais encostados
+    const adj=Array.from({length:T},()=>new Set());
+    for(let i=0;i<N;i++){
+      if(owner[i]<0)continue;
+      const x=i%cols,y=(i/cols)|0;
+      for(const j of [x+1<cols?i+1:-1,y+1<rows?i+cols:-1]){
+        if(j>=0&&owner[j]>=0&&owner[j]!==owner[i]){adj[owner[i]].add(owner[j]);adj[owner[j]].add(owner[i])}
+      }
+    }
+    const pool=shuffle([0,1,2,3,4,5,6,7]).slice(0,S),list=[];
+    for(let t=0;t<T;t++)list.push(pool[t%S]);
+    let assign=null;
+    for(let s=0;s<60&&!assign;s++){
+      shuffle(list);
+      if(list.every((sp,t)=>[...adj[t]].every(o=>list[o]!==sp)))assign=list.slice();
+    }
+    if(!assign)continue;
+
+    const sp=owner.map(o=>o<0?-1:assign[o]);
+    // 3) pedras
+    const empties=shuffle(sp.map((v,i)=>v===-1?i:-1).filter(i=>i>=0));
+    if(empties.length<R+2)continue;
+    for(let r=0;r<R;r++)sp[empties[r]]=-2;
+
+    // 4) embaralha a partir da solução
+    const pairs=buildPairs(sp,cols,rows);
+    let last=-1;
+    for(let k=0;k<K;k++){
+      let p,guard=0;
+      do{p=ri(pairs.length);guard++}while(guard<300&&(p===last||sp[pairs[p][0]]===sp[pairs[p][1]]));
+      const [a,b]=pairs[p];[sp[a],sp[b]]=[sp[b],sp[a]];last=p;
+    }
+    if(solved(sp))continue;
+
+    // 5) procura solução mais curta (até 3 trocas) para definir a meta
+    let par=K;
+    const dfs=(d,lastP)=>{
+      for(let p=0;p<pairs.length;p++){
+        if(p===lastP)continue;
+        const [a,b]=pairs[p];if(sp[a]===sp[b])continue;
+        [sp[a],sp[b]]=[sp[b],sp[a]];
+        const hit=d===1?solved(sp):dfs(d-1,p);
+        [sp[a],sp[b]]=[sp[b],sp[a]];
+        if(hit)return true;
+      }
+      return false;
+    };
+    for(let d=1;d<=Math.min(K-1,3);d++){if(dfs(d,-1)){par=d;break}}
+    const lvl={cols,rows,sp:sp.slice(),par};
+    if(!fallback||par>fallback.par)fallback=lvl;
+    if(par<Math.min(K,3))continue;
+    return lvl;
+  }
+  return fallback;
+}
+
+const levelCache={};
+const getLevel=n=>levelCache[n]||(levelCache[n]=generateLevel(n));
+const starLimits=par=>[par,par+Math.max(2,Math.ceil(par*.5))];
+const starsFor=(moves,par)=>{const [a,b]=starLimits(par);return moves<=a?3:moves<=b?2:1};
+
+/* ============================================================
+   💾 PROGRESSO
+============================================================ */
+const SAVE_KEY='trioAnimal.v1';
+let save={stars:{},muted:false};
+try{const d=JSON.parse(localStorage.getItem(SAVE_KEY));if(d)save=Object.assign(save,d)}catch(e){}
+const persist=()=>{try{localStorage.setItem(SAVE_KEY,JSON.stringify(save))}catch(e){}};
+const isUnlocked=n=>n===1||(save.stars[n-1]||0)>0;
+
+/* ============================================================
+   🔊 SONS (WebAudio, sem arquivos)
+============================================================ */
+let actx=null;
+function tone(f,dur,type='sine',vol=.15,delay=0,slide=0){
+  if(save.muted)return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended')actx.resume();
+    const t=actx.currentTime+delay,o=actx.createOscillator(),g=actx.createGain();
+    o.type=type;o.frequency.setValueAtTime(f,t);
+    if(slide)o.frequency.exponentialRampToValueAtTime(f*slide,t+dur);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+dur+.02);
+  }catch(e){}
+}
+const sfx={
+  select:()=>tone(720,.07,'sine',.12),
+  swap:()=>tone(380,.12,'triangle',.16,0,1.6),
+  nope:()=>tone(160,.14,'square',.06),
+  trio:()=>[523,659,784].forEach((f,i)=>tone(f,.16,'sine',.14,i*.07)),
+  win:()=>[523,659,784,1047,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.15,i*.11)),
+  undo:()=>tone(500,.1,'sine',.1,0,.6)
+};
+function refreshMute(){
+  const ic=save.muted?'🔇':'🔊';
+  document.getElementById('btnMute').textContent=ic;
+  document.getElementById('btnMuteTitle').textContent=ic;
+}
+function toggleMute(){save.muted=!save.muted;persist();refreshMute();sfx.select()}
+
+/* ============================================================
+   🖥️ TELAS
+============================================================ */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));
+  if(id==='screenLevels')renderLevels();
+}
+
+function renderLevels(){
+  const grid=document.getElementById('lvGrid');grid.innerHTML='';
+  let total=0,nextMarked=false;
+  for(let n=1;n<=LEVELS.length;n++){
+    const st=save.stars[n]||0;total+=st;
+    const b=document.createElement('button');b.className='lv';
+    if(!isUnlocked(n)){b.classList.add('locked');b.innerHTML='🔒';b.onclick=()=>sfx.nope()}
+    else{
+      if(st)b.classList.add('done');
+      else if(!nextMarked){b.classList.add('next');nextMarked=true}
+      b.innerHTML=`${n}<div class="st">${[1,2,3].map(i=>i<=st?'<b>★</b>':'★').join('')}</div>`;
+      b.onclick=()=>{sfx.select();startLevel(n)};
+    }
+    grid.appendChild(b);
+  }
+  document.getElementById('starTotal').textContent=`⭐ ${total} / ${LEVELS.length*3}`;
+}
+
+/* ============================================================
+   🎮 JOGO
+============================================================ */
+const board=document.getElementById('board');
+let G=null; // estado da fase atual
+let cs=60;
+
+function startLevel(n){
+  document.getElementById('winModal').classList.remove('active');
+  show('screenGame');
+  const L=getLevel(n);
+  G={n,cols:L.cols,rows:L.rows,par:L.par,sp:L.sp.slice(),cells:[],moves:0,hist:[],sel:-1,busy:false,won:false,happy:new Set()};
+  board.innerHTML='';
+  board.style.gridTemplateColumns=`repeat(${G.cols},var(--cs))`;
+  for(let i=0;i<G.sp.length;i++){
+    const x=i%G.cols,y=(i/G.cols)|0,c=document.createElement('div');
+    c.className='cell'+((x+y)%2?' alt':'');
+    if(G.sp[i]===-2){c.classList.add('rock');c.textContent='🪨'}
+    board.appendChild(c);
+  }
+  G.cells=G.sp.map(s=>{
+    if(s<0)return null;
+    const el=document.createElement('div');el.className='tile';
+    el.style.setProperty('--c',SPECIES[s].c);
+    el.innerHTML=`<div class="bub"></div><div class="face">${SPECIES[s].e}</div>`;
+    board.appendChild(el);return {s,el};
+  });
+  const [a,b]=starLimits(G.par);
+  document.getElementById('hudLevel').textContent='Fase '+n;
+  document.getElementById('goal').innerHTML=`⭐⭐⭐ em até <b>${a}</b> movimentos &nbsp;·&nbsp; ⭐⭐ até <b>${b}</b>`;
+  document.getElementById('tip').textContent=TIPS[n]||DEFAULT_TIP;
+  layout();
+  evaluate(false);
+  updateHud();
+}
+
+function layout(){
+  if(!G)return;
+  const wrap=document.getElementById('boardWrap');
+  const availW=wrap.clientWidth-16-20,availH=wrap.clientHeight-16-20;
+  cs=Math.max(32,Math.floor(Math.min(availW/G.cols,availH/G.rows,100)));
+  board.style.setProperty('--cs',cs+'px');
+  board.classList.add('noanim');
+  G.cells.forEach((t,i)=>t&&placeTile(t,i));
+  board.offsetWidth; // força reflow antes de reativar animação
+  board.classList.remove('noanim');
+}
+function placeTile(t,i){t.el.style.transform=`translate(${(i%G.cols)*cs}px,${((i/G.cols)|0)*cs}px)`}
+
+function updateHud(){
+  document.getElementById('hudMoves').textContent=G.moves;
+  const st=starsFor(G.moves,G.par);
+  document.getElementById('liveStars').innerHTML=[1,2,3].map(i=>`<span class="${i<=st?'':'off'}">⭐</span>`).join('');
+  document.getElementById('btnUndo').disabled=!G.hist.length||G.won;
+}
+
+function setSel(i){
+  if(G.sel>=0&&G.cells[G.sel])G.cells[G.sel].el.classList.remove('sel');
+  G.sel=i;
+  if(i>=0&&G.cells[i])G.cells[i].el.classList.add('sel');
+}
+
+const adjacent=(a,b)=>{
+  const ax=a%G.cols,bx=b%G.cols;
+  return (Math.abs(a-b)===1&&((a/G.cols)|0)===((b/G.cols)|0))||(Math.abs(a-b)===G.cols&&ax===bx);
+};
+const canSwap=(a,b)=>a>=0&&b>=0&&a<G.sp.length&&b<G.sp.length&&adjacent(a,b)&&G.sp[a]!==-2&&G.sp[b]!==-2&&G.sp[a]!==G.sp[b];
+
+function rawSwap(a,b){
+  [G.sp[a],G.sp[b]]=[G.sp[b],G.sp[a]];
+  [G.cells[a],G.cells[b]]=[G.cells[b],G.cells[a]];
+  if(G.cells[a])placeTile(G.cells[a],a);
+  if(G.cells[b])placeTile(G.cells[b],b);
+}
+
+function doSwap(a,b){
+  if(G.busy||G.won)return;
+  if(!canSwap(a,b)){
+    const t=G.cells[a];
+    if(t){t.el.classList.remove('nope');void t.el.offsetWidth;t.el.classList.add('nope')}
+    sfx.nope();return;
+  }
+  setSel(-1);
+  rawSwap(a,b);
+  G.moves++;G.hist.push([a,b]);
+  sfx.swap();updateHud();
+  G.busy=true;
+  setTimeout(()=>{G.busy=false;evaluate(true)},180);
+}
+
+function undo(){
+  if(!G||G.busy||G.won||!G.hist.length)return;
+  setSel(-1);
+  const [a,b]=G.hist.pop();rawSwap(a,b);G.moves--;
+  sfx.undo();updateHud();
+  G.busy=true;setTimeout(()=>{G.busy=false;evaluate(false)},180);
+}
+
+function evaluate(fromMove){
+  const sizes=groupSizes(G.sp,G.cols,G.rows);
+  const nowHappy=new Set();let formed=false,all=true;
+  G.cells.forEach((t,i)=>{
+    if(!t)return;
+    const s=sizes[i],happy=s===3;
+    t.el.classList.toggle('happy',happy);
+    t.el.classList.toggle('crowd',s>3);
+    if(happy){
+      nowHappy.add(t);
+      if(fromMove&&!G.happy.has(t)){
+        formed=true;t.el.classList.remove('pop');void t.el.offsetWidth;t.el.classList.add('pop');
+      }
+    }else all=false;
+  });
+  G.happy=nowHappy;
+  if(formed&&!all)sfx.trio();
+  if(all&&fromMove)win();
+}
+
+function win(){
+  G.won=true;updateHud();
+  const st=starsFor(G.moves,G.par);
+  if(st>(save.stars[G.n]||0)){save.stars[G.n]=st;persist()}
+  sfx.win();confetti();
+  setTimeout(()=>{
+    const last=G.n>=LEVELS.length;
+    document.getElementById('winTitle').textContent=st===3?'Perfeito!':st===2?'Muito bem!':'Conseguiu!';
+    document.getElementById('winStars').innerHTML=[1,2,3].map(i=>`<span class="${i<=st?'':'off'}" style="animation-delay:${i*.15}s">⭐</span>`).join('');
+    document.getElementById('winText').innerHTML=
+      `Fase ${G.n} em <b>${G.moves}</b> movimento${G.moves===1?'':'s'}.`+
+      (st<3?`<br>Tente em ${G.par} para 3 estrelas!`:'')+
+      (last?'<br>🎉 Você completou todas as fases!':'');
+    document.getElementById('btnWinNext').style.display=last?'none':'';
+    document.getElementById('winModal').classList.add('active');
+  },900);
+}
+
+function confetti(){
+  const bits=['⭐','🎉','✨','💛','🌸','🍀'];
+  for(let i=0;i<36;i++){
+    const s=document.createElement('div');s.className='confetti';
+    s.textContent=bits[i%bits.length];
+    s.style.left=Math.random()*100+'vw';
+    s.style.animationDuration=(1.6+Math.random()*1.6)+'s';
+    s.style.animationDelay=Math.random()*.5+'s';
+    document.body.appendChild(s);setTimeout(()=>s.remove(),3800);
+  }
+}
+
+/* ============================================================
+   👆 CONTROLES (arrastar ou tocar)
+============================================================ */
+let drag=null;
+function cellAt(e){
+  const r=board.getBoundingClientRect();
+  const x=Math.floor((e.clientX-r.left)/cs),y=Math.floor((e.clientY-r.top)/cs);
+  if(x<0||y<0||x>=G.cols||y>=G.rows)return -1;
+  return y*G.cols+x;
+}
+board.addEventListener('pointerdown',e=>{
+  if(!G||G.won||G.busy)return;
+  const i=cellAt(e);if(i<0)return;
+  drag={i,x:e.clientX,y:e.clientY,moved:false};
+  try{board.setPointerCapture(e.pointerId)}catch(err){}
+});
+board.addEventListener('pointermove',e=>{
+  if(!drag||drag.moved||!G.cells[drag.i])return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  if(Math.max(Math.abs(dx),Math.abs(dy))<cs*.35)return;
+  drag.moved=true;
+  const i=drag.i,x=i%G.cols;let j;
+  if(Math.abs(dx)>Math.abs(dy))j=dx>0?(x<G.cols-1?i+1:-1):(x>0?i-1:-1);
+  else j=dy>0?i+G.cols:i-G.cols;
+  if(j<0||j>=G.sp.length)j=-1;
+  doSwap(i,j);
+});
+board.addEventListener('pointerup',e=>{
+  if(!drag)return;
+  const d=drag;drag=null;
+  if(d.moved||G.won||G.busy)return;
+  const i=d.i;
+  if(G.sel>=0&&G.sel!==i&&adjacent(G.sel,i)){doSwap(G.sel,i);return}
+  if(G.cells[i]){
+    if(G.sel===i)setSel(-1);else{setSel(i);sfx.select()}
+  }else setSel(-1);
+});
+board.addEventListener('pointercancel',()=>{drag=null});
+
+document.addEventListener('keydown',e=>{
+  if(!G||!document.getElementById('screenGame').classList.contains('active'))return;
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){undo();e.preventDefault()}
+  else if(e.key==='r'||e.key==='R')startLevel(G.n);
+  else if(G.sel>=0){
+    const x=G.sel%G.cols,m={ArrowLeft:x>0?G.sel-1:-1,ArrowRight:x<G.cols-1?G.sel+1:-1,ArrowUp:G.sel-G.cols,ArrowDown:G.sel+G.cols};
+    if(e.key in m){e.preventDefault();const j=m[e.key];doSwap(G.sel,j>=0&&j<G.sp.length?j:-1)}
+  }
+});
+
+/* ============================================================
+   🔘 BOTÕES
+============================================================ */
+const $=id=>document.getElementById(id);
+$('btnPlay').onclick=()=>{sfx.select();show('screenLevels')};
+$('btnLvBack').onclick=()=>{sfx.select();show('screenTitle')};
+$('btnMenu').onclick=()=>{sfx.select();show('screenLevels')};
+$('btnUndo').onclick=undo;
+$('btnRestart').onclick=()=>{if(G){sfx.undo();startLevel(G.n)}};
+$('btnMute').onclick=toggleMute;
+$('btnMuteTitle').onclick=toggleMute;
+$('btnWinLevels').onclick=()=>{$('winModal').classList.remove('active');show('screenLevels')};
+$('btnWinRetry').onclick=()=>startLevel(G.n);
+$('btnWinNext').onclick=()=>startLevel(G.n+1);
+window.addEventListener('resize',layout);
+
+$('parade').innerHTML=SPECIES.slice(0,6).map((s,i)=>`<span style="animation-delay:${i*.12}s">${s.e}</span>`).join('');
+refreshMute();
+</script>
+</body>
+</html>
