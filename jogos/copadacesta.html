@@ -155,7 +155,7 @@ const ROUNDS=[
   {name:'SEMIFINAL',short:'Semi',twist:'move',desc:'↕️ Surpresa: CESTA MÓVEL! A cesta fica subindo e descendo.',skill:.51,every:[2.3,3.2]},
   {name:'GRANDE FINAL',short:'Final',twist:'defender',desc:'🌙 Surpresa: JOGO À NOITE com DEFENSOR! Ele pula para dar toco — arremesse bem alto.',skill:.58,every:[2.15,3]}
 ];
-const MATCH_TIME=45,OT_TIME=15;
+const MATCH_TIME=45,OT_TIME=15,DEF_GAP=135; // distância do defensor até o arremessador
 const SAVE_KEY='copaCesta.v1';
 let save={titles:{},muted:false};
 try{const d=JSON.parse(localStorage.getItem(SAVE_KEY));if(d)save=Object.assign(save,d)}catch(e){}
@@ -197,6 +197,7 @@ const sfx={
   buzzer:()=>{tone('sawtooth',220,.9,.14);tone('square',223,.9,.06)},
   whistle:()=>{tone('sine',2400,.35,.1,2600);tone('sine',2500,.25,.08,2500,.12)},
   beep:(f=660)=>tone('square',f,.12,.08),
+  tick:()=>{tone('sine',1320,.06,.1);tone('sine',1760,.08,.08,1760,.05)},
   fire:()=>{noise(.6,.25,'lowpass',400,2500);tone('sawtooth',180,.4,.06,500)},
   block:()=>{tone('sine',140,.2,.3,60);noise(.15,.25,'lowpass',600,150)},
   win:()=>[523,659,784,1047,784,1047].forEach((f,i)=>tone('triangle',f,.35,.15,f,i*.12)),
@@ -246,8 +247,9 @@ const crowd=[];
 for(let r=0;r<6;r++)for(let i=0;i<34;i++)crowd.push({x:i*29+(r%2)*14+rand(-4,4),y:62+r*30+rand(-3,3),r:9+r*.8,col:['#e84a5f','#2a9df4','#ffd23a','#5ad16a','#ff8c2a','#b06af2','#ffffff','#1d3a8a'][Math.random()*8|0],skin:SKINS[Math.random()*6|0],ph:rand(0,6)});
 
 function makeChar(team,x,cpu){
-  return {team,x,tx:x,y:FLOOR,cpu,skin:SKINS[Math.random()*SKINS.length|0],hair:HAIRS[Math.random()*HAIRS.length|0],hairStyle:Math.random()*3|0,
-    num:(Math.random()*30|0)+1,pose:'idle',poseT:0,jump:0,vy:0,hasBall:true,happy:0,sad:0};
+  return {team,x,tx:x,y:FLOOR,cpu,skin:SKINS[Math.random()*SKINS.length|0],hair:HAIRS[Math.random()*HAIRS.length|0],hairStyle:Math.random()*5|0,
+    eye:['#5a3a1a','#2a6ad1','#3a8a3a','#7a5a2a'][Math.random()*4|0],band:Math.random()<.5,
+    num:(Math.random()*30|0)+1,pose:'idle',poseT:0,jump:0,vy:0,hasBall:true,happy:0,sad:0,crouch:0,aiming:false,setT:0,shotAng:-1};
 }
 function startMatch(){
   const rd=ROUNDS[T.round];
@@ -256,7 +258,7 @@ function startMatch(){
     golden:false,shots:0,makes:0,cheer:0,shake:0,flash:0,
     def:rd.twist==='defender'?{x:0,jump:0,vy:0,cool:0,team:T.opps[T.round],skin:SKINS[Math.random()*6|0],hair:'#111'}:null};
   M.me.num=(Math.random()*30|0)+1;
-  if(M.def)M.def.x=clamp(M.me.x+100,200,640);
+  if(M.def)M.def.x=clamp(M.me.x+DEF_GAP,200,640);
   wind=0;windT=0;hoopPhase=0;night=rd.twist==='defender';
   if(M.twist==='wind')newWind();
   state='playing';showOv(null);sfx.whistle();
@@ -266,14 +268,15 @@ function newWind(){wind=(Math.random()<.5?-1:1)*rand(70,190);windT=rand(8,11)}
 function spawnText(x,y,txt,col,size=26,life=1){M.texts.push({x,y,txt,col,size,t:0,life})}
 function burst(x,y,cols,n=18,sp=220){for(let i=0;i<n;i++){const a=rand(0,Math.PI*2),v=rand(sp*.3,sp);M.parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-80,g:500,t:0,life:rand(.5,1),col:cols[i%cols.length],sz:rand(3,6)})}}
 
-function handPos(c){const k=c.cpu?.92:1;return {x:c.x+6*k,y:c.y-(c.cpu?10:-6)-c.jump-150*k}}
+// centro da bola no "set" do arremesso (acima da testa)
+function handPos(c){const k=c.cpu?.92:1;return {x:c.x+SET_X*k,y:(c.cpu?FLOOR-10:FLOOR+6)-c.jump+SET_Y*k}}
 function playerShoot(vx,vy){
   const me=M.me;if(!me.hasBall||M.count>0)return;
   const h=handPos(me),three=me.x<THREE_X;
   const b={x:h.x,y:h.y,vx,vy,rot:0,bounces:0,t:0,owner:'me',pts:three?3:2,golden:M.golden,fire:M.fire,touched:false};
   b.onScore=scoreMe;M.balls.push(b);
-  me.hasBall=false;me.pose='shoot';me.poseT=.35;M.shots++;M.golden=false;sfx.shoot();
-  if(M.def&&M.def.cool<=0&&Math.random()<.6){M.def.vy=-560;M.def.cool=.9}
+  me.hasBall=false;me.pose='shoot';me.poseT=.45;me.shotAng=Math.atan2(vy,vx);me.vy=-330;me.crouch=0;M.shots++;M.golden=false;sfx.shoot();
+  if(M.def&&M.def.cool<=0&&Math.random()<.5){M.def.vy=-600;M.def.cool=.9}
   setTimeout(()=>{if(!M||state!=='playing')return;me.tx=rand(110,520);if(Math.abs(me.tx-me.x)<60)me.tx=clamp(me.x+(Math.random()<.5?-1:1)*120,110,520);
     me.hasBall=true;if(Math.random()<.16&&!M.fire){M.golden=true}},520);
 }
@@ -302,7 +305,7 @@ function cpuShoot(){
   if(Math.random()>skill){const e=(Math.random()<.5?-1:1)*rand(.11,.2);vx*=1+e;vy*=1+e*rand(.5,1)}
   const b={x:h.x,y:h.y,vx,vy,rot:0,bounces:0,t:0,owner:'cpu',pts:c.x<THREE_X?3:2,touched:false,quiet:false};
   b.onScore=scoreCpu;M.balls.push(b);
-  c.hasBall=false;c.pose='shoot';c.poseT=.35;
+  c.hasBall=false;c.pose='shoot';c.poseT=.45;c.shotAng=Math.atan2(vy,vx);c.vy=-300;c.crouch=0;
   setTimeout(()=>{if(!M||state!=='playing')return;c.tx=rand(300,650);c.hasBall=true},650);
 }
 
@@ -317,11 +320,14 @@ function update(dt){
     if(M.timeLeft<=10&&Math.ceil(M.timeLeft)!==Math.ceil(M.timeLeft+dt)&&M.timeLeft>0)sfx.beep(520);
     // adversário
     M.cpuT-=dt;
-    if(M.cpuT<=0&&M.cpu.hasBall&&Math.abs(M.cpu.x-M.cpu.tx)<4){cpuShoot();M.cpuT=rand(...M.rd.every)}
+    if(M.cpuT<=0&&M.cpu.hasBall&&!M.cpu.setT&&Math.abs(M.cpu.x-M.cpu.tx)<4)M.cpu.setT=.45; // prepara o arremesso
+    if(M.cpu.setT>0){M.cpu.setT-=dt;if(M.cpu.setT<=0){M.cpu.setT=0;cpuShoot();M.cpuT=rand(...M.rd.every)}}
     if(M.timeLeft<=0){M.timeLeft=0;endMatch();return}
   }
   // personagens
+  M.me.aiming=aim.on&&M.me.hasBall&&M.count<=0;
   for(const c of [M.me,M.cpu]){
+    c.crouch+=(((c.aiming||c.setT>0)&&c.jump===0?1:0)-c.crouch)*Math.min(1,dt*10);
     c.x+=(c.tx-c.x)*Math.min(1,dt*7);
     c.poseT-=dt;if(c.poseT<=0)c.pose='idle';
     c.happy=Math.max(0,c.happy-dt);c.sad=Math.max(0,c.sad-dt);
@@ -331,7 +337,7 @@ function update(dt){
   // defensor (final)
   const d=M.def;
   if(d){
-    d.x+=(clamp(M.me.x+100,200,640)-d.x)*Math.min(1,dt*5);d.cool-=dt;
+    d.x+=(clamp(M.me.x+DEF_GAP,200,640)-d.x)*Math.min(1,dt*5);d.cool-=dt;
     if(d.vy!==0||d.jump>0){d.vy+=1500*dt;d.jump-=d.vy*dt;if(d.jump<=0){d.jump=0;d.vy=0}}
   }
   // bolas
@@ -340,8 +346,8 @@ function update(dt){
     for(let i=0;i<4;i++){
       stepBall(b,dt/4);
       if(d&&b.owner==='me'&&!b.blocked&&d.jump>8){
-        const hx=d.x-24,hy=FLOOR-d.jump-158;
-        if(Math.hypot(b.x-hx,b.y-hy)<R+16){b.blocked=true;b.vx=-Math.abs(b.vx)*.35;b.vy=Math.abs(b.vy)*.25;sfx.block();M.shake=6;spawnText(hx,hy-30,'TOCO!','#ff5a5a',30)}
+        const hx=d.x-32,hy=FLOOR-d.jump-125;
+        if(Math.hypot(b.x-hx,b.y-hy)<R+12){b.blocked=true;b.vx=-Math.abs(b.vx)*.35;b.vy=Math.abs(b.vy)*.25;sfx.block();M.shake=6;spawnText(hx,hy-30,'TOCO!','#ff5a5a',30)}
       }
     }
     if(b.fire&&Math.random()<.6)M.parts.push({x:b.x,y:b.y,vx:rand(-30,30),vy:rand(-60,-20),g:-50,t:0,life:.4,col:Math.random()<.5?'#ff7a1a':'#ffd23a',sz:rand(3,6)});
@@ -475,67 +481,149 @@ function drawBall(x,y,rot,golden,fire,scale=1){
 }
 
 // jogador fofinho (cabeção)
-function drawChar(c,x,y,flip,holding,sc=1){
-  const tm=c.team,t=time,bob=Math.sin(t*4+(c.cpu?1:0))*1.5,jy=c.jump||0;
+// ---- Jogador estilo desenho animado (contorno, articulações e poses) ----
+const OUT='#1b1830';
+function capLine(pts,w,col){
+  ctx.lineCap='round';ctx.lineJoin='round';
+  for(const [lw,c] of [[w+3.6,OUT],[w,col]]){ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.beginPath();pts.forEach(([px,py],i)=>i?ctx.lineTo(px,py):ctx.moveTo(px,py));ctx.stroke()}
+}
+function fillOut(fill,lw=2.4){ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=OUT;ctx.lineWidth=lw;ctx.lineJoin='round';ctx.stroke()}
+// cinemática inversa: acha o cotovelo/joelho entre o ombro/quadril (s) e a mão/pé (h)
+function ik(sx,sy,hx,hy,a,b,bend){
+  let dx=hx-sx,dy=hy-sy,d=Math.hypot(dx,dy);
+  if(d>a+b-.5){const k=(a+b-.5)/d;dx*=k;dy*=k;hx=sx+dx;hy=sy+dy;d=a+b-.5}
+  const ca=clamp((a*a+d*d-b*b)/(2*a*d),-1,1),an=Math.atan2(dy,dx)+bend*Math.acos(ca);
+  return {ex:sx+Math.cos(an)*a,ey:sy+Math.sin(an)*a,hx,hy};
+}
+// posição da bola segurada (no "set" do arremesso), em coordenadas locais do jogador
+const SET_X=24,SET_Y=-124;
+
+function drawChar(c,x,y,flip,ball,sc=1){
+  const tm=c.team,t=time,jy=c.jump||0,cr=c.crouch||0,air=jy>2;
+  const mode=c.block?'block':ball&&(c.aiming||c.setT>0)?'set':c.pose==='shoot'?'shoot':ball?'dribble':c.happy>0?'happy':c.sad>0?'sad':'idle';
   ctx.save();ctx.translate(x,y);
-  ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.ellipse(0,0,26*sc*(1-jy/400),7*sc,0,0,7);ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.ellipse(0,0,28*sc*(1-Math.min(jy,200)/400),7*sc,0,0,7);ctx.fill();
   ctx.translate(0,-jy);ctx.scale(flip?-sc:sc,sc);
-  const shoot=c.pose==='shoot',happy=c.happy>0,sad=c.sad>0&&!happy;
-  // pernas
-  const step=Math.abs(c.tx-c.x)>3?Math.sin(t*16)*5:0;
-  ctx.fillStyle=c.skin;ctx.fillRect(-11,-30,8,22+step*.4);ctx.fillRect(3,-30,8,22-step*.4);
-  ctx.fillStyle='#fff';ctx.fillRect(-11,-14+step*.4,8,6);ctx.fillRect(3,-14-step*.4,8,6);
-  ctx.fillStyle='#222';rr(-14,-9+step*.4,13,9,4);ctx.fill();rr(1,-9-step*.4,13,9,4);ctx.fill();
-  ctx.fillStyle=tm.main==='#ffffff'?'#e84a2a':'#fff';ctx.fillRect(-12,-5+step*.4,10,2);ctx.fillRect(2,-5-step*.4,10,2);
-  // calção
-  ctx.fillStyle=tm.alt;rr(-15,-46,30,20,5);ctx.fill();
-  ctx.fillStyle='rgba(0,0,0,.15)';ctx.fillRect(-1,-40,2,14);
-  // camisa
-  const jg=ctx.createLinearGradient(-16,0,16,0);jg.addColorStop(0,tm.main);jg.addColorStop(1,shadeHex(tm.main,-.18));
-  ctx.fillStyle=jg;rr(-16,-80,32,38,8);ctx.fill();
-  ctx.fillStyle=tm.alt;ctx.fillRect(-16,-80,32,4);ctx.fillRect(-16,-48,32,3);
-  ctx.fillStyle=tm.num;ctx.font="22px 'Lilita One',Impact,sans-serif";ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(c.num,0,-61);
-  // braços
-  const arm=(sx,ang,len)=>{ctx.strokeStyle=c.skin;ctx.lineWidth=8;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(sx,-74);ctx.lineTo(sx+Math.cos(ang)*len,-74+Math.sin(ang)*len);ctx.stroke()};
-  if(holding){arm(-13,-1.72,56);arm(13,-1.38,56)}
-  else if(shoot){arm(-12,-1.4,44);arm(12,-1.05,44)}
-  else if(happy){arm(-12,-2.2,26);arm(12,-.95,26)}
-  else{const sw=Math.sin(t*4)*.15;arm(-14,Math.PI/2+.35+sw,22);arm(14,Math.PI/2-.35-sw,22)}
-  // cabeça
-  ctx.translate(0,-104+bob*.5);
-  const hg=ctx.createRadialGradient(-6,-8,3,0,0,30);hg.addColorStop(0,shadeHex(c.skin,.12));hg.addColorStop(1,shadeHex(c.skin,-.12));
-  ctx.fillStyle=hg;ctx.beginPath();ctx.arc(0,0,27,0,7);ctx.fill();
-  // cabelo
+  const walk=Math.abs(c.tx-c.x)>3&&!air,st=walk?Math.sin(t*16):0;
+  const bob=(mode==='idle'||mode==='dribble')&&!walk?Math.sin(t*4+(c.cpu?1:0)):0;
+  const hipY=-42+cr*9+bob*.6,skinD=shadeHex(c.skin,-.14);
+  // ---------- pernas ----------
+  const leg=(hx,fx,col,lift)=>{
+    const fy=(air?-8:0)-lift;
+    const k=ik(hx,hipY,fx,fy-9,19,19,-1);
+    capLine([[hx,hipY],[k.ex,k.ey],[k.hx,k.hy]],9,col);
+    const mx=k.hx+(k.ex-k.hx)*.45,my=k.hy+(k.ey-k.hy)*.45;
+    capLine([[k.hx,k.hy],[mx,my]],9.6,'#ffffff');
+    ctx.strokeStyle=tm.main==='#ffffff'?tm.alt:tm.main;ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(mx-4.6,my+2.4);ctx.lineTo(mx+4.6,my+2.4);ctx.stroke();
+    // tênis
+    const ax=k.hx,ay=fy;
+    ctx.beginPath();ctx.moveTo(ax-9,ay);ctx.lineTo(ax+13,ay);ctx.quadraticCurveTo(ax+15,ay-7,ax+6,ay-9);ctx.lineTo(ax-6,ay-11);ctx.quadraticCurveTo(ax-11,ay-6,ax-9,ay);ctx.closePath();
+    fillOut('#2a2a3a');
+    ctx.fillStyle='#f4f4f8';ctx.fillRect(ax-9,ay-3,22,3);
+    ctx.strokeStyle=tm.main==='#ffffff'?'#e84a2a':tm.main;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ax-5,ay-5);ctx.quadraticCurveTo(ax+3,ay-4,ax+9,ay-8);ctx.stroke();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ax,ay-9);ctx.lineTo(ax+3,ay-7.5);ctx.moveTo(ax+2,ay-10);ctx.lineTo(ax+5,ay-8.5);ctx.stroke();
+  };
+  const lift1=walk?Math.max(0,st)*5:0,lift2=walk?Math.max(0,-st)*5:0;
+  leg(-6,-10+st*7+(air?-3:0),skinD,lift1);
+  leg(6,10-st*7+(air?5:0),c.skin,lift2);
+  // ---------- calção ----------
+  const sTop=-49+cr*9+bob*.6,sBot=-27+cr*9+bob*.6;
+  ctx.beginPath();ctx.moveTo(-17,sTop);ctx.lineTo(17,sTop);ctx.lineTo(19.5,sBot);ctx.lineTo(3,sBot);ctx.lineTo(0,sBot-6);ctx.lineTo(-3,sBot);ctx.lineTo(-19.5,sBot);ctx.closePath();
+  const sg=ctx.createLinearGradient(-19,0,19,0);sg.addColorStop(0,shadeHex(tm.alt,-.15));sg.addColorStop(.6,tm.alt);sg.addColorStop(1,shadeHex(tm.alt,-.1));
+  fillOut(sg);
+  ctx.fillStyle=tm.main==='#ffffff'?shadeHex(tm.alt,-.35):tm.main;ctx.fillRect(13,sTop+3,4,sBot-sTop-4);ctx.fillRect(-17,sBot-3,15,2.5);ctx.fillRect(2,sBot-3,16,2.5);
+  // ---------- regata ----------
+  const jTop=-83+cr*8+bob*.8,jBot=-45+cr*9+bob*.6;
+  const jpath=()=>{ctx.beginPath();ctx.moveTo(-6,jTop);ctx.quadraticCurveTo(0,jTop+9,6,jTop);ctx.lineTo(12,jTop);ctx.quadraticCurveTo(13,jTop+13,18,jTop+17);ctx.lineTo(18,jBot);ctx.lineTo(-18,jBot);ctx.lineTo(-18,jTop+17);ctx.quadraticCurveTo(-13,jTop+13,-12,jTop);ctx.closePath()};
+  jpath();const jg=ctx.createLinearGradient(-18,0,18,0);jg.addColorStop(0,shadeHex(tm.main,-.16));jg.addColorStop(.55,tm.main);jg.addColorStop(1,shadeHex(tm.main,-.08));fillOut(jg);
+  ctx.strokeStyle=tm.alt;ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(-5.4,jTop+1.4);ctx.quadraticCurveTo(0,jTop+9,5.4,jTop+1.4);ctx.moveTo(12.6,jTop+1.5);ctx.quadraticCurveTo(13.5,jTop+12.5,17,jTop+16);ctx.moveTo(-12.6,jTop+1.5);ctx.quadraticCurveTo(-13.5,jTop+12.5,-17,jTop+16);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(4,jTop+6,7,jBot-jTop-8);
+  ctx.font="21px 'Lilita One',Impact,sans-serif";ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.lineWidth=3;ctx.strokeStyle=tm.num==='#ffffff'?shadeHex(tm.main,-.45):'rgba(255,255,255,.75)';ctx.strokeText(c.num,0,jTop+23);ctx.fillStyle=tm.num;ctx.fillText(c.num,0,jTop+23);
+  // ---------- braços: alvos das mãos conforme a pose ----------
+  const shY=jTop+7,sB=[-12,shY],sF=[12,shY];
+  let hB,hF,flick=0;
+  const by=-15-28*Math.abs(Math.cos(t*7+(c.cpu?2:0)));
+  if(mode==='set'){hB=[11,-128];hF=[28,-110];}
+  else if(mode==='shoot'){const a=c.shotAng??-1,p=Math.max(0,c.poseT)/.45;hF=[sF[0]+Math.cos(a)*36,sF[1]+Math.sin(a)*36];hB=[sB[0]+Math.cos(a-.35)*32,sB[1]+Math.sin(a-.35)*32];flick=1-p*.4}
+  else if(mode==='dribble'){hF=[27,Math.min(-45,by-16)];hB=[-18,-45+bob]}
+  else if(mode==='happy'||mode==='block'){hB=[-32,-128];hF=[34,-128]}
+  else{const sw=Math.sin(t*4)*2;hB=[-19,-44+sw];hF=[19,-44-sw]}
+  const up=mode==='happy'||mode==='block',AL=up?24:18; // braços para cima ficam mais longos e passam por trás da cabeça
+  const arm=(s,h,col,bend)=>{
+    const k=ik(s[0],s[1],h[0],h[1],AL,AL,bend);
+    capLine([[s[0],s[1]],[k.ex,k.ey],[k.hx,k.hy]],8,col);
+    const wx=k.hx+(k.ex-k.hx)*.22,wy=k.hy+(k.ey-k.hy)*.22;
+    capLine([[wx,wy],[k.hx+(k.ex-k.hx)*.08,k.hy+(k.ey-k.hy)*.08]],9,tm.main==='#ffffff'?tm.alt:tm.main);
+    return k;
+  };
+  const hand=(k,col)=>{ctx.beginPath();ctx.arc(k.hx,k.hy,5.4,0,7);fillOut(col,2.2)};
+  // braço de trás
+  const kB=arm(sB,hB,skinD,mode==='set'||up?1:-1);
+  // bola segurada
+  if(ball){
+    if(mode==='dribble')drawBall(27,by,t*6,ball.golden,ball.fire);
+    else drawBall(SET_X,SET_Y,Math.sin(t*2)*.2,ball.golden,ball.fire);
+  }
+  hand(kB,skinD);
+  let kF=null;
+  if(up){kF=arm(sF,hF,c.skin,-1);hand(kF,c.skin)}
+  // ---------- cabeça ----------
+  ctx.save();ctx.translate(2,-104+cr*7+bob);
+  if(mode==='sad')ctx.rotate(.12);else if(mode==='set')ctx.rotate(-.08);
+  const hs=c.hairStyle%5;
   ctx.fillStyle=c.hair;
-  if(c.hairStyle===0){ctx.beginPath();ctx.arc(0,-4,27,Math.PI*1.05,Math.PI*1.95);ctx.fill()}
-  else if(c.hairStyle===1){for(let i=0;i<7;i++){ctx.beginPath();ctx.arc(-18+i*6,-20+Math.abs(i-3)*2.5,8,0,7);ctx.fill()}}
-  else{ctx.beginPath();ctx.arc(0,-6,27,Math.PI*1.1,Math.PI*1.9);ctx.fill();ctx.beginPath();ctx.moveTo(4,-30);ctx.quadraticCurveTo(18,-38,24,-28);ctx.lineTo(10,-24);ctx.fill()}
-  // faixa de cabeça
-  ctx.fillStyle=tm.main==='#ffffff'?tm.alt:tm.main;ctx.fillRect(-26,-15,52,6);
-  // rosto
-  const ex=6;
-  ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(-8+ex,0,6,7,0,0,7);ctx.ellipse(10+ex,0,6,7,0,0,7);ctx.fill();
-  ctx.fillStyle='#1d1d2a';
-  if(happy){ctx.lineWidth=2.5;ctx.strokeStyle='#1d1d2a';ctx.beginPath();ctx.arc(-8+ex,2,4,Math.PI*1.15,Math.PI*1.85);ctx.arc(10+ex,2,4,Math.PI*1.15,Math.PI*1.85);ctx.stroke()}
-  else{ctx.beginPath();ctx.arc(-6+ex,1,3.6,0,7);ctx.arc(12+ex,1,3.6,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-5+ex,-.5,1.3,0,7);ctx.arc(13+ex,-.5,1.3,0,7);ctx.fill()}
-  ctx.fillStyle='rgba(255,110,110,.35)';ctx.beginPath();ctx.ellipse(-15+ex,10,5,3,0,0,7);ctx.ellipse(19+ex,10,5,3,0,0,7);ctx.fill();
-  ctx.strokeStyle='#5a2a1a';ctx.lineWidth=2.2;ctx.lineCap='round';ctx.beginPath();
-  if(happy){ctx.fillStyle='#7a2a2a';ctx.arc(2+ex,12,6,0,Math.PI);ctx.fill()}
-  else if(sad)ctx.arc(2+ex,17,5,Math.PI*1.2,Math.PI*1.8);
-  else ctx.arc(2+ex,11,4.5,Math.PI*.15,Math.PI*.85);
+  if(hs===1){ctx.beginPath();for(let i=0;i<12;i++){const a=Math.PI*.85+i/11*Math.PI*1.3;ctx.moveTo(Math.cos(a)*24,-6+Math.sin(a)*24);ctx.arc(Math.cos(a)*24,-6+Math.sin(a)*24,10,0,7)}fillOut(c.hair)}
+  if(hs===4){ctx.beginPath();ctx.arc(-14,-26,10,0,7);fillOut(c.hair)}
+  ctx.beginPath();ctx.arc(0,0,27,0,7);
+  const hg=ctx.createRadialGradient(6,-8,3,0,0,30);hg.addColorStop(0,shadeHex(c.skin,.14));hg.addColorStop(1,shadeHex(c.skin,-.12));fillOut(hg,2.6);
+  // orelha
+  ctx.beginPath();ctx.ellipse(-13,3,5,6.5,0,0,7);fillOut(skinD,2);
+  ctx.strokeStyle=shadeHex(c.skin,-.3);ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(-13,3,2.6,-1.2,1.6);ctx.stroke();
+  // cabelo
+  ctx.fillStyle=c.hair;ctx.strokeStyle=OUT;ctx.lineWidth=2.2;
+  if(hs===0){ctx.beginPath();ctx.moveTo(-27,0);ctx.arc(0,0,27.5,Math.PI,Math.PI*1.86);ctx.lineTo(22,-10);ctx.lineTo(14,-12);ctx.lineTo(10,-6);ctx.lineTo(4,-13);ctx.lineTo(-6,-11);ctx.quadraticCurveTo(-18,-8,-20,4);ctx.closePath();ctx.fill();ctx.stroke()}
+  else if(hs===2){ctx.beginPath();ctx.moveTo(-27,2);for(let i=0;i<7;i++){const a=Math.PI*1.02+i/6*Math.PI*.9;ctx.lineTo(Math.cos(a)*27,Math.sin(a)*27);const a2=a+Math.PI*.075;ctx.lineTo(Math.cos(a2)*38,Math.sin(a2)*38-2)}ctx.lineTo(22,-12);ctx.lineTo(8,-10);ctx.quadraticCurveTo(-14,-10,-20,4);ctx.closePath();ctx.fill();ctx.stroke()}
+  else if(hs===3){ctx.globalAlpha=.85;ctx.beginPath();ctx.arc(0,0,27.2,Math.PI*1.04,Math.PI*1.9);ctx.quadraticCurveTo(4,-14,-22,-4);ctx.closePath();ctx.fill();ctx.globalAlpha=1;ctx.stroke()}
+  else if(hs===4){ctx.beginPath();ctx.arc(0,0,27.5,Math.PI,Math.PI*1.88);ctx.quadraticCurveTo(8,-16,-6,-12);ctx.quadraticCurveTo(-18,-8,-21,6);ctx.closePath();ctx.fill();ctx.stroke()}
+  if(c.band){ctx.beginPath();ctx.moveTo(-26,-12);ctx.quadraticCurveTo(0,-20,26,-12);ctx.lineTo(26,-6);ctx.quadraticCurveTo(0,-14,-26,-6);ctx.closePath();fillOut(tm.main==='#ffffff'?tm.alt:tm.main,2)}
+  // olhos (olhando para a cesta)
+  const focus=mode==='set',happy=c.happy>0&&!focus,sad=mode==='sad';
+  for(const [ex,ey] of [[5,0],[18,-1]]){
+    if(happy){ctx.strokeStyle=OUT;ctx.lineWidth=2.6;ctx.lineCap='round';ctx.beginPath();ctx.arc(ex,ey+2,4.2,Math.PI*1.15,Math.PI*1.85);ctx.stroke();continue}
+    ctx.beginPath();ctx.ellipse(ex,ey,5.2,focus?5:6.6,0,0,7);fillOut('#ffffff',1.8);
+    ctx.fillStyle=c.eye;ctx.beginPath();ctx.arc(ex+1.6,ey+.6,3.5,0,7);ctx.fill();
+    ctx.fillStyle='#111';ctx.beginPath();ctx.arc(ex+2,ey+.6,1.8,0,7);ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ex+.6,ey-1.2,1.3,0,7);ctx.arc(ex+3.2,ey+2,.7,0,7);ctx.fill();
+  }
+  // sobrancelhas
+  ctx.strokeStyle=shadeHex(c.hair,-.1);ctx.lineWidth=2.6;ctx.lineCap='round';ctx.beginPath();
+  if(focus){ctx.moveTo(1,-8);ctx.lineTo(9,-6);ctx.moveTo(14,-7.5);ctx.lineTo(22,-9.5)}
+  else if(sad){ctx.moveTo(1,-8);ctx.lineTo(8,-10);ctx.moveTo(15,-11);ctx.lineTo(22,-8)}
+  else{ctx.moveTo(1,-9);ctx.quadraticCurveTo(5,-11,9,-9.5);ctx.moveTo(14,-10.5);ctx.quadraticCurveTo(18,-12,22,-10)}
   ctx.stroke();
+  // nariz, bochechas e boca
+  ctx.strokeStyle=shadeHex(c.skin,-.35);ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(13,7,2.6,-.4,1.9);ctx.stroke();
+  ctx.fillStyle='rgba(255,100,100,.32)';ctx.beginPath();ctx.ellipse(1,11,4.5,2.8,0,0,7);ctx.ellipse(22,10,4,2.6,0,0,7);ctx.fill();
+  ctx.strokeStyle=OUT;ctx.lineWidth=2.2;ctx.lineCap='round';ctx.beginPath();
+  if(happy){ctx.moveTo(6,14);ctx.quadraticCurveTo(12,22,19,13.5);ctx.closePath();ctx.fillStyle='#8a2a2a';ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.fillRect(8,14,9,2.2)}
+  else if(sad){ctx.arc(12,21,4.5,Math.PI*1.2,Math.PI*1.8);ctx.stroke()}
+  else if(focus){ctx.moveTo(9,16);ctx.lineTo(15,15.5);ctx.stroke()}
+  else{ctx.arc(12,12,4.5,Math.PI*.18,Math.PI*.82);ctx.stroke()}
+  ctx.restore();
+  // braço da frente (por cima de tudo)
+  if(!up)kF=arm(sF,hF,c.skin,mode==='set'?1:-1);
+  if(up){} // braço levantado já foi desenhado atrás da cabeça
+  else if(flick>0){ // pulso dobrado no final do arremesso
+    const a=(c.shotAng??-1)+1.3*flick;ctx.save();ctx.translate(kF.hx,kF.hy);ctx.rotate(a);
+    ctx.beginPath();ctx.ellipse(4,0,6.5,4.6,0,0,7);fillOut(c.skin,2.2);ctx.restore();
+  }else hand(kF,c.skin);
   ctx.restore();
 }
 function shadeHex(hex,f){const n=parseInt(hex.slice(1),16),m=f<0?0:255,a=Math.abs(f),c=v=>Math.round(v+(m-v)*a);return `rgb(${c(n>>16)},${c(n>>8&255)},${c(n&255)})`}
 
 function drawDefender(d){
-  const c={team:d.team,skin:d.skin,hair:d.hair,hairStyle:1,num:23,pose:'idle',happy:0,sad:0,tx:d.x,x:d.x,jump:d.jump,cpu:true};
-  // braços levantados (atrás da cabeça), mãos por cima
-  const hy=FLOOR-d.jump-158,sy=FLOOR-d.jump-84;
-  ctx.strokeStyle=d.skin;ctx.lineWidth=9;ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(d.x-14,sy);ctx.lineTo(d.x-24,hy);ctx.moveTo(d.x+14,sy);ctx.lineTo(d.x+22,hy+6);ctx.stroke();
-  drawChar(c,d.x,FLOOR,true,false,1.05);
-  ctx.fillStyle=d.skin;ctx.beginPath();ctx.arc(d.x-24,hy,7.5,0,7);ctx.arc(d.x+22,hy+6,7.5,0,7);ctx.fill();
+  drawChar({team:d.team,skin:d.skin,hair:d.hair,hairStyle:1,eye:'#4a2a12',num:23,pose:'idle',happy:0,sad:0,tx:d.x,x:d.x,jump:d.jump,cpu:true,block:true,band:true},d.x,FLOOR,true,null,1.05);
 }
 
 function drawFlag(id,x,y,w,h){const im=flagImg[id];ctx.save();rr(x,y,w,h,4);ctx.clip();if(im.complete)ctx.drawImage(im,x,y,w,h);ctx.restore();ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=1;rr(x,y,w,h,4);ctx.stroke()}
@@ -590,13 +678,13 @@ function assist(v){
   return {vx:v.vx+(pv.vx-v.vx)*t,vy:v.vy+(pv.vy-v.vy)*t};
 }
 function drawAim(){
-  const me=M.me;if(!aim.on||!me.hasBall||M.count>0)return;
+  const me=M.me;if(!aim.on||!me.hasBall||M.count>0){M.lastGood=false;return}
   const p=Math.min(1,Math.hypot(aim.x-aim.sx,aim.y-aim.sy)/PULL_MAX);
-  if(p<.06)return;
+  if(p<.06){M.lastGood=false;return}
   const v=assist(aimVel()),h=handPos(me),pr=predictShot(h.x,h.y,v.vx,v.vy);
   const good=pr.scored,col=good?'#3dff4a':'#ffd84a',sh=good?'rgba(0,70,0,.4)':'rgba(90,60,0,.4)';
   // anel pulsando na bola
-  ctx.strokeStyle=col;ctx.globalAlpha=.85;ctx.lineWidth=3;ctx.beginPath();ctx.arc(h.x,h.y+6,R+6+Math.sin(time*10)*1.5,0,7);ctx.stroke();ctx.globalAlpha=1;
+  ctx.strokeStyle=col;ctx.globalAlpha=.85;ctx.lineWidth=3;ctx.beginPath();ctx.arc(h.x,h.y,R+6+Math.sin(time*10)*1.5,0,7);ctx.stroke();ctx.globalAlpha=1;
   // trilha: mostra ~65% do caminho, verde se vai entrar, amarela se não
   const pts=pr.pts,show=Math.max(5,Math.min(pts.length,Math.round(pts.length*.65)));
   for(let i=0;i<show-1;i++){
@@ -614,7 +702,9 @@ function drawAim(){
     ctx.beginPath();ctx.moveTo(s,0);ctx.lineTo(-s*.6,-s*.78);ctx.lineTo(-s*.6,s*.78);ctx.closePath();ctx.fill();ctx.stroke();
     ctx.restore();
   }
-  // aro acende em verde quando a bola vai entrar
+  // aro acende em verde quando a bola vai entrar (com um "tic" e vibração ao acertar a mira)
+  if(good&&!M.lastGood){sfx.tick();try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}}
+  M.lastGood=good;
   if(good){
     const ry=RIM_Y+hoopY();
     ctx.save();ctx.shadowColor='#3dff4a';ctx.shadowBlur=14;ctx.strokeStyle='rgba(61,255,74,.95)';ctx.lineWidth=5;
@@ -633,11 +723,9 @@ function render(){
   if(M){
     drawHoop(false);
     for(const b of M.balls)if(b.owner==='cpu')drawBall(b.x,b.y,b.rot,false,false,.94);
-    drawChar(M.cpu,M.cpu.x,FLOOR-10,false,M.cpu.hasBall,.92);
-    if(M.cpu.hasBall){const h=handPos(M.cpu);drawBall(h.x,h.y+4,0,false,false,.92)}
+    drawChar(M.cpu,M.cpu.x,FLOOR-10,false,M.cpu.hasBall?{}:null,.92);
     if(M.def)drawDefender(M.def);
-    drawChar(M.me,M.me.x,FLOOR+6,false,M.me.hasBall);
-    if(M.me.hasBall){const h=handPos(M.me);drawBall(h.x,h.y+6,Math.sin(time*2)*.2,M.golden,M.fire)}
+    drawChar(M.me,M.me.x,FLOOR+6,false,M.me.hasBall?{golden:M.golden,fire:M.fire}:null);
     for(const b of M.balls)if(b.owner==='me')drawBall(b.x,b.y,b.rot,b.golden,b.fire);
     drawHoop(true);
     for(const p of M.parts){ctx.globalAlpha=1-p.t/p.life;ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,7);ctx.fill()}
@@ -645,9 +733,9 @@ function render(){
   }else{
     drawHoop(false);drawHoop(true);
     // personagens de enfeite no menu
-    const demo=[{team:TEAMS[0],skin:SKINS[1],hair:HAIRS[0],hairStyle:1,num:10,pose:'idle',happy:Math.sin(time*2)>.6?1:0,sad:0,tx:300,x:300,jump:Math.max(0,Math.sin(time*2))*30,cpu:false},
-                {team:TEAMS[3],skin:SKINS[3],hair:HAIRS[2],hairStyle:0,num:7,pose:'idle',happy:0,sad:0,tx:620,x:620,jump:0,cpu:true}];
-    drawChar(demo[0],300,FLOOR,false,false);drawChar(demo[1],620,FLOOR-8,true,false,.92);
+    const demo=[{team:TEAMS[0],skin:SKINS[1],hair:HAIRS[0],hairStyle:1,eye:'#5a3a1a',band:true,num:10,pose:'idle',happy:Math.sin(time*2)>.6?1:0,sad:0,tx:300,x:300,jump:Math.max(0,Math.sin(time*2))*30,cpu:false},
+                {team:TEAMS[3],skin:SKINS[3],hair:HAIRS[2],hairStyle:2,eye:'#3a8a3a',band:false,num:7,pose:'idle',happy:0,sad:0,tx:620,x:620,jump:0,cpu:true}];
+    drawChar(demo[0],300,FLOOR,false,null);drawChar(demo[1],620,FLOOR-8,true,{},.92);
   }
   ctx.restore();
   if(night){
