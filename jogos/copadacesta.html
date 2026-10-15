@@ -155,7 +155,7 @@ const ROUNDS=[
   {name:'SEMIFINAL',short:'Semi',twist:'move',desc:'↕️ Surpresa: CESTA MÓVEL! A cesta fica subindo e descendo.',skill:.51,every:[2.3,3.2]},
   {name:'GRANDE FINAL',short:'Final',twist:'defender',desc:'🌙 Surpresa: JOGO À NOITE com DEFENSOR! Ele pula para dar toco — arremesse bem alto.',skill:.58,every:[2.15,3]}
 ];
-const MATCH_TIME=45,OT_TIME=15,DEF_GAP=135; // distância do defensor até o arremessador
+const MATCH_TIME=45,OT_TIME=15,DEF_GAP=100; // distância do defensor até o arremessador
 const SAVE_KEY='copaCesta.v1';
 let save={titles:{},muted:false};
 try{const d=JSON.parse(localStorage.getItem(SAVE_KEY));if(d)save=Object.assign(save,d)}catch(e){}
@@ -233,8 +233,8 @@ function stepBall(b,dt){
   if(b.y>FLOOR-R){b.y=FLOOR-R;if(b.vy>90&&!b.quiet)sfx.bounce();b.vy*=-.58;b.vx*=.8;b.bounces++}
 }
 // velocidade para acertar o centro do aro (usada pelo adversário)
-function perfectShot(x,y){
-  const dx=RIM_CX-x,T=.82+dx/980,ty=RIM_Y+hoopYAt(T)-3,dy=ty-y;
+function perfectShot(x,y,delay=0){
+  const dx=RIM_CX-x,T=.82+dx/980,ty=RIM_Y+hoopYAt(T+delay)-3,dy=ty-y;
   return {vx:(dx-.5*wind*T*T)/T,vy:(dy-.5*G*T*T)/T};
 }
 
@@ -270,16 +270,31 @@ function spawnText(x,y,txt,col,size=26,life=1){M.texts.push({x,y,txt,col,size,t:
 function burst(x,y,cols,n=18,sp=220){for(let i=0;i<n;i++){const a=rand(0,Math.PI*2),v=rand(sp*.3,sp);M.parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-80,g:500,t:0,life:rand(.5,1),col:cols[i%cols.length],sz:rand(3,6)})}}
 
 // centro da bola no "set" do arremesso (acima da testa)
+// ponto onde a bola sai da mão, no alto do salto
+function releasePos(c){const h=handPos(c),k=c.cpu?.92:1;return {x:h.x+REL_DX*k,y:h.y+REL_DY*k-JUMP_H}}
 function handPos(c){const k=c.cpu?.92:1;return {x:c.x+SET_X*k,y:(c.cpu?FLOOR-10:FLOOR+6)-c.jump+SET_Y*k}}
 function playerShoot(vx,vy){
-  const me=M.me;if(!me.hasBall||M.count>0||M.timeLeft<=0||M.zoom>1.03)return;
-  const h=handPos(me),three=me.x<THREE_X;
-  const b={x:h.x,y:h.y,vx,vy,rot:0,bounces:0,t:0,trail:[],owner:'me',pts:three?3:2,golden:M.golden,fire:M.fire,touched:false};
-  b.onScore=scoreMe;M.balls.push(b);
-  me.hasBall=false;me.pose='shoot';me.poseT=.45;me.shotAng=Math.atan2(vy,vx);me.vy=-330;me.crouch=0;M.shots++;M.golden=false;sfx.shoot();
-  if(M.def&&M.def.cool<=0&&Math.random()<.5){M.def.vy=-600;M.def.cool=.9}
-  setTimeout(()=>{if(!M||state!=='playing')return;me.tx=rand(110,520);if(Math.abs(me.tx-me.x)<60)me.tx=clamp(me.x+(Math.random()<.5?-1:1)*120,110,520);
-    me.hasBall=true;if(Math.random()<.16&&!M.fire){M.golden=true}},520);
+  const me=M.me;if(!me.hasBall||me.shotPending||M.count>0||M.timeLeft<=0||M.zoom>1.03)return;
+  const r=releasePos(me);
+  me.shotPending={x:r.x,y:r.y,vx,vy,t:0,pts:me.x<THREE_X?3:2,golden:M.golden,fire:M.fire};
+  me.vy=-JUMP_V;me.crouch=0;M.shots++;M.golden=false;
+  if(M.def&&M.def.cool<=0&&Math.random()<.28){M.def.delay=.001;M.def.cool=.9}
+}
+// a bola sai da mão no alto do salto
+function launch(c){
+  const sp=c.shotPending;c.shotPending=null;
+  const me=!c.cpu,b={x:sp.x,y:sp.y,vx:sp.vx,vy:sp.vy,rot:0,bounces:0,t:0,trail:[],owner:me?'me':'cpu',pts:sp.pts,golden:!!sp.golden,fire:!!sp.fire,touched:false};
+  b.onScore=me?scoreMe:scoreCpu;M.balls.push(b);
+  // compensa o atraso do quadro: a bola já devia ter saído há "sobra" segundos
+  let extra=Math.min(.05,sp.t-RISE_T),ph=hoopPhase;if(M.twist==='move')hoopPhase-=1.25*extra;
+  while(extra>1e-6){const st=Math.min(1/240,extra);stepBall(b,st);if(M.twist==='move')hoopPhase+=1.25*st;extra-=st}
+  hoopPhase=ph;
+  c.hasBall=false;c.pose='shoot';c.poseT=.45;c.shotAng=Math.atan2(sp.vy,sp.vx);
+  sfx.shoot();
+  setTimeout(()=>{if(!M||state!=='playing')return;
+    if(me){c.tx=rand(110,520);if(Math.abs(c.tx-c.x)<60)c.tx=clamp(c.x+(Math.random()<.5?-1:1)*120,110,520);if(Math.random()<.16&&!M.fire)M.golden=true}
+    else c.tx=rand(300,650);
+    c.hasBall=true},me?380:500);
 }
 function scoreMe(b){
   let pts=b.pts;const mult=(b.golden?2:1)*(b.fire?2:1);pts*=mult;
@@ -313,14 +328,12 @@ function missMe(){
   M.me.sad=.5;
 }
 function cpuShoot(){
-  const c=M.cpu,h=handPos(c);
-  let {vx,vy}=perfectShot(h.x,h.y);
+  const c=M.cpu,r=releasePos(c);
+  let {vx,vy}=perfectShot(r.x,r.y,RISE_T);
   const skill=M.rd.skill*(c.x<THREE_X?.85:1);
   if(Math.random()>skill){const e=(Math.random()<.5?-1:1)*rand(.11,.2);vx*=1+e;vy*=1+e*rand(.5,1)}
-  const b={x:h.x,y:h.y,vx,vy,rot:0,bounces:0,t:0,trail:[],owner:'cpu',pts:c.x<THREE_X?3:2,touched:false,quiet:false};
-  b.onScore=scoreCpu;M.balls.push(b);
-  c.hasBall=false;c.pose='shoot';c.poseT=.45;c.shotAng=Math.atan2(vy,vx);c.vy=-300;c.crouch=0;
-  setTimeout(()=>{if(!M||state!=='playing')return;c.tx=rand(300,650);c.hasBall=true},650);
+  c.shotPending={x:r.x,y:r.y,vx,vy,t:0,pts:c.x<THREE_X?3:2};
+  c.vy=-JUMP_V;c.crouch=0;
 }
 
 function update(dt){
@@ -334,18 +347,18 @@ function update(dt){
     if(M.timeLeft<=10&&Math.ceil(M.timeLeft)!==Math.ceil(M.timeLeft+dt)&&M.timeLeft>0)sfx.beep(520);
     // adversário
     M.cpuT-=dt;
-    if(M.cpuT<=0&&M.timeLeft>0&&M.cpu.hasBall&&!M.cpu.setT&&Math.abs(M.cpu.x-M.cpu.tx)<4)M.cpu.setT=.45; // prepara o arremesso
+    if(M.cpuT<=0&&M.timeLeft>0&&M.cpu.hasBall&&!M.cpu.setT&&!M.cpu.shotPending&&Math.abs(M.cpu.x-M.cpu.tx)<4)M.cpu.setT=.45; // prepara o arremesso
     if(M.cpu.setT>0){M.cpu.setT-=dt;if(M.cpu.setT<=0){M.cpu.setT=0;if(M.timeLeft>0){cpuShoot();M.cpuT=rand(...M.rd.every)}}}
     if(M.timeLeft<=0){
       M.timeLeft=0;
-      const flying=M.balls.some(b=>!b.scored&&!b.blocked&&b.bounces===0);
+      const flying=M.balls.some(b=>!b.scored&&!b.blocked&&b.bounces===0)||M.me.shotPending||M.cpu.shotPending;
       if(!M.buzz){M.buzz=true;M.buzzT=0;M.buzzed=true;sfx.buzzer();if(flying)spawnText(W/2,200,'A BOLA ESTÁ NO AR…','#ffd35a',30,1.3)}
       M.buzzT+=dt;
       if(!flying||M.buzzT>3){M.buzz=false;endMatch();return}
     }
   }
   // personagens
-  M.me.aiming=aim.on&&M.me.hasBall&&M.count<=0;
+  M.me.aiming=aim.on&&M.me.hasBall&&!M.me.shotPending&&M.count<=0;
   for(const c of [M.me,M.cpu]){
     c.crouch+=(((c.aiming||c.setT>0)&&c.jump===0?1:0)-c.crouch)*Math.min(1,dt*10);
     c.x+=(c.tx-c.x)*Math.min(1,dt*7);
@@ -354,9 +367,11 @@ function update(dt){
     if(c.happy>.5&&c.jump===0)c.vy=-260;
     if(c.vy!==0||c.jump>0){const up=c.jump>0;c.vy+=1400*dt;c.jump-=c.vy*dt;if(c.jump<=0){if(up&&c.vy>250)dust(c);c.jump=0;c.vy=0}}
   }
+  for(const c of [M.me,M.cpu])if(c.shotPending){c.shotPending.t+=dt;if(c.shotPending.t>=RISE_T)launch(c)}
   // defensor (final)
   const d=M.def;
   if(d){
+    if(d.delay>0){d.delay-=dt;if(d.delay<=0){d.delay=0;d.vy=-700}}
     d.x+=(clamp(M.me.x+DEF_GAP,200,640)-d.x)*Math.min(1,dt*5);d.cool-=dt;
     if(d.vy!==0||d.jump>0){d.vy+=1500*dt;d.jump-=d.vy*dt;if(d.jump<=0){d.jump=0;d.vy=0}}
   }
@@ -366,7 +381,7 @@ function update(dt){
     for(let i=0;i<4;i++){
       stepBall(b,dt/4);
       if(d&&b.owner==='me'&&!b.blocked&&d.jump>8){
-        const hx=d.x-32,hy=FLOOR-d.jump-125;
+        const hx=d.x-35,hy=FLOOR-d.jump-122;
         if(Math.hypot(b.x-hx,b.y-hy)<R+12){b.blocked=true;b.vx=-Math.abs(b.vx)*.35;b.vy=Math.abs(b.vy)*.25;sfx.block();M.shake=6;spawnText(hx,hy-30,'TOCO!','#ff5a5a',30)}
       }
     }
@@ -539,6 +554,25 @@ function capLine(pts,w,col){
   for(const [lw,c] of [[w+3.6,OUT],[w,col]]){ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.beginPath();pts.forEach(([px,py],i)=>i?ctx.lineTo(px,py):ctx.moveTo(px,py));ctx.stroke()}
 }
 function fillOut(fill,lw=2.4){ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=OUT;ctx.lineWidth=lw;ctx.lineJoin='round';ctx.stroke()}
+// membro com largura variável (ombro, bíceps, cotovelo, antebraço, pulso), com contorno
+function limbShape(pts,ws,col){
+  for(const pass of [0,1]){
+    const add=pass?0:3.4;ctx.fillStyle=pass?col:OUT;
+    for(let i=0;i<pts.length-1;i++){
+      const [x1,y1]=pts[i],[x2,y2]=pts[i+1],a=Math.atan2(y2-y1,x2-x1),nx=-Math.sin(a),ny=Math.cos(a),w1=(ws[i]+add)/2,w2=(ws[i+1]+add)/2;
+      ctx.beginPath();ctx.moveTo(x1+nx*w1,y1+ny*w1);ctx.lineTo(x2+nx*w2,y2+ny*w2);ctx.lineTo(x2-nx*w2,y2-ny*w2);ctx.lineTo(x1-nx*w1,y1-ny*w1);ctx.closePath();ctx.fill();
+    }
+    for(let i=0;i<pts.length;i++){ctx.beginPath();ctx.arc(pts[i][0],pts[i][1],(ws[i]+add)/2,0,7);ctx.fill()}
+  }
+}
+// mão com polegar e dedos, alinhada com o antebraço
+function drawHand(x,y,ang,col){
+  ctx.save();ctx.translate(x,y);ctx.rotate(ang);
+  ctx.beginPath();ctx.ellipse(3.8,0,6.2,5.2,0,0,7);fillOut(col,2);
+  ctx.beginPath();ctx.ellipse(1.6,-4.8,2.9,2.1,-.6,0,7);fillOut(col,1.7);
+  ctx.strokeStyle='rgba(0,0,0,.3)';ctx.lineWidth=1;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(6.6,-1.8);ctx.lineTo(9.4,-1.8);ctx.moveTo(6.6,1.4);ctx.lineTo(9.4,1.4);ctx.stroke();
+  ctx.restore();
+}
 // cinemática inversa: acha o cotovelo/joelho entre o ombro/quadril (s) e a mão/pé (h)
 function ik(sx,sy,hx,hy,a,b,bend){
   let dx=hx-sx,dy=hy-sy,d=Math.hypot(dx,dy);
@@ -548,16 +582,45 @@ function ik(sx,sy,hx,hy,a,b,bend){
 }
 // posição da bola segurada (no "set" do arremesso), em coordenadas locais do jogador
 const SET_X=24,SET_Y=-124;
+// arremesso com salto: o jogador sobe com a bola e solta no alto
+const RISE_T=.17,JUMP_V=330,REL_DX=6,REL_DY=-18,JUMP_H=JUMP_V*RISE_T-700*RISE_T*RISE_T;
 
 function drawChar(c,x,y,flip,ball,sc=1){
   const tm=c.team,t=time,jy=c.jump||0,cr=c.crouch||0,air=jy>2;
-  const mode=c.block?'block':ball&&(c.aiming||c.setT>0)?'set':c.pose==='shoot'?'shoot':ball?'dribble':c.happy>0?'happy':c.sad>0?'sad':'idle';
+  const mode=c.block?'block':c.shotPending?'rise':ball&&(c.aiming||c.setT>0)?'set':c.pose==='shoot'?'shoot':ball?'dribble':c.happy>0?'happy':c.sad>0?'sad':'idle';
   ctx.save();ctx.translate(x,y);
   ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.ellipse(0,0,28*sc*(1-Math.min(jy,200)/400),7*sc,0,0,7);ctx.fill();
   ctx.translate(0,-jy);ctx.scale(flip?-sc:sc,sc);
   const walk=Math.abs(c.tx-c.x)>3&&!air,st=walk?Math.sin(t*16):0;
   const bob=(mode==='idle'||mode==='dribble')&&!walk?Math.sin(t*4+(c.cpu?1:0)):0;
   const hipY=-42+cr*9+bob*.6,skinD=shadeHex(c.skin,-.14);
+  // ---------- braços: alvos das mãos conforme a pose ----------
+  const shY=-76+cr*8+bob*.8,sB=[-12,shY],sF=[12,shY];
+  const sp=c.shotPending,rp=sp?clamp(sp.t/RISE_T,0,1):0;
+  const ballL=[SET_X+REL_DX*rp,SET_Y+REL_DY*rp];
+  const du=Math.abs(Math.cos(t*7+(c.cpu?2:0))),by=-14-13*du; // quique baixo, a bola sobe até a mão
+  // braço direito (da frente) reto: a mão fica na ponta do braço esticado
+  const straight=(a,len)=>[sF[0]+Math.cos(a)*(len+3),sF[1]+Math.sin(a)*(len+3)];
+  let hB,hF,flick=0;
+  if(mode==='set'||mode==='rise'){hF=[ballL[0]+3,ballL[1]+13];hB=[ballL[0]-13,ballL[1]-3]}
+  else if(mode==='shoot'){const a=c.shotAng??-1,p=Math.max(0,c.poseT)/.45;hF=[sF[0]+Math.cos(a)*40,sF[1]+Math.sin(a)*40];hB=[14,-122];flick=1.25*(1-p*.5)}
+  else if(mode==='dribble'){hF=straight(Math.PI/2-.55+.1*(1-du),36);hB=[-19,-46+bob]}
+  else if(mode==='happy'||mode==='block'){hB=[-32,-128];hF=straight(-1.07,45)}
+  else{const sw=Math.sin(t*4)*.05;hB=[-19,-45+sw*40];hF=straight(Math.PI/2-.22-sw,36)}
+  const up=mode==='happy'||mode==='block',shooting=mode==='set'||mode==='rise'||mode==='shoot';
+  const UL=up?23:shooting?(mode==='set'?21.5:25):18.5,FL=up?22:shooting?(mode==='set'?20.5:24):17.5,band=tm.main==='#ffffff'?tm.alt:tm.main;
+  const lerp=(a,b,u)=>[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u];
+  const arm=(s0,h,col,bend,back)=>{
+    const k=ik(s0[0],s0[1],h[0],h[1],UL,FL,bend),E=[k.ex,k.ey],Hh=[k.hx,k.hy];
+    limbShape([s0,lerp(s0,E,.45),E,lerp(E,Hh,.5),Hh],[10.5,10,7.6,7.2,6.2],col);
+    if(!back){const a=Math.atan2(E[1]-s0[1],E[0]-s0[0]),nx=-Math.sin(a)*2.3,ny=Math.cos(a)*2.3,m1=lerp(s0,E,.15),m2=lerp(s0,E,.7);
+      ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(m1[0]-nx,m1[1]-ny);ctx.lineTo(m2[0]-nx,m2[1]-ny);ctx.stroke()}
+    limbShape([lerp(E,Hh,.7),lerp(E,Hh,.9)],[8.2,8.2],band);
+    return {hx:k.hx,hy:k.hy,fa:Math.atan2(k.hy-k.ey,k.hx-k.ex)};
+  };
+  // braço de trás (atrás do corpo)
+  const kB=arm(sB,hB,skinD,up||mode==='set'||mode==='rise'||mode==='shoot'?-1:1,true);
+  drawHand(kB.hx,kB.hy,kB.fa,skinD);
   // ---------- pernas ----------
   const leg=(hx,fx,col,lift)=>{
     const fy=(air?-8:0)-lift;
@@ -591,34 +654,8 @@ function drawChar(c,x,y,flip,ball,sc=1){
   ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(4,jTop+6,7,jBot-jTop-8);
   ctx.font="21px 'Lilita One',Impact,sans-serif";ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.lineWidth=3;ctx.strokeStyle=tm.num==='#ffffff'?shadeHex(tm.main,-.45):'rgba(255,255,255,.75)';ctx.strokeText(c.num,0,jTop+23);ctx.fillStyle=tm.num;ctx.fillText(c.num,0,jTop+23);
-  // ---------- braços: alvos das mãos conforme a pose ----------
-  const shY=jTop+7,sB=[-12,shY],sF=[12,shY];
-  let hB,hF,flick=0;
-  const by=-15-28*Math.abs(Math.cos(t*7+(c.cpu?2:0)));
-  if(mode==='set'){hB=[11,-128];hF=[28,-110];}
-  else if(mode==='shoot'){const a=c.shotAng??-1,p=Math.max(0,c.poseT)/.45;hF=[sF[0]+Math.cos(a)*36,sF[1]+Math.sin(a)*36];hB=[sB[0]+Math.cos(a-.35)*32,sB[1]+Math.sin(a-.35)*32];flick=1-p*.4}
-  else if(mode==='dribble'){hF=[27,Math.min(-45,by-16)];hB=[-18,-45+bob]}
-  else if(mode==='happy'||mode==='block'){hB=[-32,-128];hF=[34,-128]}
-  else{const sw=Math.sin(t*4)*2;hB=[-19,-44+sw];hF=[19,-44-sw]}
-  const up=mode==='happy'||mode==='block',AL=up?24:18; // braços para cima ficam mais longos e passam por trás da cabeça
-  const arm=(s,h,col,bend)=>{
-    const k=ik(s[0],s[1],h[0],h[1],AL,AL,bend);
-    capLine([[s[0],s[1]],[k.ex,k.ey],[k.hx,k.hy]],8,col);
-    const wx=k.hx+(k.ex-k.hx)*.22,wy=k.hy+(k.ey-k.hy)*.22;
-    capLine([[wx,wy],[k.hx+(k.ex-k.hx)*.08,k.hy+(k.ey-k.hy)*.08]],9,tm.main==='#ffffff'?tm.alt:tm.main);
-    return k;
-  };
-  const hand=(k,col)=>{ctx.beginPath();ctx.arc(k.hx,k.hy,5.4,0,7);fillOut(col,2.2)};
-  // braço de trás
-  const kB=arm(sB,hB,skinD,mode==='set'||up?1:-1);
-  // bola segurada
-  if(ball){
-    if(mode==='dribble')drawBall(27,by,t*6,ball.golden,ball.fire);
-    else drawBall(SET_X,SET_Y,Math.sin(t*2)*.2,ball.golden,ball.fire);
-  }
-  hand(kB,skinD);
-  let kF=null;
-  if(up){kF=arm(sF,hF,c.skin,-1);hand(kF,c.skin)}
+  // braço da frente levantado passa por trás da cabeça
+  if(up){const k=arm(sF,hF,c.skin,1,false);drawHand(k.hx,k.hy,k.fa,c.skin)}
   // ---------- cabeça ----------
   ctx.save();ctx.translate(2,-104+cr*7+bob);
   if(mode==='sad')ctx.rotate(.12);else if(mode==='set')ctx.rotate(-.08);
@@ -662,13 +699,13 @@ function drawChar(c,x,y,flip,ball,sc=1){
   else if(focus){ctx.moveTo(9,16);ctx.lineTo(15,15.5);ctx.stroke()}
   else{ctx.arc(12,12,4.5,Math.PI*.18,Math.PI*.82);ctx.stroke()}
   ctx.restore();
-  // braço da frente (por cima de tudo)
-  if(!up)kF=arm(sF,hF,c.skin,mode==='set'?1:-1);
-  if(up){} // braço levantado já foi desenhado atrás da cabeça
-  else if(flick>0){ // pulso dobrado no final do arremesso
-    const a=(c.shotAng??-1)+1.3*flick;ctx.save();ctx.translate(kF.hx,kF.hy);ctx.rotate(a);
-    ctx.beginPath();ctx.ellipse(4,0,6.5,4.6,0,0,7);fillOut(c.skin,2.2);ctx.restore();
-  }else hand(kF,c.skin);
+  // bola segurada (na frente do rosto) e braço de arremesso por cima
+  if(ball){
+    if(mode==='dribble')drawBall(31,by,t*6,ball.golden,ball.fire);
+    else if(mode==='set'||mode==='rise'||c.aiming||c.setT>0)drawBall(ballL[0],ballL[1],Math.sin(t*2)*.2,ball.golden,ball.fire);
+    else drawBall(31,by,t*6,ball.golden,ball.fire);
+  }
+  if(!up){const k=arm(sF,hF,c.skin,1,false);drawHand(k.hx,k.hy,k.fa+flick,c.skin)}
   ctx.restore();
 }
 function shadeHex(hex,f){const n=parseInt(hex.slice(1),16),m=f<0?0:255,a=Math.abs(f),c=v=>Math.round(v+(m-v)*a);return `rgb(${c(n>>16)},${c(n>>8&255)},${c(n&255)})`}
@@ -710,11 +747,12 @@ function drawHud(){
 }
 
 // Simula o arremesso sem efeitos (para a mira): devolve o caminho e se a bola vai entrar
-function predictShot(x,y,vx,vy){
-  const b={x,y,vx,vy,rot:0,bounces:0,quiet:true,scored:false},pts=[],ph0=hoopPhase,st=1/120;
-  for(let i=0;i<220&&b.bounces<1&&b.x<W+40;i++){
+function predictShot(x,y,vx,vy,delay=0){
+  const b={x,y,vx,vy,rot:0,bounces:0,quiet:true,scored:false},pts=[],ph0=hoopPhase,st=1/240;
+  if(M.twist==='move')hoopPhase+=1.25*delay;
+  for(let i=0;i<440&&b.bounces<1&&b.x<W+40;i++){
     stepBall(b,st);if(M.twist==='move')hoopPhase+=1.25*st;
-    if(i%4===3)pts.push([b.x,b.y,b.vx,b.vy]);
+    if(i%8===7)pts.push([b.x,b.y,b.vx,b.vy]);
     if(b.scored)break;
   }
   hoopPhase=ph0;
@@ -722,7 +760,7 @@ function predictShot(x,y,vx,vy){
 }
 // Ajuda de mira: arremessos que passam perto do ideal são puxados para ele
 function assist(v){
-  const h=handPos(M.me),pv=perfectShot(h.x,h.y);
+  const h=releasePos(M.me),pv=perfectShot(h.x,h.y,RISE_T);
   const d=Math.hypot(v.vx-pv.vx,v.vy-pv.vy)/Math.hypot(pv.vx,pv.vy);
   if(d>=ASSIST)return v;
   const t=1-d/ASSIST;
@@ -732,7 +770,7 @@ function drawAim(){
   const me=M.me;if(!aim.on||!me.hasBall||M.count>0){M.lastGood=false;return}
   const p=Math.min(1,Math.hypot(aim.x-aim.sx,aim.y-aim.sy)/PULL_MAX);
   if(p<.06){M.lastGood=false;return}
-  const v=assist(aimVel()),h=handPos(me),pr=predictShot(h.x,h.y,v.vx,v.vy);
+  const v=assist(aimVel()),h=handPos(me),r0=releasePos(me),pr=predictShot(r0.x,r0.y,v.vx,v.vy,RISE_T);
   const good=pr.scored,col=good?'#3dff4a':'#ffd84a',sh=good?'rgba(0,70,0,.4)':'rgba(90,60,0,.4)';
   // anel pulsando na bola
   ctx.strokeStyle=col;ctx.globalAlpha=.85;ctx.lineWidth=3;ctx.beginPath();ctx.arc(h.x,h.y,R+6+Math.sin(time*10)*1.5,0,7);ctx.stroke();ctx.globalAlpha=1;
@@ -780,7 +818,7 @@ function render(){
     for(const b of M.balls)if(b.owner==='cpu'){trail(b);drawBall(b.x,b.y,b.rot,false,false,.94)}
     drawChar(M.cpu,M.cpu.x,FLOOR-10,false,M.cpu.hasBall?{}:null,.92);
     if(M.def)drawDefender(M.def);
-    drawChar(M.me,M.me.x,FLOOR+6,false,M.me.hasBall?{golden:M.golden,fire:M.fire}:null);
+    drawChar(M.me,M.me.x,FLOOR+6,false,M.me.hasBall?(M.me.shotPending?{golden:M.me.shotPending.golden,fire:M.me.shotPending.fire}:{golden:M.golden,fire:M.fire}):null);
     for(const b of M.balls)if(b.owner==='me'){trail(b);drawBall(b.x,b.y,b.rot,b.golden,b.fire)}
     drawHoop(true);
     for(const r of M.fx.rings){const k=r.t/.5,rx=18+k*150;ctx.strokeStyle=r.col;ctx.globalAlpha=1-k;ctx.lineWidth=5*(1-k)+1;ctx.beginPath();ctx.ellipse(r.x,r.y,rx,rx*.32,0,0,7);ctx.stroke()}
