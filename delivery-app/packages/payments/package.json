@@ -1,0 +1,20 @@
+{
+  "name": "@delivery/payments",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "stripe": "^18.0.0"
+  },
+  "devDependencies": {
+    "@delivery/config": "workspace:*",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0"
+  }
+}

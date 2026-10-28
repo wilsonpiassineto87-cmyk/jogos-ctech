@@ -1,0 +1,19 @@
+{
+  "name": "@delivery/validators",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@delivery/config": "workspace:*",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,0 +1,34 @@
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { loginSchema } from "@delivery/validators";
+import { verify } from "@node-rs/argon2";
+import NextAuth from "next-auth";
+import type { Provider } from "next-auth/providers";
+import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import { authConfig } from "./auth.config";
+import { prisma } from "./db";
+import { env } from "./env";
+
+const providers: Provider[] = [
+  Credentials({
+    credentials: { email: {}, password: {} },
+    async authorize(raw) {
+      const parsed = loginSchema.safeParse(raw);
+      if (!parsed.success) return null;
+
+      const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+      if (!user?.passwordHash || user.status !== "ACTIVE" || user.deletedAt) return null;
+      if (!(await verify(user.passwordHash, parsed.data.password))) return null;
+
+      return { id: user.id, name: user.name, email: user.email, image: user.image, roles: user.roles };
+    },
+  }),
+];
+
+if (env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET) providers.push(Google);
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
+  adapter: PrismaAdapter(prisma),
+  providers,
+});
