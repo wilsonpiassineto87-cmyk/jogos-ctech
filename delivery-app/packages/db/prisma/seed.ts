@@ -1,9 +1,9 @@
 // Dados de desenvolvimento. Rode com: pnpm db:seed
 // Todos os usuários usam a senha de SEED_PASSWORD (padrão: "delivery123").
 import { hashPassword } from "@delivery/core";
-import { PrismaClient } from "../generated/client/index.js";
+import { createPrismaClient } from "../src/index.js";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function main() {
   const passwordHash = await hashPassword(process.env.SEED_PASSWORD ?? "delivery123");

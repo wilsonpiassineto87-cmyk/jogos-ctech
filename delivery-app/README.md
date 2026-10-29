@@ -31,7 +31,9 @@ pnpm db:migrate               # cria as tabelas (e roda o seed)
 pnpm dev                      # http://localhost:3000
 ```
 
-Usuários do seed (senha `SEED_PASSWORD`, padrão `delivery123`):
+Usuários do seed (senha `SEED_PASSWORD`; padrão `delivery123` só no banco local).
+No site publicado, a senha é outra, aleatória, guardada em `SEED_PASSWORD` no arquivo
+`.env.supabase.local` (fora do git):
 
 | E-mail | Portal |
 |---|---|
