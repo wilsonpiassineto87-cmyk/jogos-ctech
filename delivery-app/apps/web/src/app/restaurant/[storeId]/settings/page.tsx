@@ -2,7 +2,7 @@ import { centsToInput } from "@delivery/core";
 import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";
 import { saveSettingsAction, toggleOpenAction } from "@/features/store/actions";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/shared/submit-button";
 
 export const metadata = { title: "Configurações" };
 
@@ -26,8 +26,8 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
           <p className="font-medium">{store.isOpen ? "Recebendo pedidos" : "Loja pausada"}</p>
           <p className="text-sm text-muted-foreground">Pause para parar de receber pedidos na hora.</p>
         </div>
-        <form action={toggleOpenAction}>
-          <Button variant={store.isOpen ? "outline" : "default"}>{store.isOpen ? "Pausar" : "Abrir"}</Button>
+        <form action={toggleOpenAction.bind(null, "settings")}>
+          <SubmitButton variant={store.isOpen ? "outline" : "default"}>{store.isOpen ? "Pausar" : "Abrir"}</SubmitButton>
         </form>
       </section>
 
@@ -58,7 +58,7 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
             <input name="deliveryFeePerKm" inputMode="decimal" defaultValue={centsToInput(fee?.feePerKmCents ?? 0)} className={input} />
           </Field>
         </div>
-        <Button>Salvar configurações</Button>
+        <SubmitButton pendingText="Salvando...">Salvar configurações</SubmitButton>
       </form>
 
       <section className="rounded-xl border p-4 text-sm">

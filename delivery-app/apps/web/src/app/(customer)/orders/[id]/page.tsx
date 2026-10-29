@@ -7,12 +7,19 @@ import { prisma } from "@/lib/db";
 import { FINAL_ORDER_STATUSES, ORDER_STATUS_LABEL, ORDER_STEPS, PAYMENT_LABEL, formatDateTime } from "@/lib/order-status";
 import { cancelOrderAction } from "@/features/orders/customer-actions";
 import { AutoRefresh } from "@/components/shared/auto-refresh";
+import { SubmitButton } from "@/components/shared/submit-button";
 import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "Acompanhar pedido" };
 
-export default async function OrderTrackingPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function OrderTrackingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const [{ id }, { error }] = await Promise.all([params, searchParams]);
   const user = await guard(requireUser, `/orders/${id}`);
 
   // customerId no WHERE: cada cliente só vê os próprios pedidos.
@@ -64,6 +71,7 @@ export default async function OrderTrackingPage({ params }: { params: Promise<{ 
         )}
         {order.cancelReason && <p className="mt-2 text-sm text-destructive">Motivo: {order.cancelReason}</p>}
       </div>
+      {error && <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
 
       {order.status === "PENDING_PAYMENT" && payment?.pixQrCode && (
         <section className="rounded-xl border p-4">
@@ -155,7 +163,9 @@ export default async function OrderTrackingPage({ params }: { params: Promise<{ 
       <div className="flex flex-wrap gap-3">
         {canTransition(order.status, "CANCELLED", "CUSTOMER") && (
           <form action={cancel}>
-            <Button variant="outline">Cancelar pedido</Button>
+            <SubmitButton variant="outline" pendingText="Cancelando...">
+              Cancelar pedido
+            </SubmitButton>
           </form>
         )}
         {order.store.phone && (

@@ -9,11 +9,11 @@ import { cache } from "react";
 // No Node (next dev / testes), usa DATABASE_URL e reaproveita uma instância.
 const isWorkers = typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers";
 
-// O pool nasce e morre com a requisição (cache), então pode reaproveitar conexões entre
-// as consultas da mesma página; `maxUses: 1` abriria uma conexão nova a cada consulta.
+// `maxUses: 1`, como recomenda o OpenNext: nenhuma conexão é reaproveitada, nem por engano
+// entre requisições. Com o banco em São Paulo, abrir conexão no Hyperdrive custa pouco.
 const perRequest = cache(() => {
   const { env } = getCloudflareContext();
-  return createPrismaClient({ connectionString: env.HYPERDRIVE.connectionString });
+  return createPrismaClient({ connectionString: env.HYPERDRIVE.connectionString, maxUses: 1 });
 });
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 

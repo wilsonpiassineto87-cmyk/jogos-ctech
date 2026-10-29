@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { ORDER_STATUS_LABEL, PAYMENT_LABEL } from "@/lib/order-status";
 import { arrivedAction, completeDeliveryAction, pickedUpAction } from "@/features/courier/actions";
 import { AutoRefresh } from "@/components/shared/auto-refresh";
+import { SubmitButton } from "@/components/shared/submit-button";
 import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "Corrida" };
@@ -133,16 +134,16 @@ export default async function CourierDeliveryPage({
 
       {delivery.status === "ASSIGNED" && (
         <form action={arrivedAction.bind(null, delivery.id)}>
-          <Button size="lg" className="w-full">
+          <SubmitButton size="lg" className="w-full">
             Cheguei na loja
-          </Button>
+          </SubmitButton>
         </form>
       )}
       {(delivery.status === "ASSIGNED" || delivery.status === "AT_STORE") && (
         <form action={pickedUpAction.bind(null, delivery.id)}>
-          <Button size="lg" variant={delivery.status === "AT_STORE" ? "default" : "outline"} className="w-full">
+          <SubmitButton size="lg" variant={delivery.status === "AT_STORE" ? "default" : "outline"} className="w-full">
             {order.status === "READY_FOR_PICKUP" ? "Peguei o pedido" : "Peguei o pedido (aguardando a loja ficar pronta)"}
-          </Button>
+          </SubmitButton>
         </form>
       )}
       {delivery.status === "PICKED_UP" && (
@@ -159,9 +160,9 @@ export default async function CourierDeliveryPage({
               className="h-12 rounded-md border bg-background px-3 text-center text-2xl tracking-[0.5em] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             />
           </label>
-          <Button size="lg" className="w-full">
+          <SubmitButton size="lg" className="w-full" pendingText="Confirmando...">
             Confirmar entrega
-          </Button>
+          </SubmitButton>
         </form>
       )}
       {done && (

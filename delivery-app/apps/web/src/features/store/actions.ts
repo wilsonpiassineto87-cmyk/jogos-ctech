@@ -4,6 +4,7 @@ import { parseBRL, type OrderStatus } from "@delivery/core";
 import { categoryFormSchema, productFormSchema, storeSettingsSchema } from "@delivery/validators";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { runAction } from "@/lib/action";
 import { requireStoreMember } from "@/lib/authz";
 import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";
@@ -26,28 +27,31 @@ function fail(path: string, message: string): never {
 
 export async function acceptOrderAction(orderId: string) {
   const { store, user, base } = await member();
-  await acceptOrder({ orderId, storeId: store.id, userId: user.id });
-  revalidatePath(`${base}/orders`);
+  await runAction(`${base}/orders`, () => acceptOrder({ orderId, storeId: store.id, userId: user.id }));
 }
 
 export async function rejectOrderAction(orderId: string, form: FormData) {
   const { store, user, base } = await member();
   const reason = text(form, "reason").trim() || "Recusado pela loja";
-  await transitionOrder({ orderId, to: "REJECTED", actor: "STORE", userId: user.id, scope: { storeId: store.id }, note: reason });
-  revalidatePath(`${base}/orders`);
+  await runAction(`${base}/orders`, () =>
+    transitionOrder({ orderId, to: "REJECTED", actor: "STORE", userId: user.id, scope: { storeId: store.id }, note: reason }),
+  );
 }
 
 export async function advanceOrderAction(orderId: string, to: OrderStatus) {
   const { store, user, base } = await member();
-  await transitionOrder({ orderId, to, actor: "STORE", userId: user.id, scope: { storeId: store.id } });
-  revalidatePath(`${base}/orders`);
+  await runAction(`${base}/orders`, () =>
+    transitionOrder({ orderId, to, actor: "STORE", userId: user.id, scope: { storeId: store.id } }),
+  );
 }
 
-export async function toggleOpenAction() {
+/** `from`: tela de onde veio o clique (pedidos ou configurações), para voltar a ela. */
+export async function toggleOpenAction(from: "orders" | "settings") {
   const { store, base } = await member();
-  await prisma.store.update({ where: { id: store.id }, data: { isOpen: !store.isOpen } });
-  revalidatePath(base, "layout");
   revalidatePath("/");
+  await runAction(`${base}/${from}`, async () => {
+    await prisma.store.update({ where: { id: store.id }, data: { isOpen: !store.isOpen } });
+  });
 }
 
 // --- Cardápio ------------------------------------------------------------------

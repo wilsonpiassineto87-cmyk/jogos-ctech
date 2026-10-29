@@ -7,7 +7,7 @@ import { acceptDeliveryAction, toggleOnlineAction } from "@/features/courier/act
 import { getActiveDelivery } from "@/features/courier/service";
 import { AutoRefresh } from "@/components/shared/auto-refresh";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/shared/submit-button";
 
 export const metadata = { title: "Corridas" };
 
@@ -44,7 +44,9 @@ export default async function CourierHomePage({ searchParams }: { searchParams: 
           </p>
         </div>
         <form action={toggleOnlineAction}>
-          <Button variant={courier.courier.isOnline ? "outline" : "default"}>{courier.courier.isOnline ? "Ficar offline" : "Ficar online"}</Button>
+          <SubmitButton variant={courier.courier.isOnline ? "outline" : "default"}>
+            {courier.courier.isOnline ? "Ficar offline" : "Ficar online"}
+          </SubmitButton>
         </form>
       </section>
 
@@ -81,9 +83,9 @@ export default async function CourierHomePage({ searchParams }: { searchParams: 
                       {d.distanceMeters ? ` · ${(d.distanceMeters / 1000).toFixed(1)} km` : ""}
                     </p>
                     <form action={acceptDeliveryAction.bind(null, d.id)} className="mt-3">
-                      <Button className="w-full" disabled={!!active}>
+                      <SubmitButton className="w-full" disabled={!!active} pendingText="Aceitando...">
                         Aceitar corrida
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </li>
                 );

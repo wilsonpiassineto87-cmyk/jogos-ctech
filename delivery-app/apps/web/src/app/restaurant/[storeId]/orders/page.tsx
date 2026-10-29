@@ -6,7 +6,7 @@ import { acceptOrderAction, advanceOrderAction, rejectOrderAction, toggleOpenAct
 import { NewOrderAlert } from "@/components/restaurant/new-order-alert";
 import { AutoRefresh } from "@/components/shared/auto-refresh";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/shared/submit-button";
 
 export const metadata = { title: "Pedidos" };
 
@@ -18,7 +18,8 @@ const COLUMNS: { title: string; statuses: OrderStatus[] }[] = [
 
 const REJECT_REASONS = ["Item em falta", "Loja muito cheia", "Fora da área de entrega", "Loja fechando"];
 
-export default async function StoreOrdersPage() {
+export default async function StoreOrdersPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams;
   const store = await getStore();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const [orders, finishedToday] = await Promise.all([
@@ -52,12 +53,13 @@ export default async function StoreOrdersPage() {
         <h1 className="mr-auto text-2xl font-bold tracking-tight">Pedidos</h1>
         <span className="text-sm text-muted-foreground">{finishedToday} entregues nas últimas 24h</span>
         <NewOrderAlert pendingCount={pending} />
-        <form action={toggleOpenAction}>
-          <Button variant={store.isOpen ? "outline" : "destructive"} size="sm">
+        <form action={toggleOpenAction.bind(null, "orders")}>
+          <SubmitButton variant={store.isOpen ? "outline" : "destructive"} size="sm">
             {store.isOpen ? "Loja aberta · pausar" : "Loja pausada · abrir"}
-          </Button>
+          </SubmitButton>
         </form>
       </div>
+      {error && <p className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         {COLUMNS.map((column) => {
@@ -115,7 +117,7 @@ export default async function StoreOrdersPage() {
                         {order.status === "PLACED" && (
                           <>
                             <form action={acceptOrderAction.bind(null, order.id)}>
-                              <Button size="sm">Aceitar</Button>
+                              <SubmitButton size="sm">Aceitar</SubmitButton>
                             </form>
                             <form action={rejectOrderAction.bind(null, order.id)} className="flex gap-1">
                               <select name="reason" className="h-8 rounded-md border bg-background px-2 text-xs">
@@ -123,20 +125,20 @@ export default async function StoreOrdersPage() {
                                   <option key={r}>{r}</option>
                                 ))}
                               </select>
-                              <Button size="sm" variant="outline">
+                              <SubmitButton size="sm" variant="outline">
                                 Recusar
-                              </Button>
+                              </SubmitButton>
                             </form>
                           </>
                         )}
                         {order.status === "ACCEPTED" && (
                           <form action={advanceOrderAction.bind(null, order.id, "PREPARING")}>
-                            <Button size="sm">Iniciar preparo</Button>
+                            <SubmitButton size="sm">Iniciar preparo</SubmitButton>
                           </form>
                         )}
                         {order.status === "PREPARING" && (
                           <form action={advanceOrderAction.bind(null, order.id, "READY_FOR_PICKUP")}>
-                            <Button size="sm">Pedido pronto</Button>
+                            <SubmitButton size="sm">Pedido pronto</SubmitButton>
                           </form>
                         )}
                         {(order.status === "READY_FOR_PICKUP" || order.status === "OUT_FOR_DELIVERY") && (
