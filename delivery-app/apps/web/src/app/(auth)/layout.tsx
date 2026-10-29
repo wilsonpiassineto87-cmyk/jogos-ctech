@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { getStore } from "@/lib/store";
 
+// Lê o nome da loja no banco: renderiza na hora (o build do Cloudflare não acessa o banco).
+export const dynamic = "force-dynamic";
+
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const store = await getStore();
   return (
