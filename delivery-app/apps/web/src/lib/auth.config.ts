@@ -3,16 +3,10 @@
 import type { UserRole } from "@delivery/db";
 import type { NextAuthConfig } from "next-auth";
 
-// Prefixo de rota -> role exigida. A checagem definitiva acontece no servidor
-// (layouts e handlers via lib/authz.ts); o middleware só evita navegação inútil.
-const PROTECTED: { prefix: string; role?: UserRole }[] = [
-  { prefix: "/admin", role: "ADMIN" },
-  { prefix: "/restaurant", role: "MERCHANT" },
-  { prefix: "/courier", role: "COURIER" },
-  { prefix: "/checkout" },
-  { prefix: "/orders" },
-  { prefix: "/account" },
-];
+// Áreas que exigem login. O middleware NÃO confere roles: as do JWT são as do momento
+// do login e ficariam desatualizadas (ex.: acesso à loja dado pelo admin só valeria
+// após sair e entrar). Quem pode o quê é checado no servidor, no banco (lib/authz.ts).
+const PROTECTED = ["/admin", "/restaurant", "/courier", "/checkout", "/orders", "/account"];
 
 export const authConfig = {
   pages: { signIn: "/login" },
@@ -20,13 +14,8 @@ export const authConfig = {
   providers: [],
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
-      const rule = PROTECTED.find((r) => nextUrl.pathname.startsWith(r.prefix));
-      if (!rule) return true;
-      if (!auth?.user) return false; // redireciona para /login?callbackUrl=...
-      if (rule.role && !auth.user.roles?.includes(rule.role)) {
-        return Response.redirect(new URL("/", nextUrl));
-      }
-      return true;
+      if (!PROTECTED.some((prefix) => nextUrl.pathname.startsWith(prefix))) return true;
+      return Boolean(auth?.user); // sem login: redireciona para /login?callbackUrl=...
     },
     jwt({ token, user }) {
       if (user) {
