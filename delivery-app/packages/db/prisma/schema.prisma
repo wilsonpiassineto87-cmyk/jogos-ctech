@@ -10,9 +10,11 @@
 // =============================================================================
 
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   // Sem `output`: o OpenNext precisa encontrar e ajustar o client gerado para o Workers.
-  // Driver adapters (usados no Workers) já são estáveis no Prisma 6.16+.
+  // "client" = Prisma sem motor nativo (Rust): as consultas saem pelo driver adapter `pg`.
+  // Necessário no Cloudflare Workers, que não tem disco para carregar o motor.
+  engineType = "client"
 }
 
 datasource db {
