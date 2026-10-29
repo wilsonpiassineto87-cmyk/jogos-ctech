@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { config as loadEnv } from "dotenv";
 import type { NextConfig } from "next";
@@ -14,6 +15,14 @@ const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   // TODO: Content-Security-Policy com nonce quando os domínios de mapa/pagamento estiverem definidos.
 ];
+
+/** dist/index.js do pg-cloudflare na pasta do pnpm (o pacote não exporta esse caminho). */
+function pgCloudflareEntry(): string {
+  const store = path.join(process.cwd(), "../../node_modules/.pnpm");
+  const dir = fs.readdirSync(store).find((name) => name.startsWith("pg-cloudflare@"));
+  if (!dir) throw new Error("pg-cloudflare não encontrado em node_modules/.pnpm");
+  return path.join(store, dir, "node_modules/pg-cloudflare/dist/index.js");
+}
 
 const nextConfig: NextConfig = {
   // Pacotes internos são publicados como TypeScript e compilados pelo Next.
@@ -45,6 +54,15 @@ const nextConfig: NextConfig = {
     // - a variante wasm (Workers) importa um .wasm que o webpack não lê.
     // O OpenNext/wrangler empacota esses arquivos no deploy.
     if (isServer) {
+      // O pg só usa o pg-cloudflare quando roda no Workers, mas o webpack resolve o
+      // pacote com as condições do Node e pega a versão vazia (dist/empty.js); aí a
+      // conexão falha com "CloudflareSocket is not a constructor". Força a versão real.
+      config.resolve.alias["pg-cloudflare$"] = pgCloudflareEntry();
+      // Módulo embutido do Workers. O `.catch` faz o esbuild do OpenNext manter o import
+      // sem tentar resolvê-lo (sem ele, "Could not resolve cloudflare:sockets").
+      config.externals.push({
+        "cloudflare:sockets": "var import('cloudflare:sockets').catch((error) => { throw error; })",
+      });
       config.externals.push(
         (
           { context, request }: { context?: string; request?: string },
