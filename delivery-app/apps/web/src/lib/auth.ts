@@ -29,6 +29,8 @@ if (env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET) providers.push(Google);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma),
+  // O client é gerado em packages/db/generated (mesma API do @prisma/client padrão,
+  // que é o tipo esperado pelo adapter).
+  adapter: PrismaAdapter(prisma as unknown as Parameters<typeof PrismaAdapter>[0]),
   providers,
 });

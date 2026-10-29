@@ -1,3 +1,5 @@
-// Carrega a variante wasm do Prisma pela condição "require": no Prisma 6.19 a
-// condição "import" de `@prisma/client/wasm` aponta para um wasm.mjs inexistente.
-module.exports = require("@prisma/client/wasm");
+// Carrega a variante wasm do client gerado só quando chamada (no Cloudflare Workers),
+// para não ser avaliada no Node (next build / next dev).
+module.exports = function loadWorkersPrismaClient() {
+  return require("../generated/client/wasm.js").PrismaClient;
+};

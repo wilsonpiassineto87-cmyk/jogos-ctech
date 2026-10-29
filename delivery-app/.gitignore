@@ -3,6 +3,7 @@ node_modules/
 .turbo/
 .next/
 .open-next/
+packages/db/generated/
 .wrangler/
 .dev.vars
 cloudflare-env.d.ts

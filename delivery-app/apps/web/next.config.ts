@@ -18,9 +18,13 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Pacotes internos são publicados como TypeScript e compilados pelo Next.
   transpilePackages: ["@delivery/core", "@delivery/db", "@delivery/payments", "@delivery/validators"],
-  // Necessário para o OpenNext incluir o Prisma Client gerado no bundle do Workers.
-  serverExternalPackages: ["@prisma/client", ".prisma/client"],
+  // O runtime do Prisma fica fora do bundle do webpack (o OpenNext o empacota para o Workers).
+  serverExternalPackages: ["@prisma/client"],
   poweredByHeader: false,
+  // Client gerado pelo Prisma (packages/db/generated/client), inclusive a variante wasm.
+  outputFileTracingIncludes: {
+    "*": ["../../packages/db/generated/client/**/*"],
+  },
   // O wrangler instala o sharp (nativo) e o Next o incluiria no bundle do servidor,
   // quebrando o build para o Workers. As imagens já são servidas sem otimização.
   outputFileTracingExcludes: {
@@ -34,6 +38,27 @@ const nextConfig: NextConfig = {
       // TODO: domínio do bucket de imagens (S3 / R2 / UploadThing)
       { protocol: "https", hostname: "**.r2.dev" },
     ],
+  },
+  webpack(config, { isServer }) {
+    // O client gerado pelo Prisma fica como require externo (caminho absoluto):
+    // - a variante Node lê arquivos relativos à própria pasta, o que quebra se empacotada;
+    // - a variante wasm (Workers) importa um .wasm que o webpack não lê.
+    // O OpenNext/wrangler empacota esses arquivos no deploy.
+    if (isServer) {
+      config.externals.push(
+        (
+          { context, request }: { context?: string; request?: string },
+          callback: (error?: Error, result?: string) => void,
+        ) => {
+          const target = context && request?.startsWith(".") ? path.resolve(context, request) : "";
+          if (/[\\/]packages[\\/]db[\\/]generated[\\/]client[\\/]/.test(target)) {
+            return callback(undefined, `commonjs ${target.replace(/\\/g, "/")}`);
+          }
+          callback();
+        },
+      );
+    }
+    return config;
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

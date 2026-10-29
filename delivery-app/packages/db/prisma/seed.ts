@@ -1,7 +1,7 @@
 // Dados de desenvolvimento. Rode com: pnpm db:seed
 // Todos os usuários usam a senha de SEED_PASSWORD (padrão: "delivery123").
 import { hashPassword } from "@delivery/core";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../generated/client/index.js";
 
 const prisma = new PrismaClient();
 
