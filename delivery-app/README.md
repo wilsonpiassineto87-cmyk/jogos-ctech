@@ -64,8 +64,11 @@ Produção: https://delivery-app.wilsonpiassineto87.workers.dev
   - Build: `pnpm --filter @delivery/db db:generate && pnpm --filter @delivery/web exec opennextjs-cloudflare build`
   - Deploy: `pnpm --filter @delivery/web exec opennextjs-cloudflare deploy`
   - Variável de build: `SKIP_ENV_VALIDATION=1`
-- Banco: Supabase, acessado pelo **Hyperdrive** `delivery-db` (binding `HYPERDRIVE` em
-  `apps/web/wrangler.jsonc`), com `sslmode=verify-full` e a CA em `certs/supabase-ca-2021.crt`.
+- Banco: Supabase em **São Paulo** (projeto `delivery-jaborandi`, `sa-east-1`), acessado pelo
+  **Hyperdrive** `delivery-db` (binding `HYPERDRIVE` em `apps/web/wrangler.jsonc`), com
+  `sslmode=verify-full` e a CA em `certs/supabase-ca-2021.crt`. As conexões ficam em
+  `.env.supabase-sp.local` (fora do git). O projeto antigo em Oregon (`delivery`) ficou como
+  cópia de segurança e pode ser apagado; `.env.supabase.local` ainda aponta para ele.
 - Segredos do Worker: `AUTH_SECRET` (`wrangler secret put AUTH_SECRET`).
 - Migrations no Supabase: rode `prisma migrate deploy` com `DATABASE_URL`/`DIRECT_URL`
   apontando para o *session pooler* (porta 5432), guardado em `.env.supabase.local` (fora do git).
