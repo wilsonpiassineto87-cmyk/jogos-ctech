@@ -30,6 +30,8 @@
   // Variáveis públicas. Segredos (DATABASE_URL, AUTH_SECRET...) vão com `wrangler secret put`.
   "vars": {
     "AUTH_TRUST_HOST": "true",
-    "AUTH_URL": "https://delivery-app.wilsonpiassineto87.workers.dev"
+    "AUTH_URL": "https://delivery-app.wilsonpiassineto87.workers.dev",
+    // Loja única atendida pelo app.
+    "STORE_SLUG": "pizzaria-do-bairro"
   }
 }

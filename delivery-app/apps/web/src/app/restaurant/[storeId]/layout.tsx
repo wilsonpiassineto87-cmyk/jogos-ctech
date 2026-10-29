@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { guard, requireStoreMember } from "@/lib/authz";
+import { getStore } from "@/lib/store";
 import { PortalShell } from "@/components/shared/portal-shell";
 
 export default async function StoreDashboardLayout({
@@ -9,7 +11,10 @@ export default async function StoreDashboardLayout({
   params: Promise<{ storeId: string }>;
 }) {
   const { storeId } = await params;
-  // Isolamento do tenant: só membros desta loja passam daqui.
+  // Loja única: as páginas trabalham com getStore(); um id diferente na URL volta para ela.
+  const current = await getStore();
+  if (storeId !== current.id) redirect(`/restaurant/${current.id}/orders`);
+  // Só membros desta loja passam daqui.
   const { user, store } = await guard(() => requireStoreMember(storeId), `/restaurant/${storeId}/orders`);
   const base = `/restaurant/${storeId}`;
 

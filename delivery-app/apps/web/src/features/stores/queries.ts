@@ -56,45 +56,35 @@ export async function listStores({ latitude, longitude, category, q, limit }: St
     .slice(0, limit);
 }
 
-export async function getStoreMenu(slug: string) {
-  return prisma.store.findFirst({
-    where: { slug, status: "ACTIVE", deletedAt: null },
+/** Cardápio público: categorias ativas com produtos (e complementos) não excluídos. */
+export async function getMenu(storeId: string) {
+  return prisma.productCategory.findMany({
+    where: { storeId, isActive: true },
+    orderBy: { position: "asc" },
     select: {
       id: true,
       name: true,
-      description: true,
-      bannerUrl: true,
-      minOrderCents: true,
-      prepTimeMinutes: true,
-      ratingAvg: true,
-      productCategories: {
-        where: { isActive: true },
+      products: {
+        where: { deletedAt: null },
         orderBy: { position: "asc" },
         select: {
           id: true,
           name: true,
-          products: {
-            where: { deletedAt: null },
+          description: true,
+          imageUrl: true,
+          priceCents: true,
+          isAvailable: true,
+          optionGroups: {
             orderBy: { position: "asc" },
             select: {
               id: true,
               name: true,
-              description: true,
-              imageUrl: true,
-              priceCents: true,
-              isAvailable: true,
-              optionGroups: {
+              minSelect: true,
+              maxSelect: true,
+              options: {
+                where: { isAvailable: true },
                 orderBy: { position: "asc" },
-                select: {
-                  id: true,
-                  name: true,
-                  minSelect: true,
-                  maxSelect: true,
-                  options: {
-                    orderBy: { position: "asc" },
-                    select: { id: true, name: true, priceCents: true, isAvailable: true },
-                  },
-                },
+                select: { id: true, name: true, priceCents: true },
               },
             },
           },
@@ -103,6 +93,9 @@ export async function getStoreMenu(slug: string) {
     },
   });
 }
+
+export type MenuCategory = Awaited<ReturnType<typeof getMenu>>[number];
+export type MenuProduct = MenuCategory["products"][number];
 
 /** Pausa manual vence; sem horários cadastrados, vale só a pausa. */
 export function isStoreOpenNow(

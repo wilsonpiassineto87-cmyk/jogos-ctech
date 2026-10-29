@@ -27,8 +27,9 @@ export async function createOrder(customer: Customer, input: CreateOrderInput, i
   if (existing) return getCreatedOrder(existing.orderId);
 
   const { quote, store, address } = await buildQuote(customer.id, input);
-  const isCash = input.paymentMethod === "CASH";
-  if (isCash && input.changeForCents !== undefined && input.changeForCents < quote.totalCents) {
+  // Pago na entrega (dinheiro ou maquininha): vai direto para a loja, sem gateway.
+  const isCash = input.paymentMethod === "CASH" || (input.payOnDelivery === true && input.paymentMethod !== "PIX");
+  if (input.paymentMethod === "CASH" && input.changeForCents !== undefined && input.changeForCents < quote.totalCents) {
     throw new HttpError(422, "O troco deve ser maior que o total", "INVALID_CHANGE");
   }
 
@@ -66,7 +67,7 @@ export async function createOrder(customer: Customer, input: CreateOrderInput, i
           commissionBps: quote.commissionBps,
           commissionCents: quote.commissionCents,
           paymentMethod: input.paymentMethod,
-          changeForCents: isCash ? input.changeForCents : null,
+          changeForCents: input.paymentMethod === "CASH" ? input.changeForCents : null,
           estimatedDeliveryAt: new Date(Date.now() + (store.prepTimeMinutes + 20) * 60_000),
           items: {
             create: quote.lines.map((l) => ({

@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "[Nome do Seu App]", template: "%s · [Nome do Seu App]" },
-  description: "Delivery de restaurantes e mercados perto de você.",
+  // A área do cliente troca pelo nome da loja (app/(customer)/layout.tsx).
+  title: { default: "Delivery", template: "%s · Delivery" },
+  description: "Peça online e receba em casa.",
 };
 
 export const viewport: Viewport = {

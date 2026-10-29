@@ -39,6 +39,10 @@ export const addressSchema = z.object({
 });
 export type AddressInput = z.infer<typeof addressSchema>;
 
+/** Formulário do cliente: as coordenadas são obtidas no servidor (geocoding). */
+export const addressFormSchema = addressSchema.omit({ latitude: true, longitude: true });
+export type AddressFormInput = z.infer<typeof addressFormSchema>;
+
 // --- Catálogo ----------------------------------------------------------------
 
 export const storeListQuerySchema = z.object({
@@ -67,6 +71,8 @@ export type CheckoutQuoteInput = z.infer<typeof checkoutQuoteSchema>;
 
 export const createOrderSchema = checkoutQuoteSchema.extend({
   paymentMethod: z.enum(["PIX", "CREDIT_CARD", "DEBIT_CARD", "CASH"]),
+  // Cartão na maquininha do entregador: pago na entrega, sem gateway online.
+  payOnDelivery: z.boolean().optional(),
   changeForCents: cents.optional(),
   customerNotes: z.string().trim().max(280).optional(),
   // Token do cartão gerado no navegador (Mercado Pago Bricks / Stripe Elements).
@@ -107,6 +113,43 @@ export const productSchema = z.object({
   optionGroups: z.array(productOptionGroupSchema).max(20).default([]),
 });
 export type ProductInput = z.infer<typeof productSchema>;
+
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .transform((v) => v || undefined)
+    .optional();
+
+/** Formulário simples de produto do painel da loja (complementos ficam à parte). */
+export const productFormSchema = z.object({
+  name: z.string().trim().min(2, "Nome muito curto").max(100),
+  description: optionalText(500),
+  categoryId: z
+    .string()
+    .max(64)
+    .transform((v) => v || null)
+    .nullable()
+    .optional(),
+  imageUrl: z.union([z.literal(""), z.url("URL de imagem inválida")]).transform((v) => v || undefined).optional(),
+  priceCents: cents,
+});
+export type ProductFormInput = z.infer<typeof productFormSchema>;
+
+export const categoryFormSchema = z.object({ name: z.string().trim().min(2, "Nome muito curto").max(60) });
+
+export const storeSettingsSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  description: optionalText(300),
+  phone: optionalText(20),
+  minOrderCents: cents,
+  prepTimeMinutes: z.number().int().min(5).max(180),
+  deliveryRadiusKm: z.number().min(0.5).max(50),
+  deliveryFeeCents: cents,
+  deliveryFeePerKmCents: cents,
+});
+export type StoreSettingsInput = z.infer<typeof storeSettingsSchema>;
 
 // --- Entregador --------------------------------------------------------------
 

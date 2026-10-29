@@ -1,6 +1,6 @@
-# [Nome do Seu App]
+# Delivery — loja única
 
-Delivery multi-tenant: portais do Cliente, Restaurante, Entregador (PWA) e Super Admin.
+App de delivery para uma loja: portais do Cliente, da Loja, do Entregador (PWA) e Admin.
 Decisões de arquitetura, rotas e práticas de segurança: [ARQUITETURA.md](ARQUITETURA.md).
 
 ## Stack
@@ -72,12 +72,19 @@ Produção: https://delivery-app.wilsonpiassineto87.workers.dev
 
 ## O que já está implementado
 
-- Autenticação (e-mail/senha com argon2, Google opcional) e proteção de rotas por role.
-- Autorização centralizada em `apps/web/src/lib/authz.ts` (role, membro da loja, entregador aprovado).
-- Catálogo de lojas por proximidade e página de cardápio.
-- `POST /api/v1/checkout/quote` e `POST /api/v1/orders`: preço recalculado no servidor, idempotência, Pix via Mercado Pago.
-- Webhook do Mercado Pago com verificação de assinatura e deduplicação.
-- Aceite do pedido pela loja (cria a entrega com PIN) e aceite atômico da corrida pelo entregador.
-- Carrinho com Zustand (persistido no navegador).
+O app atende **uma loja** (`STORE_SLUG`); o banco continua multi-loja.
 
-As demais telas estão como páginas provisórias que listam o que falta implementar.
+- **Cliente:** cardápio na página inicial, complementos (tamanho, borda...), carrinho, checkout com
+  endereço (CEP pelo ViaCEP, coordenadas pelo OpenStreetMap), pagamento na entrega (dinheiro com troco
+  ou maquininha) ou Pix (se o Mercado Pago estiver configurado), acompanhamento com linha do tempo e PIN
+  de entrega, histórico e endereços.
+- **Loja** (`/restaurant`): painel de pedidos com aviso sonoro (aceitar, recusar, preparo, pronto),
+  pausar a loja, cardápio (produtos, categorias, esgotado), configurações (taxa de entrega, raio,
+  pedido mínimo), relatórios e avaliações.
+- **Entregador** (`/courier`): online/offline, corridas disponíveis (só o bairro antes de aceitar),
+  aceite atômico, rota no Google Maps, coleta e confirmação com o PIN, histórico e ganhos.
+- **Admin** (`/admin`): visão geral, pedidos, aprovar entregadores, dar acesso à loja e tornar
+  usuário entregador (tudo registrado no `AuditLog`).
+- Telas atualizam sozinhas a cada 5–10 s (o tempo real via Pusher fica pronto para quando houver chave).
+
+Ainda não tem tela: edição de complementos e de horários de funcionamento, avaliação pelo cliente.

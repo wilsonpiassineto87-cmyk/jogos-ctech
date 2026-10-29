@@ -10,11 +10,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       userName={admin.name}
       nav={[
         { href: "/admin", label: "Visão geral" },
-        { href: "/admin/stores", label: "Lojas" },
+        { href: "/admin/orders", label: "Pedidos" },
         { href: "/admin/couriers", label: "Entregadores" },
         { href: "/admin/users", label: "Usuários" },
-        { href: "/admin/orders", label: "Pedidos" },
-        { href: "/admin/fees", label: "Taxas e comissões" },
+        { href: "/restaurant", label: "Painel da loja" },
       ]}
     >
       {children}

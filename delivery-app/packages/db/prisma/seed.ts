@@ -25,17 +25,16 @@ async function main() {
   const category = (name: string, slug: string) =>
     prisma.storeCategory.upsert({ where: { slug }, update: {}, create: { name, slug } });
   const pizza = await category("Pizza", "pizza");
-  const japonesa = await category("Japonesa", "japonesa");
-  const lanches = await category("Lanches", "lanches");
 
   const user = (email: string, name: string, roles: ("CUSTOMER" | "MERCHANT" | "COURIER" | "ADMIN")[]) =>
     prisma.user.upsert({
       where: { email },
-      update: { passwordHash }, // mantém a senha dos usuários de teste em sincronia com SEED_PASSWORD
+      // Mantém senha e papéis dos usuários de teste em sincronia com este arquivo.
+      update: { passwordHash, roles },
       create: { email, name, roles, passwordHash, emailVerified: new Date() },
     });
 
-  await user("admin@delivery.test", "Admin", ["ADMIN"]);
+  const admin = await user("admin@delivery.test", "Admin", ["ADMIN", "MERCHANT"]);
   const merchant = await user("loja@delivery.test", "Dono da Pizzaria", ["CUSTOMER", "MERCHANT"]);
   const courier = await user("entregador@delivery.test", "Entregador Teste", ["COURIER"]);
   const customer = await user("cliente@delivery.test", "Cliente Teste", ["CUSTOMER"]);
@@ -152,37 +151,11 @@ async function main() {
     });
   }
 
-  await prisma.store.upsert({
-    where: { slug: "sushi-express" },
+  // O app é de loja única (STORE_SLUG=pizzaria-do-bairro). O admin também entra no painel dela.
+  await prisma.storeMember.upsert({
+    where: { storeId_userId: { storeId: pizzaria.id, userId: admin.id } },
     update: {},
-    create: {
-      ...storeAddress,
-      slug: "sushi-express",
-      name: "Sushi Express",
-      description: "Combinados e temakis.",
-      number: "900",
-      latitude: -23.5631,
-      longitude: -46.6687,
-      status: "ACTIVE",
-      isOpen: true,
-      categories: { connect: [{ id: japonesa.id }] },
-      members: { create: { userId: merchant.id, role: "OWNER" } },
-    },
-  });
-
-  await prisma.store.upsert({
-    where: { slug: "burger-lab" },
-    update: {},
-    create: {
-      ...storeAddress,
-      slug: "burger-lab",
-      name: "Burger Lab",
-      description: "Hambúrgueres smash. Aguardando aprovação do admin.",
-      number: "1200",
-      latitude: -23.5588,
-      longitude: -46.6612,
-      categories: { connect: [{ id: lanches.id }] },
-    },
+    create: { storeId: pizzaria.id, userId: admin.id, role: "MANAGER" },
   });
 
   console.log("Seed concluído.");
