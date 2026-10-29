@@ -5,7 +5,8 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-    DATABASE_URL: z.url(),
+    // Obrigatória no Node; no Cloudflare Workers a conexão vem do binding HYPERDRIVE.
+    DATABASE_URL: z.url().optional(),
     AUTH_SECRET: z.string().min(16),
     AUTH_URL: z.url().optional(),
     AUTH_GOOGLE_ID: z.string().optional(),

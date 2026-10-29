@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "delivery-app",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "delivery-app"
+    }
+  ],
+  // Pool de conexões da Cloudflare até o Supabase (sslmode verify-full com a CA
+  // em certs/supabase-ca-2021.crt, cache desligado). Criado com `wrangler hyperdrive create`.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "57744036bc564530b06f4211f1f3e7fd",
+      // Usado só localmente (wrangler/OpenNext preview): o banco de desenvolvimento.
+      "localConnectionString": "postgresql://delivery:delivery@localhost:5432/delivery"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  },
+  // Variáveis públicas. Segredos (DATABASE_URL, AUTH_SECRET...) vão com `wrangler secret put`.
+  "vars": {
+    "AUTH_TRUST_HOST": "true",
+    "AUTH_URL": "https://delivery-app.wilsonpiassineto87.workers.dev"
+  }
+}

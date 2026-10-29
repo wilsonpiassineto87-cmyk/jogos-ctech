@@ -1,6 +1,6 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import { verifyPassword } from "@delivery/core";
 import { loginSchema } from "@delivery/validators";
-import { verify } from "@node-rs/argon2";
 import NextAuth from "next-auth";
 import type { Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
@@ -18,7 +18,7 @@ const providers: Provider[] = [
 
       const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
       if (!user?.passwordHash || user.status !== "ACTIVE" || user.deletedAt) return null;
-      if (!(await verify(user.passwordHash, parsed.data.password))) return null;
+      if (!(await verifyPassword(user.passwordHash, parsed.data.password))) return null;
 
       return { id: user.id, name: user.name, email: user.email, image: user.image, roles: user.roles };
     },

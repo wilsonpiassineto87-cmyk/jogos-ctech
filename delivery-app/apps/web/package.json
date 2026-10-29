@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -14,7 +16,7 @@
     "@delivery/db": "workspace:*",
     "@delivery/payments": "workspace:*",
     "@delivery/validators": "workspace:*",
-    "@node-rs/argon2": "^2.0.2",
+    "@opennextjs/cloudflare": "^1.8.0",
     "@radix-ui/react-slot": "^1.2.0",
     "@t3-oss/env-nextjs": "^0.13.8",
     "class-variance-authority": "^0.7.1",
@@ -38,6 +40,7 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "tailwindcss": "^4.1.0",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "wrangler": "^4.40.0"
   }
 }

@@ -18,9 +18,18 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Pacotes internos são publicados como TypeScript e compilados pelo Next.
   transpilePackages: ["@delivery/core", "@delivery/db", "@delivery/payments", "@delivery/validators"],
-  serverExternalPackages: ["@node-rs/argon2"],
+  // Necessário para o OpenNext incluir o Prisma Client gerado no bundle do Workers.
+  serverExternalPackages: ["@prisma/client", ".prisma/client"],
   poweredByHeader: false,
+  // O wrangler instala o sharp (nativo) e o Next o incluiria no bundle do servidor,
+  // quebrando o build para o Workers. As imagens já são servidas sem otimização.
+  outputFileTracingExcludes: {
+    "*": ["**/node_modules/sharp/**", "**/node_modules/@img/**", "**/.pnpm/sharp@*/**", "**/.pnpm/@img+*/**"],
+  },
   images: {
+    // O otimizador de imagens do Next usa o sharp (nativo), que não roda no Workers.
+    // TODO: usar Cloudflare Images (binding IMAGES) quando houver fotos de produtos.
+    unoptimized: true,
     remotePatterns: [
       // TODO: domínio do bucket de imagens (S3 / R2 / UploadThing)
       { protocol: "https", hostname: "**.r2.dev" },

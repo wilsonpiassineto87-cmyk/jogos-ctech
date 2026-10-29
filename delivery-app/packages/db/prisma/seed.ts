@@ -1,12 +1,12 @@
 // Dados de desenvolvimento. Rode com: pnpm db:seed
 // Todos os usuários usam a senha de SEED_PASSWORD (padrão: "delivery123").
-import { hash } from "@node-rs/argon2";
+import { hashPassword } from "@delivery/core";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const passwordHash = await hash(process.env.SEED_PASSWORD ?? "delivery123");
+  const passwordHash = await hashPassword(process.env.SEED_PASSWORD ?? "delivery123");
 
   await prisma.platformSettings.upsert({
     where: { id: 1 },
@@ -31,7 +31,7 @@ async function main() {
   const user = (email: string, name: string, roles: ("CUSTOMER" | "MERCHANT" | "COURIER" | "ADMIN")[]) =>
     prisma.user.upsert({
       where: { email },
-      update: {},
+      update: { passwordHash }, // mantém a senha dos usuários de teste em sincronia com SEED_PASSWORD
       create: { email, name, roles, passwordHash, emailVerified: new Date() },
     });
 

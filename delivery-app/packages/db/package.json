@@ -18,14 +18,15 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^6.16.0"
+    "@prisma/adapter-pg": "^6.19.0",
+    "@prisma/client": "^6.19.0"
   },
   "devDependencies": {
     "@delivery/config": "workspace:*",
-    "@node-rs/argon2": "^2.0.2",
+    "@delivery/core": "workspace:*",
     "@types/node": "^22.0.0",
     "dotenv-cli": "^8.0.0",
-    "prisma": "^6.16.0",
+    "prisma": "^6.19.0",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"
   }

@@ -2,6 +2,10 @@ node_modules/
 .pnpm-store/
 .turbo/
 .next/
+.open-next/
+.wrangler/
+.dev.vars
+cloudflare-env.d.ts
 out/
 dist/
 coverage/

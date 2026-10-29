@@ -1,15 +1,20 @@
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
-// Reaproveita a instância entre hot reloads do Next.js em desenvolvimento,
-// evitando abrir uma nova conexão a cada alteração de arquivo.
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+/**
+ * Cria um PrismaClient que fala com o Postgres pelo driver `pg` (driver adapter).
+ * Funciona no Node e no Cloudflare Workers. Quem chama decide o ciclo de vida:
+ * no Workers, um client por requisição com `maxUses: 1` (conexões não podem ser
+ * reaproveitadas entre requisições); no Node, uma instância compartilhada.
+ */
+export function createPrismaClient(options: { connectionString?: string; maxUses?: number } = {}) {
+  const connectionString = options.connectionString ?? process.env.DATABASE_URL;
+  if (!connectionString) throw new Error("DATABASE_URL não definida");
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+  return new PrismaClient({
+    adapter: new PrismaPg({ connectionString, maxUses: options.maxUses }),
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+}
 
 export * from "@prisma/client";

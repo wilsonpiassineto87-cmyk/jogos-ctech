@@ -1,6 +1,6 @@
 import "server-only";
+import { hashPassword } from "@delivery/core";
 import type { RegisterInput } from "@delivery/validators";
-import { hash } from "@node-rs/argon2";
 import { HttpError } from "@/lib/api";
 import { prisma } from "@/lib/db";
 
@@ -13,7 +13,7 @@ export async function registerCustomer(input: RegisterInput) {
       name: input.name,
       email: input.email,
       phone: input.phone,
-      passwordHash: await hash(input.password), // argon2id
+      passwordHash: await hashPassword(input.password),
       roles: ["CUSTOMER"],
     },
     select: { id: true, name: true, email: true },

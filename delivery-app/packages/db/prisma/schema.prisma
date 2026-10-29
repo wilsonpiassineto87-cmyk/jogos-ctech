@@ -11,6 +11,8 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Sem `output`: o OpenNext precisa encontrar e ajustar o client gerado para o Workers.
+  // Driver adapters (usados no Workers) já são estáveis no Prisma 6.16+.
 }
 
 datasource db {

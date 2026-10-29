@@ -20,13 +20,17 @@
     "typescript": "^5.9.0"
   },
   "pnpm": {
+    "overrides": {
+      "sharp": "link:./stubs/sharp"
+    },
     "onlyBuiltDependencies": [
       "@prisma/client",
       "@prisma/engines",
       "prisma",
       "esbuild",
       "sharp",
-      "unrs-resolver"
+      "unrs-resolver",
+      "workerd"
     ]
   }
 }

@@ -1,0 +1,7 @@
+{
+  "name": "sharp",
+  "version": "0.0.0-stub",
+  "private": true,
+  "description": "Substitui o sharp (nativo), que não roda no Cloudflare Workers. Ver package.json da raiz (pnpm.overrides).",
+  "main": "index.js"
+}
