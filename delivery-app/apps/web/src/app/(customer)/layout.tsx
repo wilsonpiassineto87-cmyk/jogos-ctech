@@ -12,11 +12,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CustomerLayout({ children }: { children: React.ReactNode }) {
-  const [session, store] = await Promise.all([auth(), getStore()]);
   // Roles do banco (as do JWT são as do momento do login): os atalhos aparecem na hora.
-  const roles = session?.user.id
-    ? ((await prisma.user.findUnique({ where: { id: session.user.id }, select: { roles: true } }))?.roles ?? [])
-    : [];
+  // Em paralelo com a loja, para não somar o tempo das duas consultas.
+  const sessionWithRoles = auth().then(async (session) => ({
+    session,
+    roles: session?.user.id
+      ? ((await prisma.user.findUnique({ where: { id: session.user.id }, select: { roles: true } }))?.roles ?? [])
+      : [],
+  }));
+  const [{ session, roles }, store] = await Promise.all([sessionWithRoles, getStore()]);
 
   return (
     <div className="flex min-h-dvh flex-col">

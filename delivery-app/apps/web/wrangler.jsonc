@@ -24,6 +24,11 @@
       "localConnectionString": "postgresql://delivery:delivery@localhost:5432/delivery"
     }
   ],
+  // O banco (Supabase) fica em Oregon: o Smart Placement roda o Worker perto dele, então
+  // as várias consultas de cada página não cruzam o continente uma a uma.
+  "placement": {
+    "mode": "smart"
+  },
   "observability": {
     "enabled": true
   },

@@ -47,7 +47,7 @@ export default async function StoreOrdersPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
-      <AutoRefresh intervalMs={5_000} />
+      <AutoRefresh intervalMs={8_000} />
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="mr-auto text-2xl font-bold tracking-tight">Pedidos</h1>
         <span className="text-sm text-muted-foreground">{finishedToday} entregues nas últimas 24h</span>

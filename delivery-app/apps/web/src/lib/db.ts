@@ -9,9 +9,11 @@ import { cache } from "react";
 // No Node (next dev / testes), usa DATABASE_URL e reaproveita uma instância.
 const isWorkers = typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers";
 
+// O pool nasce e morre com a requisição (cache), então pode reaproveitar conexões entre
+// as consultas da mesma página; `maxUses: 1` abriria uma conexão nova a cada consulta.
 const perRequest = cache(() => {
   const { env } = getCloudflareContext();
-  return createPrismaClient({ connectionString: env.HYPERDRIVE.connectionString, maxUses: 1 });
+  return createPrismaClient({ connectionString: env.HYPERDRIVE.connectionString });
 });
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
