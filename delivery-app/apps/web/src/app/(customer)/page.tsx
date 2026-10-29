@@ -1,6 +1,7 @@
 import { formatCents } from "@delivery/core";
 import { Clock, MapPin, Star } from "lucide-react";
 import { getMenu, isStoreOpenNow } from "@/features/stores/queries";
+import { memo } from "@/lib/memo";
 import { getStore } from "@/lib/store";
 import { CartBar } from "@/components/customer/cart-bar";
 import { ProductCard } from "@/components/customer/product-card";
@@ -12,7 +13,9 @@ const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export default async function MenuPage() {
   const store = await getStore();
-  const menu = await getMenu(store.id);
+  // Cardápio público em cache por 20 s (4 consultas a menos por visita). Preço e
+  // disponibilidade são conferidos de novo no banco ao calcular e criar o pedido.
+  const menu = await memo(`menu:${store.id}`, 20_000, () => getMenu(store.id));
   const open = isStoreOpenNow(store.isOpen, store.openingHours, store.timezone);
   const categories = menu.filter((c) => c.products.length > 0);
 
