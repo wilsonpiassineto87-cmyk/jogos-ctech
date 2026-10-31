@@ -180,6 +180,39 @@ export const storeSettingsSchema = z.object({
 });
 export type StoreSettingsInput = z.infer<typeof storeSettingsSchema>;
 
+// --- Personalização da loja (painel) -----------------------------------------
+
+const hexColor = z
+  .string()
+  .trim()
+  .regex(/^#[0-9a-fA-F]{6}$/, "Cor inválida")
+  .transform((v) => v.toUpperCase());
+
+/** Paleta da marca: cor principal, cor de "aberto/sucesso" e cor de destaque. */
+export const storeThemeSchema = z.object({ primary: hexColor, success: hexColor, highlight: hexColor });
+export type StoreTheme = z.infer<typeof storeThemeSchema>;
+
+const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Horário inválido (use HH:MM)");
+
+/** Horário de um dia: vale de opensAt a closesAt; fechar antes de abrir = vira a madrugada. */
+export const openingHourSchema = z
+  .object({ dayOfWeek: z.number().int().min(0).max(6), opensAt: time, closesAt: time })
+  .refine((h) => h.opensAt !== h.closesAt, { message: "Abertura e fechamento iguais", path: ["closesAt"] });
+export type OpeningHourInput = z.infer<typeof openingHourSchema>;
+
+export const optionGroupFormSchema = z
+  .object({
+    name: z.string().trim().min(1, "Dê um nome ao grupo").max(80),
+    minSelect: z.number().int().min(0, "Mínimo inválido").max(20),
+    maxSelect: z.number().int().min(1, "O máximo precisa ser pelo menos 1").max(20),
+  })
+  .refine((g) => g.minSelect <= g.maxSelect, { message: "O mínimo não pode passar do máximo", path: ["minSelect"] });
+
+export const optionFormSchema = z.object({
+  name: z.string().trim().min(1, "Dê um nome à opção").max(80),
+  priceCents: cents,
+});
+
 // --- Entregador --------------------------------------------------------------
 
 export const courierLocationSchema = z.object({

@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";
 import { Logo } from "@/components/brand/logo";
+import { StoreTheme } from "@/components/brand/store-theme";
 import { CartButton } from "@/components/customer/cart-button";
 import { Button } from "@/components/ui/button";
 
@@ -25,6 +26,7 @@ export default async function CustomerLayout({ children }: { children: React.Rea
 
   return (
     <div className="flex min-h-dvh flex-col">
+      <StoreTheme />
       <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center gap-3 px-4">
           <Link href="/" className="mr-auto flex min-w-0 flex-1 text-foreground" aria-label={`${store.name}, página inicial`}>

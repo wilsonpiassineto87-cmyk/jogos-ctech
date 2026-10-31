@@ -1,4 +1,5 @@
 import { centsToInput, formatCents } from "@delivery/core";
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";
 import {
@@ -105,8 +106,11 @@ export default async function StoreMenuPage({ searchParams }: { searchParams: Pr
                       </Button>
                     </form>
                   </div>
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-sm text-primary">Editar</summary>
+                  <Link href={`/restaurant/${store.id}/menu/${product.id}`} className="mt-2 mr-4 inline-block text-sm text-primary hover:underline">
+                    {product._count.optionGroups > 0 ? "Editar complementos" : "Adicionar complementos"}
+                  </Link>
+                  <details className="mt-2 inline-block w-full">
+                    <summary className="cursor-pointer text-sm text-primary">Editar produto</summary>
                     <form action={updateProductAction.bind(null, product.id)} className="mt-3 space-y-3">
                       <ProductFields categories={categories} product={product} />
                       <div className="flex gap-2">
@@ -125,7 +129,7 @@ export default async function StoreMenuPage({ searchParams }: { searchParams: Pr
       ))}
 
       <p className="text-sm text-muted-foreground">
-        Complementos (tamanhos, adicionais) dos produtos existentes continuam valendo. A edição deles ainda não tem tela.
+        Complementos são as escolhas do cliente em cada produto (tamanho, sabores, coberturas). Use “Editar complementos”.
       </p>
     </div>
   );

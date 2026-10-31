@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signOut } from "@/lib/auth";
 import { LogoMark } from "@/components/brand/logo";
+import { StoreTheme } from "@/components/brand/store-theme";
 import { Button } from "@/components/ui/button";
 
 export type NavItem = { href: string; label: string };
@@ -19,6 +20,7 @@ export function PortalShell({
 }) {
   return (
     <div className="flex min-h-dvh flex-col">
+      <StoreTheme />
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
           <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Página inicial">

@@ -34,6 +34,7 @@ export const getStore = cache(async () => {
       prepTimeMinutes: true,
       ratingAvg: true,
       ratingCount: true,
+      theme: true,
       openingHours: { select: { dayOfWeek: true, opensAt: true, closesAt: true }, orderBy: { dayOfWeek: "asc" } },
     },
   });
