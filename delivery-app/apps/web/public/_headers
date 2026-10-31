@@ -1,2 +1,6 @@
 /_next/static/*
   Cache-Control: public,max-age=31536000,immutable
+
+# O service worker precisa ser sempre revalidado para as atualizações chegarem aos apps instalados.
+/sw.js
+  Cache-Control: no-cache

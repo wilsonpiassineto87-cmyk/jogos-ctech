@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
 import { acceptDeliveryAction, toggleOnlineAction } from "@/features/courier/actions";
 import { getActiveDelivery } from "@/features/courier/service";
+import { InstallBanner } from "@/components/pwa/install-banner";
 import { AutoRefresh } from "@/components/shared/auto-refresh";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -34,6 +35,7 @@ export default async function CourierHomePage({ searchParams }: { searchParams: 
   return (
     <div className="mx-auto max-w-xl space-y-6 px-4 py-6">
       <AutoRefresh intervalMs={10_000} />
+      <InstallBanner appName="Sorveteria do Bairro" />
       {error && <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
 
       <section className="flex items-center justify-between gap-4 rounded-xl border p-4">

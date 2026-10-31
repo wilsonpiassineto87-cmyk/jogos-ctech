@@ -1,19 +1,32 @@
 import type { MetadataRoute } from "next";
 
-// PWA do entregador: "Adicionar à tela inicial" abre direto no portal /courier.
+// App instalável (PWA): "Instalar app" / "Adicionar à tela inicial" cria um ícone que abre o
+// site em tela cheia, sem barra de endereço. Serve para clientes, loja e entregadores (atalhos).
+// O nome é fixo aqui porque o manifesto é gerado no build, que não acessa o banco.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Entregas · Sorveteria do Bairro",
-    short_name: "Entregas",
-    start_url: "/courier",
-    scope: "/courier",
+    id: "/",
+    name: "Sorveteria do Bairro",
+    short_name: "Sorveteria",
+    description: "Peça sorvetes, açaí e milkshakes e receba em casa.",
+    lang: "pt-BR",
+    start_url: "/?origem=app",
+    scope: "/",
     display: "standalone",
     orientation: "portrait",
     background_color: "#FDF9F0",
     theme_color: "#E0457B",
+    categories: ["food", "shopping"],
     icons: [
+      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icons/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
       { src: "/icons/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-      { src: "/icons/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "maskable" },
+    ],
+    shortcuts: [
+      { name: "Meus pedidos", url: "/orders", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "Entregas", short_name: "Entregas", url: "/courier", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "Painel da loja", short_name: "Loja", url: "/restaurant", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
     ],
   };
 }

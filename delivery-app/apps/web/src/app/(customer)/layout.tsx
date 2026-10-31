@@ -27,7 +27,7 @@ export default async function CustomerLayout({ children }: { children: React.Rea
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center gap-3 px-4">
-          <Link href="/" className="mr-auto min-w-0 text-foreground" aria-label={`${store.name}, página inicial`}>
+          <Link href="/" className="mr-auto flex min-w-0 flex-1 text-foreground" aria-label={`${store.name}, página inicial`}>
             <Logo name={store.name} />
           </Link>
           {roles.includes("MERCHANT") && (
@@ -47,10 +47,10 @@ export default async function CustomerLayout({ children }: { children: React.Rea
           )}
           {session ? (
             <>
-              <Link href="/orders" className="text-sm hover:underline">
+              <Link href="/orders" className="shrink-0 text-sm hover:underline">
                 Pedidos
               </Link>
-              <Link href="/account" className="text-sm hover:underline">
+              <Link href="/account" className="shrink-0 text-sm hover:underline">
                 Conta
               </Link>
             </>

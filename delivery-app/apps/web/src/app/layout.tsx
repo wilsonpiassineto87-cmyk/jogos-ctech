@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   // A área do cliente troca pelo nome da loja (app/(customer)/layout.tsx).
   title: { default: "Delivery", template: "%s · Delivery" },
   description: "Peça online e receba em casa.",
+  // iPhone: "Adicionar à Tela de Início" usa este ícone e abre em tela cheia.
+  appleWebApp: { capable: true, title: "Sorveteria", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {

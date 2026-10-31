@@ -6,6 +6,7 @@ import { getStore } from "@/lib/store";
 import { LogoMark } from "@/components/brand/logo";
 import { CartBar } from "@/components/customer/cart-bar";
 import { ProductCard } from "@/components/customer/product-card";
+import { InstallBanner } from "@/components/pwa/install-banner";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
@@ -59,8 +60,12 @@ export default async function MenuPage() {
         </div>
       </section>
 
+      <div className="px-4">
+        <InstallBanner appName={store.name} />
+      </div>
+
       {categories.length > 1 && (
-        <nav className="sticky top-16 z-10 border-b bg-background/95 backdrop-blur">
+        <nav className="sticky top-16 z-10 mt-4 border-b bg-background/95 backdrop-blur">
           <div className="mx-auto flex max-w-3xl gap-2 overflow-x-auto px-4 py-3">
             {categories.map((c) => (
               <a

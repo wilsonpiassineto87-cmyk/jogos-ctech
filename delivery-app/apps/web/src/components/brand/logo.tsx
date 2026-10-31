@@ -35,7 +35,7 @@ export function Logo({ name, className, markClassName }: { name: string; classNa
   return (
     <span className={cn("inline-flex min-w-0 items-center gap-2", className)}>
       <LogoMark className={markClassName} />
-      <span className="truncate font-display text-xl font-semibold tracking-tight">{name}</span>
+      <span className="min-w-0 truncate font-display text-lg font-semibold tracking-tight sm:text-xl">{name}</span>
     </span>
   );
 }
