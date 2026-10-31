@@ -52,7 +52,8 @@ export function Modal({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
-        {footer && <div className="border-t px-5 py-4">{footer}</div>}
+        {/* pb com safe-area: o botão não fica embaixo da barrinha do iPhone. */}
+        {footer && <div className="border-t px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">{footer}</div>}
       </div>
     </div>
   );

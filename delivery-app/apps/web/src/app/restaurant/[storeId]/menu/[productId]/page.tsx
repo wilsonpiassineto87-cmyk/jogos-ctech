@@ -81,11 +81,11 @@ export default async function ProductOptionsPage({
               </label>
               <label className="grid gap-1 text-xs font-medium">
                 Mínimo
-                <input name="minSelect" type="number" min={0} max={20} defaultValue={group.minSelect} className={`${input} w-20`} />
+                <input name="minSelect" type="number" min={0} max={20} defaultValue={group.minSelect} className={`${input} max-w-24`} />
               </label>
               <label className="grid gap-1 text-xs font-medium">
                 Máximo
-                <input name="maxSelect" type="number" min={1} max={20} defaultValue={group.maxSelect} className={`${input} w-20`} />
+                <input name="maxSelect" type="number" min={1} max={20} defaultValue={group.maxSelect} className={`${input} max-w-24`} />
               </label>
               <SubmitButton size="sm" variant="outline">
                 Salvar grupo
@@ -104,40 +104,54 @@ export default async function ProductOptionsPage({
 
             <ul className="divide-y rounded-xl border">
               {group.options.map((option) => (
-                <li key={option.id} className="flex flex-wrap items-center gap-2 p-2">
+                // Celular: nome numa linha, preço + Salvar na seguinte, ações embaixo. Tela larga: tudo numa linha.
+                <li key={option.id} className="space-y-2 p-3 sm:flex sm:items-center sm:gap-2 sm:space-y-0 sm:p-2">
                   <form action={updateOptionAction.bind(null, product.id, option.id)} className="flex flex-1 flex-wrap items-center gap-2">
-                    <input name="name" required defaultValue={option.name} className={`${input} min-w-36 flex-1`} aria-label="Nome da opção" />
+                    <input
+                      name="name"
+                      required
+                      defaultValue={option.name}
+                      className={`${input} basis-full sm:min-w-36 sm:flex-1 sm:basis-auto`}
+                      aria-label="Nome da opção"
+                    />
                     <span className="text-xs text-muted-foreground">+ R$</span>
                     <input
                       name="price"
                       inputMode="decimal"
                       defaultValue={centsToInput(option.priceCents)}
-                      className={`${input} w-20`}
+                      className={`${input} max-w-24`}
                       aria-label="Preço adicional"
                     />
-                    <SubmitButton size="sm" variant="ghost">
+                    <SubmitButton size="sm" variant="outline">
                       Salvar
                     </SubmitButton>
                   </form>
-                  {!option.isAvailable && <Badge variant="secondary">Esgotado</Badge>}
-                  <form action={toggleOptionAction.bind(null, product.id, option.id)}>
-                    <SubmitButton size="sm" variant="outline">
-                      {option.isAvailable ? "Esgotar" : "Voltar"}
-                    </SubmitButton>
-                  </form>
-                  <form action={deleteOptionAction.bind(null, product.id, option.id)}>
-                    <SubmitButton size="sm" variant="ghost" className="text-destructive">
-                      Excluir
-                    </SubmitButton>
-                  </form>
+                  <div className="flex items-center gap-2">
+                    {!option.isAvailable && <Badge variant="secondary">Esgotado</Badge>}
+                    <form action={toggleOptionAction.bind(null, product.id, option.id)}>
+                      <SubmitButton size="sm" variant="outline">
+                        {option.isAvailable ? "Esgotar" : "Voltar"}
+                      </SubmitButton>
+                    </form>
+                    <form action={deleteOptionAction.bind(null, product.id, option.id)}>
+                      <SubmitButton size="sm" variant="ghost" className="text-destructive">
+                        Excluir
+                      </SubmitButton>
+                    </form>
+                  </div>
                 </li>
               ))}
             </ul>
 
             <form action={createOptionAction.bind(null, product.id, group.id)} className="flex flex-wrap items-center gap-2">
-              <input name="name" required placeholder="Nova opção (ex.: Pistache)" className={`${input} min-w-40 flex-1`} />
+              <input
+                name="name"
+                required
+                placeholder="Nova opção (ex.: Pistache)"
+                className={`${input} basis-full sm:min-w-40 sm:flex-1 sm:basis-auto`}
+              />
               <span className="text-xs text-muted-foreground">+ R$</span>
-              <input name="price" inputMode="decimal" placeholder="0,00" className={`${input} w-20`} aria-label="Preço adicional" />
+              <input name="price" inputMode="decimal" placeholder="0,00" className={`${input} max-w-24`} aria-label="Preço adicional" />
               <SubmitButton size="sm">Adicionar opção</SubmitButton>
             </form>
 
@@ -159,11 +173,11 @@ export default async function ProductOptionsPage({
           </label>
           <label className="grid gap-1 text-xs font-medium">
             Mínimo
-            <input name="minSelect" type="number" min={0} max={20} defaultValue={0} className={`${input} w-20`} />
+            <input name="minSelect" type="number" min={0} max={20} defaultValue={0} className={`${input} max-w-24`} />
           </label>
           <label className="grid gap-1 text-xs font-medium">
             Máximo
-            <input name="maxSelect" type="number" min={1} max={20} defaultValue={1} className={`${input} w-20`} />
+            <input name="maxSelect" type="number" min={1} max={20} defaultValue={1} className={`${input} max-w-24`} />
           </label>
         </div>
         <p className="text-xs text-muted-foreground">Mínimo 0 = opcional. Mínimo 1 e máximo 1 = escolha obrigatória de uma opção.</p>

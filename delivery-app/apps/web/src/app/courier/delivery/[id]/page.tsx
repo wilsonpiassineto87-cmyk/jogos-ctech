@@ -151,10 +151,13 @@ export default async function CourierDeliveryPage({
         </form>
       )}
       {(delivery.status === "ASSIGNED" || delivery.status === "AT_STORE") && (
-        <form action={pickedUpAction.bind(null, delivery.id)}>
+        <form action={pickedUpAction.bind(null, delivery.id)} className="space-y-1.5">
           <SubmitButton size="lg" variant={delivery.status === "AT_STORE" ? "default" : "outline"} className="w-full">
-            {order.status === "READY_FOR_PICKUP" ? "Peguei o pedido" : "Peguei o pedido (aguardando a loja ficar pronta)"}
+            Peguei o pedido
           </SubmitButton>
+          {order.status !== "READY_FOR_PICKUP" && (
+            <p className="text-center text-xs text-muted-foreground">A loja ainda está preparando o pedido.</p>
+          )}
         </form>
       )}
       {delivery.status === "PICKED_UP" && (

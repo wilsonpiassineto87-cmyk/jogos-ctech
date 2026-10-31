@@ -16,7 +16,7 @@ export function CartBar() {
   if (!mounted || count === 0) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 p-4 sm:pb-6">
+    <div className="fixed inset-x-0 bottom-0 z-20 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6">
       <Link
         href="/checkout"
         className="mx-auto flex max-w-3xl items-center justify-between rounded-xl bg-primary px-5 py-4 font-medium text-primary-foreground shadow-lg hover:bg-primary/90"
