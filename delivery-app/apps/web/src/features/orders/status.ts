@@ -73,14 +73,15 @@ export async function transitionOrder(args: {
 export async function acceptOrder(args: { orderId: string; storeId: string; userId: string }) {
   const order = await prisma.order.findFirst({
     where: { id: args.orderId, storeId: args.storeId },
-    select: { status: true, deliveryAddress: true, store: { select: { latitude: true, longitude: true } } },
+    select: { status: true, deliveryAddress: true, store: { select: { latitude: true, longitude: true, deliveryRadiusKm: true } } },
   });
   if (!order) throw new HttpError(404, "Pedido não encontrado", "NOT_FOUND");
   assertTransition(order.status, "ACCEPTED", "STORE");
 
   const settings = await getPlatformSettings();
   const dropoff = order.deliveryAddress as { latitude: number; longitude: number };
-  const km = distanceKm(order.store, dropoff);
+  // Ponto do mapa errado (comum em cidade pequena) não pode virar uma corrida de 300 km.
+  const km = Math.min(distanceKm(order.store, dropoff), order.store.deliveryRadiusKm);
 
   await prisma.$transaction(async (tx) => {
     const { count } = await tx.order.updateMany({

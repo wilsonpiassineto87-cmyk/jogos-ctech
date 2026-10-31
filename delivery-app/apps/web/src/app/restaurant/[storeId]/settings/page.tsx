@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";
 import { DEFAULT_THEME, THEME_PRESETS, parseTheme } from "@/lib/theme";
 import { saveSettingsAction, saveStoreAddressAction, toggleOpenAction } from "@/features/store/actions";
-import { DEFAULT_SERVED_CITIES, getServedCities } from "@/lib/service-area";
+import { getServedCities } from "@/lib/service-area";
 import {
   applyThemePresetAction,
   resetThemeAction,
@@ -32,7 +32,7 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
     prisma.order.findFirst({ where: { storeId: store.id, status: { not: "PENDING_PAYMENT" } }, orderBy: { createdAt: "desc" }, select: { id: true } }),
     getServedCities(),
   ]);
-  const citiesValue = (servedCities.length > 0 ? servedCities : DEFAULT_SERVED_CITIES).join(", ");
+  const citiesValue = servedCities.join(", ");
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-6">
@@ -79,16 +79,11 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
           </Field>
         </div>
         <Field label="Cidades onde entrega">
-          <input name="cities" defaultValue={citiesValue} placeholder="Jaborandi, Colina" className={input} />
+          <input name="cities" required defaultValue={citiesValue} placeholder="Jaborandi, Colina" className={input} />
           <span className="text-xs font-normal text-muted-foreground">
-            Separe por vírgula. Endereço de outra cidade não consegue fazer pedido. Deixe vazio para aceitar qualquer cidade
-            dentro do raio.
+            Separe por vírgula. Qualquer endereço nessas cidades pode pedir (o raio só limita o adicional por km); de outra
+            cidade, não.
           </span>
-          {servedCities.length === 0 && (
-            <span className="text-xs font-medium text-destructive">
-              Ainda não salvo: hoje a loja aceita qualquer cidade. Toque em &quot;Salvar configurações&quot;.
-            </span>
-          )}
         </Field>
         <SubmitButton pendingText="Salvando...">Salvar configurações</SubmitButton>
       </form>
@@ -102,6 +97,11 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
           </p>
         </div>
         {saved === "endereco" && <p className="rounded-md bg-accent p-3">Endereço salvo e localizado no mapa.</p>}
+        {saved === "endereco-sem-mapa" && (
+          <p className="rounded-md bg-accent p-3">
+            Endereço salvo. O mapa não respondeu agora, mas a entrega vale pela cidade: pode seguir normalmente.
+          </p>
+        )}
         <div className="grid gap-3 sm:grid-cols-[10rem_1fr_6rem]">
           <Field label="CEP">
             <input name="zipCode" required inputMode="numeric" defaultValue={store.zipCode} placeholder="14775-000" className={input} />

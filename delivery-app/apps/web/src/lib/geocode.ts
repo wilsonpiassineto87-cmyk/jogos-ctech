@@ -13,13 +13,22 @@ export async function geocodeAddress(a: {
   state: string;
   zipCode: string;
 }): Promise<LatLng | null> {
-  return search({ street: `${a.number} ${a.street}`, city: a.city, state: a.state, postalcode: a.zipCode });
+  return search({ street: `${a.number} ${a.street}`, city: a.city, state: stateName(a.state), postalcode: a.zipCode });
 }
 
 /** Centro da cidade: plano B quando a rua não está no mapa (comum em cidades pequenas). */
 export function geocodeCity(city: string, state: string): Promise<LatLng | null> {
-  return search({ city, state });
+  return search({ city, state: stateName(state) });
 }
+
+// O mapa entende melhor o nome do estado que a sigla: "SP" às vezes cai na Jaborandi da Bahia.
+const STATES: Record<string, string> = {
+  AC: "Acre", AL: "Alagoas", AP: "Amapá", AM: "Amazonas", BA: "Bahia", CE: "Ceará", DF: "Distrito Federal",
+  ES: "Espírito Santo", GO: "Goiás", MA: "Maranhão", MT: "Mato Grosso", MS: "Mato Grosso do Sul", MG: "Minas Gerais",
+  PA: "Pará", PB: "Paraíba", PR: "Paraná", PE: "Pernambuco", PI: "Piauí", RJ: "Rio de Janeiro", RN: "Rio Grande do Norte",
+  RS: "Rio Grande do Sul", RO: "Rondônia", RR: "Roraima", SC: "Santa Catarina", SP: "São Paulo", SE: "Sergipe", TO: "Tocantins",
+};
+const stateName = (uf: string) => STATES[uf.trim().toUpperCase()] ?? uf;
 
 async function search(query: Record<string, string>): Promise<LatLng | null> {
   const params = new URLSearchParams({ format: "json", limit: "1", countrycodes: "br", ...query });

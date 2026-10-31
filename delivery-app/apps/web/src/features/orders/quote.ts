@@ -1,8 +1,9 @@
 import "server-only";
-import { deliveryFeeCents, distanceKm, quoteOrder } from "@delivery/core";
+import { deliveryFeeCents, distanceKm, quoteOrder, sameCity } from "@delivery/core";
 import type { CheckoutQuoteInput } from "@delivery/validators";
 import { HttpError } from "@/lib/api";
 import { prisma } from "@/lib/db";
+import { getServedCities, joinCities } from "@/lib/service-area";
 import { isStoreOpenNow } from "@/features/stores/queries";
 
 export async function getPlatformSettings() {
@@ -14,7 +15,7 @@ export async function getPlatformSettings() {
  * e de novo na criação do pedido — preço vindo do cliente é ignorado.
  */
 export async function buildQuote(customerId: string, input: CheckoutQuoteInput) {
-  const [store, address, settings, feeRules] = await Promise.all([
+  const [store, address, settings, feeRules, servedCities] = await Promise.all([
     prisma.store.findFirst({
       where: { id: input.storeId, status: "ACTIVE", deletedAt: null },
       select: {
@@ -35,6 +36,7 @@ export async function buildQuote(customerId: string, input: CheckoutQuoteInput) 
     prisma.address.findFirst({ where: { id: input.addressId, userId: customerId } }),
     getPlatformSettings(),
     prisma.deliveryFeeRule.findMany({ where: { isActive: true } }),
+    getServedCities(),
   ]);
 
   if (!store) throw new HttpError(404, "Loja não encontrada", "STORE_NOT_FOUND");
@@ -43,8 +45,24 @@ export async function buildQuote(customerId: string, input: CheckoutQuoteInput) 
     throw new HttpError(409, "A loja está fechada no momento", "STORE_CLOSED");
   }
 
-  const distance = distanceKm(store, address);
-  const fee = distance <= store.deliveryRadiusKm ? deliveryFeeCents(feeRules, distance, address.city) : null;
+  // Com cidades atendidas, quem decide é a cidade do endereço: em cidade pequena o mapa
+  // costuma errar o ponto (rua fora do mapa, ou outra Jaborandi, na Bahia), e o raio em km
+  // recusaria um cliente da própria cidade. A distância só ajusta a taxa, até o raio.
+  const measured = distanceKm(store, address);
+  let distance = measured;
+  let inArea = measured <= store.deliveryRadiusKm;
+  if (servedCities.length > 0) {
+    if (!servedCities.some((city) => sameCity(city, address.city))) {
+      throw new HttpError(
+        422,
+        `Entregamos só em ${joinCities(servedCities)}. Escolha ou cadastre um endereço nessa cidade.`,
+        "OUT_OF_DELIVERY_AREA",
+      );
+    }
+    inArea = true;
+    distance = Math.min(measured, store.deliveryRadiusKm);
+  }
+  const fee = inArea ? deliveryFeeCents(feeRules, distance, address.city) : null;
 
   const productIds = [...new Set(input.lines.map((l) => l.productId))];
   const products = await prisma.product.findMany({

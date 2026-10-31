@@ -3,12 +3,12 @@ import { sameCity } from "@delivery/core";
 import { cache } from "react";
 import { prisma } from "./db";
 
-/** Cidade sugerida quando a loja ainda não escolheu onde entrega. */
+/** Onde a loja entrega enquanto ninguém salvou outra lista em Configurações. */
 export const DEFAULT_SERVED_CITIES = ["Jaborandi"];
 
 /**
- * Cidades onde a loja entrega. Cada cidade é uma regra de taxa (DeliveryFeeRule.city), então
- * o cálculo da taxa já recusa endereço de outra cidade. Lista vazia = qualquer cidade no raio.
+ * Cidades onde a loja entrega. Cada cidade salva é uma regra de taxa (DeliveryFeeRule.city);
+ * sem nenhuma salva, vale DEFAULT_SERVED_CITIES. Endereço de outra cidade não pede.
  */
 export const getServedCities = cache(async (): Promise<string[]> => {
   const rules = await prisma.deliveryFeeRule.findMany({
@@ -18,7 +18,7 @@ export const getServedCities = cache(async (): Promise<string[]> => {
   });
   const cities: string[] = [];
   for (const { city } of rules) if (city && !cities.some((c) => sameCity(c, city))) cities.push(city);
-  return cities;
+  return cities.length > 0 ? cities : DEFAULT_SERVED_CITIES;
 });
 
 /** "Jaborandi", "Jaborandi e Colina", "Jaborandi, Colina e Terra Roxa". */

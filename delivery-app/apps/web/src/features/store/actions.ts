@@ -186,6 +186,7 @@ export async function saveSettingsAction(form: FormData) {
   if (!parsed.success) fail(path, parsed.error.issues[0]!.message);
   const s = parsed.data;
   const cities = parseCityList(text(form, "cities"));
+  if (cities.length === 0) fail(path, "Informe ao menos uma cidade onde a loja entrega");
   if (cities.length > 20) fail(path, "Informe no máximo 20 cidades");
 
   await prisma.$transaction([
@@ -200,11 +201,11 @@ export async function saveSettingsAction(form: FormData) {
         deliveryRadiusKm: s.deliveryRadiusKm,
       },
     }),
-    // Loja única: a mesma taxa em todo o raio. Uma regra por cidade atendida (endereço de
-    // outra cidade fica sem taxa = fora da área); sem cidades, uma regra para qualquer uma.
+    // Loja única: a mesma taxa em todo o raio, uma regra por cidade atendida (endereço de
+    // outra cidade fica sem taxa = fora da área).
     prisma.deliveryFeeRule.deleteMany({}),
     prisma.deliveryFeeRule.createMany({
-      data: (cities.length > 0 ? cities : [null]).map((city) => ({
+      data: cities.map((city) => ({
         name: city ? `Entrega em ${city}` : "Taxa da loja",
         city,
         maxDistanceKm: s.deliveryRadiusKm + 0.001,
@@ -239,9 +240,9 @@ export async function saveStoreAddressAction(form: FormData) {
     fail(path, issue.path[0] === "zipCode" ? "CEP inválido" : "Preencha rua, número, bairro, cidade e UF");
   }
   const a = parsed.data;
-  // A rua nem sempre está no mapa em cidade pequena: aí vale o centro da cidade.
+  // A rua nem sempre está no mapa em cidade pequena: aí vale o centro da cidade. Se o mapa
+  // não responder, salva mesmo assim (a entrega vale pela cidade) e mantém o ponto anterior.
   const coords = (await geocodeAddress(a)) ?? (await geocodeCity(a.city, a.state));
-  if (!coords) fail(path, `Não achamos ${a.city}/${a.state} no mapa. Confira o nome da cidade e a UF.`);
 
   await prisma.store.update({
     where: { id: store.id },
@@ -253,12 +254,11 @@ export async function saveStoreAddressAction(form: FormData) {
       neighborhood: a.neighborhood,
       city: a.city,
       state: a.state,
-      latitude: coords.latitude,
-      longitude: coords.longitude,
+      ...(coords && { latitude: coords.latitude, longitude: coords.longitude }),
     },
   });
   forgetStore();
   revalidatePath(base, "layout");
   revalidatePath("/");
-  redirect(`${path}?saved=endereco#endereco`);
+  redirect(`${path}?saved=${coords ? "endereco" : "endereco-sem-mapa"}#endereco`);
 }
