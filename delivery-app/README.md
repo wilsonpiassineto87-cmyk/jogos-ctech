@@ -54,24 +54,18 @@ No site publicado, a senha é outra, aleatória, guardada em `SEED_PASSWORD` no 
 | `pnpm db:seed` | Popula dados de desenvolvimento |
 | `pnpm db:studio` | Prisma Studio |
 
-## Deploy (Cloudflare Workers)
+## Deploy (Netlify, plano grátis)
 
-Produção: https://delivery-app.wilsonpiassineto87.workers.dev
-
-- Build e deploy automáticos pelo **Workers Builds** a cada push na branch `delivery-app`
-  (o build roda no Linux da Cloudflare; o OpenNext não é compatível com build no Windows).
-  - Path: `delivery-app`
-  - Build: `pnpm --filter @delivery/db db:generate && pnpm --filter @delivery/web exec opennextjs-cloudflare build`
-  - Deploy: `pnpm --filter @delivery/web exec opennextjs-cloudflare deploy`
-  - Variável de build: `SKIP_ENV_VALIDATION=1`
-- Banco: Supabase em **São Paulo** (projeto `delivery-jaborandi`, `sa-east-1`), acessado pelo
-  **Hyperdrive** `delivery-db` (binding `HYPERDRIVE` em `apps/web/wrangler.jsonc`), com
-  `sslmode=verify-full` e a CA em `certs/supabase-ca-2021.crt`. As conexões ficam em
-  `.env.supabase-sp.local` (fora do git). O projeto antigo em Oregon (`delivery`) ficou como
-  cópia de segurança e pode ser apagado; `.env.supabase.local` ainda aponta para ele.
-- Segredos do Worker: `AUTH_SECRET` (`wrangler secret put AUTH_SECRET`).
-- Migrations no Supabase: rode `prisma migrate deploy` com `DATABASE_URL`/`DIRECT_URL`
-  apontando para o *session pooler* (porta 5432), guardado em `.env.supabase.local` (fora do git).
+- Build e deploy automáticos pela Netlify a cada push na branch `delivery-app`.
+  Configuração em `apps/web/netlify.toml`; no painel: Base directory `delivery-app`,
+  Package directory `delivery-app/apps/web`.
+- Variáveis no painel da Netlify (Environment variables): `DATABASE_URL` (pooler do Supabase,
+  porta 6543, com a senha), `AUTH_SECRET`, `AUTH_URL` (endereço do site), `AUTH_TRUST_HOST=true`
+  e `STORE_SLUG=sorveteria-do-bairro`. Mudou uma variável? Faça um novo deploy.
+- Banco: Supabase em **São Paulo** (projeto `delivery-jaborandi`, `sa-east-1`). A conexão usa TLS
+  e confere o certificado com a CA do Supabase (`packages/db/src/supabase-ca.ts`). As conexões
+  ficam em `.env.supabase-sp.local` (fora do git).
+- Migrations no Supabase: `.\scripts\migrate-prod.ps1` (PowerShell, na pasta `delivery-app`).
 
 ## O que já está implementado
 

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 /**
  * Barrinha no topo da tela enquanto a próxima página carrega. Sem ela, ao tocar num
  * link a tela fica parada até a resposta chegar e parece travada (os links não
- * pré-carregam, para economizar processamento no Cloudflare).
+ * pré-carregam, para economizar o limite do plano grátis).
  */
 export function NavigationProgress() {
   const pathname = usePathname();

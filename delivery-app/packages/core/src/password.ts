@@ -1,10 +1,9 @@
-// Hash de senha com PBKDF2-SHA256 via Web Crypto: roda igual no Node 20+ e no
-// Cloudflare Workers (onde módulos nativos como argon2 não carregam).
+// Hash de senha com PBKDF2-SHA256 via Web Crypto (Node 20+), sem módulos nativos.
 // Formato: pbkdf2_sha256$<iterações>$<salt base64>$<hash base64>
 
-// OWASP recomenda 600k; 100k cabe no limite de CPU do plano gratuito do Workers.
-// Hashes antigos continuam válidos se o valor aumentar, pois as iterações ficam no próprio hash.
-const DEFAULT_ITERATIONS = 100_000;
+// Valor recomendado pela OWASP. Hashes antigos (100k) continuam válidos, pois as
+// iterações ficam gravadas no próprio hash.
+const DEFAULT_ITERATIONS = 600_000;
 const KEY_BYTES = 32;
 
 const toBase64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes));

@@ -2,11 +2,7 @@ node_modules/
 .pnpm-store/
 .turbo/
 .next/
-.open-next/
-packages/db/generated/
-.wrangler/
-.dev.vars
-cloudflare-env.d.ts
+.netlify/
 out/
 dist/
 coverage/

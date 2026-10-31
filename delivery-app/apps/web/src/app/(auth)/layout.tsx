@@ -3,7 +3,7 @@ import { getStore } from "@/lib/store";
 import { Logo } from "@/components/brand/logo";
 import { StoreTheme } from "@/components/brand/store-theme";
 
-// Lê o nome da loja no banco: renderiza na hora (o build do Cloudflare não acessa o banco).
+// Lê o nome da loja no banco: renderiza na hora (o build não acessa o banco).
 export const dynamic = "force-dynamic";
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {

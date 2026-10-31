@@ -1,0 +1,12 @@
+# Deploy na Netlify (plano grátis). No painel: Base directory = delivery-app,
+# Package directory = delivery-app/apps/web. Caminhos abaixo partem do Base directory.
+# Segredos (DATABASE_URL, AUTH_SECRET) ficam no painel, em Environment variables.
+[build]
+  # Gera o client do Prisma e compila só o app web (e os pacotes de que ele depende).
+  command = "pnpm turbo run build --filter=@delivery/web"
+  publish = "apps/web/.next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # O build não acessa o banco nem precisa dos segredos.
+  SKIP_ENV_VALIDATION = "1"

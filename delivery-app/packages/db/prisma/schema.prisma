@@ -11,11 +11,8 @@
 
 generator client {
   provider   = "prisma-client-js"
-  // Gerado dentro do pacote (e não em node_modules/.prisma): com o layout do pnpm,
-  // o OpenNext não encontra o `.prisma/client` ao empacotar para o Workers.
-  output     = "../generated/client"
   // "client" = Prisma sem motor nativo (Rust): as consultas saem pelo driver adapter `pg`.
-  // Necessário no Cloudflare Workers, que não tem disco para carregar o motor.
+  // Nada de binário por sistema operacional para empacotar nas funções serverless.
   engineType = "client"
 }
 

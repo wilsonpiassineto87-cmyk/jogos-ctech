@@ -5,7 +5,7 @@ import { createPrismaClient } from "../src/index.js";
 
 const prisma = createPrismaClient();
 
-// Loja atendida pelo app (STORE_SLUG em wrangler.jsonc / .env).
+// Loja atendida pelo app (STORE_SLUG no .env / painel da Netlify).
 const STORE_SLUG = "sorveteria-do-bairro";
 
 const FLAVORS = ["Chocolate belga", "Morango", "Creme", "Pistache", "Doce de leite", "Limão siciliano", "Flocos"];

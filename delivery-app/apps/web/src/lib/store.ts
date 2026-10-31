@@ -5,7 +5,7 @@ import { prisma } from "./db";
 
 const STORE_KEY = "store";
 
-// O app funciona para UMA loja. Ela é escolhida por STORE_SLUG (wrangler.jsonc / .env)
+// O app funciona para UMA loja. Ela é escolhida por STORE_SLUG (.env / painel da Netlify)
 // ou, sem a variável, é a primeira loja cadastrada. O schema continua multi-loja, então
 // dá para voltar a ser marketplace sem migrar o banco.
 // Guardada 10 s na memória do Worker: toda página lê a loja, e é uma consulta a menos por
