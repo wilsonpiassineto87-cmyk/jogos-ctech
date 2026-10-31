@@ -3,6 +3,8 @@ node_modules/
 .turbo/
 .next/
 .netlify/
+.wrangler/
+.open-next/
 out/
 dist/
 coverage/
