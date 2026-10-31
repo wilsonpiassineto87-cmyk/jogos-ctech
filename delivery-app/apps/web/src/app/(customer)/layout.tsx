@@ -23,6 +23,14 @@ export default async function CustomerLayout({ children }: { children: React.Rea
       : [],
   }));
   const [{ session, roles }, store] = await Promise.all([sessionWithRoles, getStore()]);
+  // No celular não cabem os três atalhos: mostra só o principal de quem trabalha na loja.
+  const panel = roles.includes("MERCHANT")
+    ? "/restaurant"
+    : roles.includes("COURIER")
+      ? "/courier"
+      : roles.includes("ADMIN")
+        ? "/admin"
+        : null;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -32,6 +40,11 @@ export default async function CustomerLayout({ children }: { children: React.Rea
           <Link href="/" className="mr-auto flex min-w-0 flex-1 text-foreground" aria-label={`${store.name}, página inicial`}>
             <Logo name={store.name} />
           </Link>
+          {panel && (
+            <Link href={panel} className="shrink-0 rounded-full bg-primary px-3 py-1 text-sm font-medium text-primary-foreground sm:hidden">
+              Painel
+            </Link>
+          )}
           {roles.includes("MERCHANT") && (
             <Link href="/restaurant" className="hidden text-sm hover:underline sm:inline">
               Painel da loja

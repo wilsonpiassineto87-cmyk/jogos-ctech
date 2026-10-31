@@ -22,12 +22,13 @@ export function PortalShell({
     <div className="flex min-h-dvh flex-col">
       <StoreTheme />
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
-          <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Página inicial">
-            <LogoMark className="size-8" />
-            <span className="font-display text-lg font-semibold">{title}</span>
+        {/* No celular o menu desce para uma segunda linha e quebra, para nenhum item ficar escondido. */}
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 sm:h-14 sm:flex-nowrap sm:py-0">
+          <Link href="/" className="mr-auto flex min-w-0 items-center gap-2 sm:mr-0 sm:shrink-0" aria-label="Página inicial">
+            <LogoMark className="size-8 shrink-0" />
+            <span className="truncate font-display text-lg font-semibold">{title}</span>
           </Link>
-          <nav className="flex flex-1 gap-1 overflow-x-auto text-sm">
+          <nav className="order-last -mx-3 flex w-full flex-wrap gap-1 text-sm sm:order-none sm:mx-0 sm:w-auto sm:flex-1 sm:flex-nowrap sm:overflow-x-auto">
             {nav.map((item) => (
               <Link key={item.href} href={item.href} className="rounded-md px-3 py-1.5 hover:bg-accent">
                 {item.label}
