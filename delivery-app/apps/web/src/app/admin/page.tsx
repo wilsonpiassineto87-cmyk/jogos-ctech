@@ -1,50 +1,60 @@
-import { formatCents } from "@delivery/core";
+import { Bike, UserCheck, Users } from "lucide-react";
 import Link from "@/components/shared/link";
 import { prisma } from "@/lib/db";
+import { getDashboard, parsePeriod, type Period } from "@/lib/dashboard";
 import { getStore } from "@/lib/store";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StoreDashboard } from "@/components/dashboard/store-dashboard";
+import { AutoRefresh } from "@/components/shared/auto-refresh";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Visão geral" };
 
-export default async function AdminHomePage() {
+export default async function AdminHomePage({ searchParams }: { searchParams: Promise<{ periodo?: string }> }) {
+  const { periodo } = await searchParams;
+  const period = parsePeriod(periodo);
   const store = await getStore();
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [delivered, active, couriersOnline, pendingCouriers, customers] = await Promise.all([
-    prisma.order.aggregate({
-      where: { status: "DELIVERED", deliveredAt: { gte: since } },
-      _count: true,
-      _sum: { totalCents: true },
-    }),
-    prisma.order.count({ where: { status: { in: ["PLACED", "ACCEPTED", "PREPARING", "READY_FOR_PICKUP", "OUT_FOR_DELIVERY"] } } }),
+  const [data, couriersOnline, pendingCouriers, customers] = await Promise.all([
+    getDashboard(store.id, period),
     prisma.courierProfile.count({ where: { status: "APPROVED", isOnline: true } }),
     prisma.courierProfile.count({ where: { status: "PENDING_APPROVAL" } }),
     prisma.user.count({ where: { roles: { has: "CUSTOMER" }, deletedAt: null } }),
   ]);
+  const periodHref = (p: Period) => `/admin${p === "hoje" ? "" : `?periodo=${p}`}`;
 
-  const kpis = [
-    { label: "Vendas (24h)", value: formatCents(delivered._sum.totalCents ?? 0), hint: `${delivered._count} pedidos entregues` },
-    { label: "Pedidos em andamento", value: String(active), hint: store.isOpen ? "Loja recebendo pedidos" : "Loja pausada" },
-    { label: "Entregadores online", value: String(couriersOnline), hint: `${pendingCouriers} aguardando aprovação` },
-    { label: "Clientes cadastrados", value: String(customers), hint: " " },
+  const people = [
+    { href: "/admin/couriers", icon: <Bike />, label: "Entregadores online", value: couriersOnline },
+    {
+      href: "/admin/couriers",
+      icon: <UserCheck />,
+      label: "Entregadores aguardando aprovação",
+      value: pendingCouriers,
+      urgent: pendingCouriers > 0,
+    },
+    { href: "/admin/users", icon: <Users />, label: "Clientes cadastrados", value: customers },
   ];
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-8">
+    <section className="mx-auto max-w-6xl space-y-6 px-4 py-6">
+      <AutoRefresh intervalMs={60_000} />
       <h1 className="text-2xl font-bold tracking-tight">{store.name} · visão geral</h1>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpis.map((k) => (
-          <Card key={k.label}>
-            <CardHeader>
-              <CardDescription>{k.label}</CardDescription>
-              <CardTitle className="text-3xl tabular-nums">{k.value}</CardTitle>
-              <CardDescription>{k.hint}</CardDescription>
-            </CardHeader>
-          </Card>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {people.map((p) => (
+          <Link
+            key={p.label}
+            href={p.href}
+            className={`flex items-center gap-3 rounded-xl border bg-card p-4 hover:border-primary [&_svg]:size-5 ${p.urgent ? "border-primary bg-accent/60" : ""}`}
+          >
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-muted">{p.icon}</span>
+            <span>
+              <span className="block text-2xl font-bold leading-none tabular-nums">{p.value}</span>
+              <span className="text-sm text-muted-foreground">{p.label}</span>
+            </span>
+          </Link>
         ))}
       </div>
-      <p className="mt-6 text-sm text-muted-foreground">
-        Cardápio, taxa de entrega e horários ficam no{" "}
+      <StoreDashboard data={data} periodHref={periodHref} ordersHref="/admin/orders" historyHref="/admin/orders" />
+      <p className="text-sm text-muted-foreground">
+        Cardápio, taxa de entrega, cidades atendidas e horários ficam no{" "}
         <Link href="/restaurant" className="text-primary hover:underline">
           painel da loja
         </Link>

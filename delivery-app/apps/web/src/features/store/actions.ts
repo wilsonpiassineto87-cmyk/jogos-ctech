@@ -1,14 +1,16 @@
 "use server";
 
 import { parseBRL, type OrderStatus } from "@delivery/core";
-import { categoryFormSchema, productFormSchema, storeSettingsSchema } from "@delivery/validators";
+import { addressFormSchema, categoryFormSchema, productFormSchema, storeSettingsSchema } from "@delivery/validators";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { runAction } from "@/lib/action";
 import { requireStoreMember } from "@/lib/authz";
 import { prisma } from "@/lib/db";
+import { geocodeAddress, geocodeCity } from "@/lib/geocode";
 import { refreshPublicMenu } from "@/lib/menu";
 import { UPLOAD_MAX_BYTES, UPLOAD_TYPES, UPLOADED_IMAGE_PREFIX } from "@/lib/product-images";
+import { parseCityList } from "@/lib/service-area";
 import { forgetStore, getStore } from "@/lib/store";
 import { acceptOrder, transitionOrder } from "@/features/orders/status";
 
@@ -48,7 +50,7 @@ export async function advanceOrderAction(orderId: string, to: OrderStatus) {
 }
 
 /** `from`: tela de onde veio o clique (pedidos ou configurações), para voltar a ela. */
-export async function toggleOpenAction(from: "orders" | "settings") {
+export async function toggleOpenAction(from: "orders" | "settings" | "reports") {
   const { store, base } = await member();
   revalidatePath("/");
   await runAction(`${base}/${from}`, async () => {
@@ -183,6 +185,8 @@ export async function saveSettingsAction(form: FormData) {
   });
   if (!parsed.success) fail(path, parsed.error.issues[0]!.message);
   const s = parsed.data;
+  const cities = parseCityList(text(form, "cities"));
+  if (cities.length > 20) fail(path, "Informe no máximo 20 cidades");
 
   await prisma.$transaction([
     prisma.store.update({
@@ -196,19 +200,65 @@ export async function saveSettingsAction(form: FormData) {
         deliveryRadiusKm: s.deliveryRadiusKm,
       },
     }),
-    // Loja única: a taxa de entrega é uma regra só, válida em todo o raio de entrega.
+    // Loja única: a mesma taxa em todo o raio. Uma regra por cidade atendida (endereço de
+    // outra cidade fica sem taxa = fora da área); sem cidades, uma regra para qualquer uma.
     prisma.deliveryFeeRule.deleteMany({}),
-    prisma.deliveryFeeRule.create({
-      data: {
-        name: "Taxa da loja",
+    prisma.deliveryFeeRule.createMany({
+      data: (cities.length > 0 ? cities : [null]).map((city) => ({
+        name: city ? `Entrega em ${city}` : "Taxa da loja",
+        city,
         maxDistanceKm: s.deliveryRadiusKm + 0.001,
         baseFeeCents: s.deliveryFeeCents,
         feePerKmCents: s.deliveryFeePerKmCents,
-      },
+      })),
     }),
   ]);
   forgetStore();
   revalidatePath(base, "layout");
   revalidatePath("/");
   redirect(`${path}?saved=1`);
+}
+
+/** Endereço da loja: vira o centro do raio de entrega e aparece no comprovante. */
+export async function saveStoreAddressAction(form: FormData) {
+  const { store, base } = await member("MANAGER");
+  const path = `${base}/settings`;
+  const parsed = addressFormSchema
+    .pick({ zipCode: true, street: true, number: true, complement: true, neighborhood: true, city: true, state: true })
+    .safeParse({
+      zipCode: text(form, "zipCode").trim(),
+      street: text(form, "street").trim(),
+      number: text(form, "number").trim(),
+      complement: text(form, "complement").trim() || undefined,
+      neighborhood: text(form, "neighborhood").trim(),
+      city: text(form, "city").trim(),
+      state: text(form, "state").trim(),
+    });
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0]!;
+    fail(path, issue.path[0] === "zipCode" ? "CEP inválido" : "Preencha rua, número, bairro, cidade e UF");
+  }
+  const a = parsed.data;
+  // A rua nem sempre está no mapa em cidade pequena: aí vale o centro da cidade.
+  const coords = (await geocodeAddress(a)) ?? (await geocodeCity(a.city, a.state));
+  if (!coords) fail(path, `Não achamos ${a.city}/${a.state} no mapa. Confira o nome da cidade e a UF.`);
+
+  await prisma.store.update({
+    where: { id: store.id },
+    data: {
+      zipCode: a.zipCode.replace(/^(\d{5})(\d{3})$/, "$1-$2"),
+      street: a.street,
+      number: a.number,
+      complement: a.complement ?? null,
+      neighborhood: a.neighborhood,
+      city: a.city,
+      state: a.state,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+    },
+  });
+  forgetStore();
+  revalidatePath(base, "layout");
+  revalidatePath("/");
+  redirect(`${path}?saved=endereco#endereco`);
 }

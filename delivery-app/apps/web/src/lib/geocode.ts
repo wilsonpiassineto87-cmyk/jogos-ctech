@@ -13,15 +13,16 @@ export async function geocodeAddress(a: {
   state: string;
   zipCode: string;
 }): Promise<LatLng | null> {
-  const params = new URLSearchParams({
-    format: "json",
-    limit: "1",
-    countrycodes: "br",
-    street: `${a.number} ${a.street}`,
-    city: a.city,
-    state: a.state,
-    postalcode: a.zipCode,
-  });
+  return search({ street: `${a.number} ${a.street}`, city: a.city, state: a.state, postalcode: a.zipCode });
+}
+
+/** Centro da cidade: plano B quando a rua não está no mapa (comum em cidades pequenas). */
+export function geocodeCity(city: string, state: string): Promise<LatLng | null> {
+  return search({ city, state });
+}
+
+async function search(query: Record<string, string>): Promise<LatLng | null> {
+  const params = new URLSearchParams({ format: "json", limit: "1", countrycodes: "br", ...query });
   try {
     const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
       headers: { "User-Agent": "delivery-app/1.0 (pedidos online)", "Accept-Language": "pt-BR" },

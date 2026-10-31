@@ -23,11 +23,11 @@ export default async function StoreDashboardLayout({
       title={store.name}
       userName={user.name}
       nav={[
+        { href: `${base}/reports`, label: "Painel" },
         { href: `${base}/orders`, label: "Pedidos" },
         { href: `${base}/orders/history`, label: "Histórico" },
         { href: `${base}/menu`, label: "Cardápio" },
         { href: `${base}/reviews`, label: "Avaliações" },
-        { href: `${base}/reports`, label: "Relatórios" },
         { href: `${base}/settings`, label: "Configurações" },
       ]}
     >

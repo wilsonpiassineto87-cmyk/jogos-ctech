@@ -2,7 +2,8 @@ import { centsToInput, formatPhone } from "@delivery/core";
 import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";
 import { DEFAULT_THEME, THEME_PRESETS, parseTheme } from "@/lib/theme";
-import { saveSettingsAction, toggleOpenAction } from "@/features/store/actions";
+import { saveSettingsAction, saveStoreAddressAction, toggleOpenAction } from "@/features/store/actions";
+import { DEFAULT_SERVED_CITIES, getServedCities } from "@/lib/service-area";
 import {
   applyThemePresetAction,
   resetThemeAction,
@@ -26,10 +27,12 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
   const theme = parseTheme(store.theme) ?? DEFAULT_THEME;
   const hasSchedule = store.openingHours.length > 0;
   const hoursByDay = new Map(store.openingHours.map((h) => [h.dayOfWeek, h]));
-  const [printPrefs, sampleOrder] = await Promise.all([
+  const [printPrefs, sampleOrder, servedCities] = await Promise.all([
     getPrintPreferences(),
     prisma.order.findFirst({ where: { storeId: store.id, status: { not: "PENDING_PAYMENT" } }, orderBy: { createdAt: "desc" }, select: { id: true } }),
+    getServedCities(),
   ]);
+  const citiesValue = (servedCities.length > 0 ? servedCities : DEFAULT_SERVED_CITIES).join(", ");
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-6">
@@ -75,7 +78,53 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
             <input name="deliveryFeePerKm" inputMode="decimal" defaultValue={centsToInput(fee?.feePerKmCents ?? 0)} className={input} />
           </Field>
         </div>
+        <Field label="Cidades onde entrega">
+          <input name="cities" defaultValue={citiesValue} placeholder="Jaborandi, Colina" className={input} />
+          <span className="text-xs font-normal text-muted-foreground">
+            Separe por vírgula. Endereço de outra cidade não consegue fazer pedido. Deixe vazio para aceitar qualquer cidade
+            dentro do raio.
+          </span>
+          {servedCities.length === 0 && (
+            <span className="text-xs font-medium text-destructive">
+              Ainda não salvo: hoje a loja aceita qualquer cidade. Toque em &quot;Salvar configurações&quot;.
+            </span>
+          )}
+        </Field>
         <SubmitButton pendingText="Salvando...">Salvar configurações</SubmitButton>
+      </form>
+
+      <form id="endereco" action={saveStoreAddressAction} className="scroll-mt-20 space-y-4 rounded-xl border p-4 text-sm">
+        <div>
+          <h2 className="text-lg font-semibold">Endereço da loja</h2>
+          <p className="text-muted-foreground">
+            O raio de entrega ({String(store.deliveryRadiusKm).replace(".", ",")} km) é contado a partir daqui. Também sai no
+            comprovante.
+          </p>
+        </div>
+        {saved === "endereco" && <p className="rounded-md bg-accent p-3">Endereço salvo e localizado no mapa.</p>}
+        <div className="grid gap-3 sm:grid-cols-[10rem_1fr_6rem]">
+          <Field label="CEP">
+            <input name="zipCode" required inputMode="numeric" defaultValue={store.zipCode} placeholder="14775-000" className={input} />
+          </Field>
+          <Field label="Rua">
+            <input name="street" required defaultValue={store.street} className={input} />
+          </Field>
+          <Field label="Número">
+            <input name="number" required defaultValue={store.number} className={input} />
+          </Field>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_5rem]">
+          <Field label="Bairro">
+            <input name="neighborhood" required defaultValue={store.neighborhood} className={input} />
+          </Field>
+          <Field label="Cidade">
+            <input name="city" required defaultValue={store.city} className={input} />
+          </Field>
+          <Field label="UF">
+            <input name="state" required maxLength={2} defaultValue={store.state} className={`${input} uppercase`} />
+          </Field>
+        </div>
+        <SubmitButton pendingText="Localizando no mapa...">Salvar endereço</SubmitButton>
       </form>
 
       <form id="horarios" action={saveOpeningHoursAction} className="scroll-mt-20 space-y-4 rounded-xl border p-4 text-sm">
@@ -163,9 +212,6 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
         </form>
       </section>
 
-      <p className="text-sm text-muted-foreground">
-        Endereço da loja: {store.street}, {store.number} · {store.neighborhood}, {store.city}/{store.state}
-      </p>
     </div>
   );
 }

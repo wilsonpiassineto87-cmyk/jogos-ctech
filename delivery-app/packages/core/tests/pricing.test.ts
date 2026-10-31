@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deliveryFeeCents, PricingError, quoteOrder, type MenuProduct } from "../src";
+import { deliveryFeeCents, PricingError, quoteOrder, sameCity, type MenuProduct } from "../src";
 
 const pizza: MenuProduct = {
   id: "pizza",
@@ -75,5 +75,13 @@ describe("deliveryFeeCents", () => {
 
   it("regra da cidade vence a global", () => {
     expect(deliveryFeeCents(rules, 1, "Campinas")).toBe(299);
+  });
+
+  it("só com regras de cidade, outra cidade fica fora da área", () => {
+    const onlyCity = [{ city: "Jaborandi", minDistanceKm: 0, maxDistanceKm: 8, baseFeeCents: 500, feePerKmCents: 0, priority: 0 }];
+    expect(deliveryFeeCents(onlyCity, 2, "jaborandi ")).toBe(500);
+    expect(deliveryFeeCents(onlyCity, 2, "Colina")).toBeNull();
+    expect(deliveryFeeCents(onlyCity, 2)).toBeNull();
+    expect(sameCity("São Paulo", "sao  PAULO")).toBe(true);
   });
 });

@@ -33,8 +33,8 @@ async function main() {
   await prisma.deliveryFeeRule.deleteMany();
   await prisma.deliveryFeeRule.createMany({
     data: [
-      { name: "Até 3 km", maxDistanceKm: 3, baseFeeCents: 499 },
-      { name: "3 a 8 km", minDistanceKm: 3, maxDistanceKm: 8, baseFeeCents: 499, feePerKmCents: 150 },
+      // Só entrega em Jaborandi-SP (outra cidade fica sem regra = fora da área).
+      { name: "Entrega em Jaborandi", city: "Jaborandi", maxDistanceKm: 8, baseFeeCents: 500 },
     ],
   });
 
@@ -68,14 +68,14 @@ async function main() {
       data: {
         userId: customer.id,
         label: "Casa",
-        zipCode: "01310-100",
-        street: "Avenida Paulista",
-        number: "1000",
-        neighborhood: "Bela Vista",
-        city: "São Paulo",
+        zipCode: "14775-000",
+        street: "Rua Inácio Máximo Diniz Junqueira",
+        number: "300",
+        neighborhood: "Centro",
+        city: "Jaborandi",
         state: "SP",
-        latitude: -23.5649,
-        longitude: -46.6525,
+        latitude: -20.6923,
+        longitude: -48.4146,
         isDefault: true,
       },
     });
@@ -89,14 +89,14 @@ async function main() {
       slug: STORE_SLUG,
       name: "Sorveteria do Bairro",
       description: "Sorvetes artesanais, picolés e açaí feitos todos os dias.",
-      zipCode: "01414-001",
-      street: "Rua Haddock Lobo",
-      number: "500",
-      neighborhood: "Cerqueira César",
-      city: "São Paulo",
+      zipCode: "14775-000",
+      street: "Rua Inácio Máximo Diniz Junqueira",
+      number: "100",
+      neighborhood: "Centro",
+      city: "Jaborandi",
       state: "SP",
-      latitude: -23.5605,
-      longitude: -46.6634,
+      latitude: -20.6921,
+      longitude: -48.4144,
       status: "ACTIVE",
       isOpen: true,
       minOrderCents: 1500,

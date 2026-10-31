@@ -103,13 +103,24 @@ export type DeliveryFeeRuleInput = {
   priority: number;
 };
 
+/** Compara nomes de cidade sem ligar para acento, maiúsculas e espaços ("São Paulo" = "sao paulo"). */
+export function sameCity(a: string, b: string): boolean {
+  const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+  return norm(a) === norm(b);
+}
+
 /**
  * Taxa de entrega cobrada do cliente. Regras da cidade vencem as globais;
  * depois vence a maior `priority`. Retorna null se nenhuma regra cobre a distância.
  */
 export function deliveryFeeCents(rules: DeliveryFeeRuleInput[], distanceKm: number, city?: string): number | null {
   const match = rules
-    .filter((r) => (r.city === null || r.city === city) && distanceKm >= r.minDistanceKm && distanceKm < r.maxDistanceKm)
+    .filter(
+      (r) =>
+        (r.city === null || (city !== undefined && sameCity(r.city, city))) &&
+        distanceKm >= r.minDistanceKm &&
+        distanceKm < r.maxDistanceKm,
+    )
     .sort((a, b) => Number(b.city !== null) - Number(a.city !== null) || b.priority - a.priority)[0];
 
   if (!match) return null;

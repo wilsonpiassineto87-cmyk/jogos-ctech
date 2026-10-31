@@ -2,6 +2,7 @@ import { formatCents } from "@delivery/core";
 import { Clock, MapPin, Star } from "lucide-react";
 import { isStoreOpenNow } from "@/features/stores/queries";
 import { getPublicMenu } from "@/lib/menu";
+import { getServedCities, joinCities } from "@/lib/service-area";
 import { getStore } from "@/lib/store";
 import { LogoMark } from "@/components/brand/logo";
 import { CartBar } from "@/components/customer/cart-bar";
@@ -16,7 +17,7 @@ const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export default async function MenuPage() {
   const store = await getStore();
-  const menu = await getPublicMenu(store.id);
+  const [menu, servedCities] = await Promise.all([getPublicMenu(store.id), getServedCities()]);
   const open = isStoreOpenNow(store.isOpen, store.openingHours, store.timezone);
   const categories = menu.filter((c) => c.products.length > 0);
 
@@ -39,7 +40,9 @@ export default async function MenuPage() {
             </span>
             <span className="inline-flex items-center gap-1.5">
               <MapPin className="size-4" />
-              {store.neighborhood}, {store.city} · entrega até {store.deliveryRadiusKm} km
+              {servedCities.length > 0
+                ? `Entregamos em ${joinCities(servedCities)} - ${store.state}`
+                : `${store.neighborhood}, ${store.city} · entrega até ${store.deliveryRadiusKm} km`}
             </span>
             {store.ratingCount > 0 && (
               <span className="inline-flex items-center gap-1.5">

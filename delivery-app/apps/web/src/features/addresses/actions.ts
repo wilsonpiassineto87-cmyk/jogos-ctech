@@ -1,11 +1,13 @@
 "use server";
 
+import { sameCity } from "@delivery/core";
 import { addressFormSchema, type AddressFormInput } from "@delivery/validators";
 import { revalidatePath } from "next/cache";
 import { HttpError } from "@/lib/api";
 import { requireUser } from "@/lib/authz";
 import { prisma } from "@/lib/db";
 import { geocodeAddress } from "@/lib/geocode";
+import { getServedCities, joinCities } from "@/lib/service-area";
 import { getStore } from "@/lib/store";
 
 export type SavedAddress = {
@@ -27,6 +29,10 @@ export async function createAddressAction(raw: AddressFormInput): Promise<Result
     const parsed = addressFormSchema.safeParse(raw);
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Endereço inválido" };
     const input = parsed.data;
+    const served = await getServedCities();
+    if (served.length > 0 && !served.some((city) => sameCity(city, input.city))) {
+      return { ok: false, error: `Ainda não entregamos em ${input.city}. Entregamos em ${joinCities(served)}.` };
+    }
 
     // Sem coordenadas (geocoding indisponível), usa as da loja: o pedido segue com a taxa
     // mínima e a loja confere o endereço ao aceitar.

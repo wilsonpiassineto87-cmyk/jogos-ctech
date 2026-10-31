@@ -1,6 +1,6 @@
 "use client";
 
-import { formatCents, parseBRL } from "@delivery/core";
+import { formatCents, parseBRL, sameCity } from "@delivery/core";
 import type { AddressFormInput } from "@delivery/validators";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import Link from "@/components/shared/link";
@@ -20,16 +20,21 @@ type Quote = {
 
 type Payment = "CASH" | "CARD_ON_DELIVERY" | "PIX";
 
+/** Onde a loja entrega. `cities` vazio = qualquer cidade dentro do raio. */
+export type ServiceArea = { cities: string[]; state: string; label: string };
+
 export function CheckoutClient({
   storeId,
   storeName,
   addresses: initialAddresses,
   pixEnabled,
+  serviceArea,
 }: {
   storeId: string;
   storeName: string;
   addresses: SavedAddress[];
   pixEnabled: boolean;
+  serviceArea: ServiceArea;
 }) {
   const router = useRouter();
   const cart = useCart();
@@ -175,6 +180,9 @@ export function CheckoutClient({
 
       <section className="space-y-3">
         <h2 className="font-semibold">Endereço de entrega</h2>
+        {serviceArea.cities.length > 0 && (
+          <p className="text-sm text-muted-foreground">Entregamos em {serviceArea.label}.</p>
+        )}
         {addresses.map((a) => (
           <label key={a.id} className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 has-[:checked]:border-primary">
             <input
@@ -196,6 +204,7 @@ export function CheckoutClient({
         ))}
         {showForm ? (
           <AddressForm
+            serviceArea={serviceArea}
             onCancel={addresses.length > 0 ? () => setShowForm(false) : undefined}
             onSaved={(a) => {
               setAddresses((list) => [a, ...list]);
@@ -307,8 +316,19 @@ const EMPTY_ADDRESS: AddressFormInput = {
   isDefault: false,
 };
 
-function AddressForm({ onSaved, onCancel }: { onSaved: (a: SavedAddress) => void; onCancel?: () => void }) {
-  const [form, setForm] = useState<AddressFormInput>(EMPTY_ADDRESS);
+function AddressForm({
+  serviceArea,
+  onSaved,
+  onCancel,
+}: {
+  serviceArea: ServiceArea;
+  onSaved: (a: SavedAddress) => void;
+  onCancel?: () => void;
+}) {
+  // Loja de uma cidade só: cidade e UF já vêm preenchidas.
+  const [form, setForm] = useState<AddressFormInput>(() =>
+    serviceArea.cities.length === 1 ? { ...EMPTY_ADDRESS, city: serviceArea.cities[0]!, state: serviceArea.state } : EMPTY_ADDRESS,
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const set = (field: keyof AddressFormInput) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -321,7 +341,8 @@ function AddressForm({ onSaved, onCancel }: { onSaved: (a: SavedAddress) => void
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await res.json();
-      if (data.erro) return setError("CEP não encontrado");
+      // Cidade pequena costuma ter um CEP só (ex.: 14775-000), que a busca não encontra.
+      if (data.erro) return setError("CEP não encontrado na busca. Preencha rua e bairro.");
       setError(null);
       setForm((f) => ({
         ...f,
@@ -348,6 +369,8 @@ function AddressForm({ onSaved, onCancel }: { onSaved: (a: SavedAddress) => void
     });
 
   const input = "h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50";
+  const outsideArea =
+    serviceArea.cities.length > 0 && form.city.trim().length > 2 && !serviceArea.cities.some((c) => sameCity(c, form.city));
 
   return (
     <div className="space-y-3 rounded-xl border p-4">
@@ -366,9 +389,12 @@ function AddressForm({ onSaved, onCancel }: { onSaved: (a: SavedAddress) => void
         <input className={input} placeholder="UF" maxLength={2} value={form.state} onChange={set("state")} />
       </div>
       <input className={input} placeholder="Ponto de referência (opcional)" value={form.reference ?? ""} onChange={set("reference")} />
+      {outsideArea && (
+        <p className="text-sm text-destructive">Ainda não entregamos em {form.city.trim()}. Entregamos em {serviceArea.label}.</p>
+      )}
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex gap-2">
-        <Button onClick={save} disabled={pending}>
+        <Button onClick={save} disabled={pending || outsideArea}>
           {pending ? "Salvando..." : "Salvar endereço"}
         </Button>
         {onCancel && (
