@@ -7,19 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 
 // Evento do Chrome/Edge/Samsung Internet que permite abrir a janela de instalação.
-type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
+export type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
 
 const DISMISS_KEY = "install-banner-dismissed-at";
 const DISMISS_DAYS = 7;
 
-function isStandalone() {
+export function isStandalone() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true
   );
 }
 
-function isIOS() {
+export function isIOS() {
   // iPadOS se apresenta como Mac, mas tem tela de toque.
   return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && navigator.maxTouchPoints > 1);
 }
@@ -103,29 +103,36 @@ export function InstallBanner({ appName }: { appName: string }) {
       </div>
 
       <Modal open={showIosHelp} onClose={() => setShowIosHelp(false)} title="Instalar no iPhone">
-        <ol className="space-y-4 text-sm">
-          <li className="flex items-start gap-3">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">1</span>
-            <span>
-              Abra este site no <strong>Safari</strong> e toque em <strong>Compartilhar</strong>{" "}
-              <Share className="inline size-4 align-text-bottom" /> (na barra de baixo).
-            </span>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">2</span>
-            <span>
-              Role e toque em <strong>Adicionar à Tela de Início</strong>{" "}
-              <SquarePlus className="inline size-4 align-text-bottom" />.
-            </span>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">3</span>
-            <span>
-              Toque em <strong>Adicionar</strong>. O ícone da {appName} aparece junto com os seus apps.
-            </span>
-          </li>
-        </ol>
+        <IosInstallSteps appName={appName} />
       </Modal>
     </>
+  );
+}
+
+/** Passo a passo do Safari: no iPhone não existe a janela de instalação. */
+export function IosInstallSteps({ appName }: { appName: string }) {
+  return (
+    <ol className="space-y-4 text-sm">
+      <li className="flex items-start gap-3">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">1</span>
+        <span>
+          Abra este site no <strong>Safari</strong> e toque em <strong>Compartilhar</strong>{" "}
+          <Share className="inline size-4 align-text-bottom" /> (na barra de baixo).
+        </span>
+      </li>
+      <li className="flex items-start gap-3">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">2</span>
+        <span>
+          Role e toque em <strong>Adicionar à Tela de Início</strong>{" "}
+          <SquarePlus className="inline size-4 align-text-bottom" />.
+        </span>
+      </li>
+      <li className="flex items-start gap-3">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">3</span>
+        <span>
+          Toque em <strong>Adicionar</strong>. O ícone da {appName} aparece junto com os seus apps.
+        </span>
+      </li>
+    </ol>
   );
 }

@@ -5,10 +5,20 @@
 /sw.js
   Cache-Control: no-cache
 
-# App instalável: arquivo fixo servido direto pelo Cloudflare, sem passar pelo Worker.
+# App instalável: arquivo fixo, servido direto pela CDN.
 /manifest.webmanifest
   Content-Type: application/manifest+json
   Cache-Control: public,max-age=3600
 
 /icons/*
   Cache-Control: public,max-age=86400
+
+# Instalador Android: baixa como arquivo (e não abre como texto) e revalida a cada versão nova.
+/app/*.apk
+  Content-Type: application/vnd.android.package-archive
+  Content-Disposition: attachment
+  Cache-Control: public,max-age=0,must-revalidate
+
+# Liga o APK ao site (sem isso o app abre com a barra de endereço do navegador).
+/.well-known/assetlinks.json
+  Content-Type: application/json
