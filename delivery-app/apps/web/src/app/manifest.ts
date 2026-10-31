@@ -1,17 +1,19 @@
 import type { MetadataRoute } from "next";
 
 // PWA do entregador: "Adicionar à tela inicial" abre direto no portal /courier.
-// TODO: adicionar ícones 192x192 e 512x512 em public/icons.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "[Nome do Seu App] Entregador",
-    short_name: "Entregador",
+    name: "Entregas · Sorveteria do Bairro",
+    short_name: "Entregas",
     start_url: "/courier",
     scope: "/courier",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#ffffff",
-    theme_color: "#e8552a",
-    icons: [],
+    background_color: "#FDF9F0",
+    theme_color: "#E0457B",
+    icons: [
+      { src: "/icons/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: "/icons/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "maskable" },
+    ],
   };
 }

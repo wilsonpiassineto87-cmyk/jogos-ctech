@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signOut } from "@/lib/auth";
+import { LogoMark } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 
 export type NavItem = { href: string; label: string };
@@ -20,7 +21,10 @@ export function PortalShell({
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
-          <span className="font-semibold">{title}</span>
+          <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Página inicial">
+            <LogoMark className="size-8" />
+            <span className="font-display text-lg font-semibold">{title}</span>
+          </Link>
           <nav className="flex flex-1 gap-1 overflow-x-auto text-sm">
             {nav.map((item) => (
               <Link key={item.href} href={item.href} className="rounded-md px-3 py-1.5 hover:bg-accent">

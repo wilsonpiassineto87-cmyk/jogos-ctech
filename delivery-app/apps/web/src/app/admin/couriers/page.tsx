@@ -1,4 +1,6 @@
+import { formatPhone, maskCPF } from "@delivery/core";
 import { prisma } from "@/lib/db";
+import { formatDateTime } from "@/lib/order-status";
 import { setCourierStatusAction } from "@/features/admin/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,14 +19,21 @@ export default async function AdminCouriersPage() {
       isOnline: true,
       vehicleType: true,
       licensePlate: true,
+      taxId: true,
+      createdAt: true,
       user: { select: { name: true, email: true, phone: true } },
     },
   });
+  const pending = couriers.filter((c) => c.status === "PENDING_APPROVAL").length;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
       <h1 className="text-2xl font-bold tracking-tight">Entregadores</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Para cadastrar um novo entregador, use a tela Usuários.</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {pending > 0
+          ? `${pending} cadastro(s) aguardando aprovação.`
+          : "Novos entregadores se cadastram em /register/courier e aparecem aqui para aprovação."}
+      </p>
       <ul className="mt-6 divide-y rounded-xl border">
         {couriers.length === 0 && <li className="p-4 text-sm text-muted-foreground">Nenhum entregador cadastrado.</li>}
         {couriers.map((c) => (
@@ -35,8 +44,11 @@ export default async function AdminCouriersPage() {
               </p>
               <p className="text-muted-foreground">
                 {c.user.email}
-                {c.user.phone ? ` · ${c.user.phone}` : ""} · {VEHICLE_LABEL[c.vehicleType]}
-                {c.licensePlate ? ` ${c.licensePlate}` : ""}
+                {c.user.phone ? ` · ${formatPhone(c.user.phone)}` : ""}
+              </p>
+              <p className="text-muted-foreground">
+                CPF {maskCPF(c.taxId)} · {VEHICLE_LABEL[c.vehicleType]}
+                {c.licensePlate ? ` ${c.licensePlate}` : ""} · desde {formatDateTime(c.createdAt).split(",")[0]}
               </p>
             </div>
             <Badge variant={c.status === "APPROVED" ? "default" : "secondary"}>{STATUS_LABEL[c.status]}</Badge>

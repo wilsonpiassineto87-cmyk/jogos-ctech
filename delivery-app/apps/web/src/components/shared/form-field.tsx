@@ -6,7 +6,7 @@ export function FormField({ label, className, ...props }: React.ComponentProps<"
       {label}
       <input
         className={cn(
-          "h-10 rounded-md border bg-background px-3 text-sm font-normal outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+          "h-11 rounded-xl border bg-background px-3 text-sm font-normal outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
           className,
         )}
         {...props}

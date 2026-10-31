@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { signIn } from "@/lib/auth";
 import { env } from "@/lib/env";
 import { FormField } from "@/components/shared/form-field";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/shared/submit-button";
 
 export const metadata = { title: "Entrar" };
 
@@ -44,17 +44,26 @@ export default async function LoginPage({
 
   return (
     <form action={login} className="grid gap-4">
-      <h1 className="text-xl font-semibold">Entrar</h1>
-      {error && <p className="rounded-md bg-destructive/10 p-2 text-sm text-destructive">E-mail ou senha inválidos.</p>}
+      <div>
+        <h1 className="text-2xl font-semibold">Entrar</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Que bom te ver de novo!</p>
+      </div>
+      {error && <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">E-mail ou senha inválidos.</p>}
       <FormField label="E-mail" name="email" type="email" autoComplete="email" required />
       <FormField label="Senha" name="password" type="password" autoComplete="current-password" required />
-      <Button type="submit" size="lg">
+      <SubmitButton size="lg" pendingText="Entrando...">
         Entrar
-      </Button>
+      </SubmitButton>
       <p className="text-center text-sm text-muted-foreground">
         Não tem conta?{" "}
-        <Link href="/register" className="text-primary hover:underline">
+        <Link href="/register" className="font-medium text-primary hover:underline">
           Cadastre-se
+        </Link>
+      </p>
+      <p className="border-t pt-4 text-center text-sm text-muted-foreground">
+        Quer fazer entregas?{" "}
+        <Link href="/register/courier" className="font-medium text-primary hover:underline">
+          Seja entregador
         </Link>
       </p>
     </form>

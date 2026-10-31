@@ -5,6 +5,22 @@ import { createPrismaClient } from "../src/index.js";
 
 const prisma = createPrismaClient();
 
+// Loja atendida pelo app (STORE_SLUG em wrangler.jsonc / .env).
+const STORE_SLUG = "sorveteria-do-bairro";
+
+const FLAVORS = ["Chocolate belga", "Morango", "Creme", "Pistache", "Doce de leite", "Limão siciliano", "Flocos"];
+
+type Option = [name: string, priceCents?: number];
+const group = (name: string, minSelect: number, maxSelect: number, options: Option[], position = 0) => ({
+  name,
+  minSelect,
+  maxSelect,
+  position,
+  options: { create: options.map(([optionName, priceCents = 0], i) => ({ name: optionName, priceCents, position: i })) },
+});
+const flavors = (maxSelect: number, position = 1) =>
+  group(maxSelect === 1 ? "Sabor" : `Sabores (até ${maxSelect})`, 1, maxSelect, FLAVORS.map((f) => [f]), position);
+
 async function main() {
   const passwordHash = await hashPassword(process.env.SEED_PASSWORD ?? "delivery123");
 
@@ -22,9 +38,11 @@ async function main() {
     ],
   });
 
-  const category = (name: string, slug: string) =>
-    prisma.storeCategory.upsert({ where: { slug }, update: {}, create: { name, slug } });
-  const pizza = await category("Pizza", "pizza");
+  const sorvetes = await prisma.storeCategory.upsert({
+    where: { slug: "sorvetes" },
+    update: {},
+    create: { name: "Sorvetes", slug: "sorvetes" },
+  });
 
   const user = (email: string, name: string, roles: ("CUSTOMER" | "MERCHANT" | "COURIER" | "ADMIN")[]) =>
     prisma.user.upsert({
@@ -35,7 +53,7 @@ async function main() {
     });
 
   const admin = await user("admin@delivery.test", "Admin", ["ADMIN", "MERCHANT"]);
-  const merchant = await user("loja@delivery.test", "Dono da Pizzaria", ["CUSTOMER", "MERCHANT"]);
+  const merchant = await user("loja@delivery.test", "Dono da Sorveteria", ["CUSTOMER", "MERCHANT"]);
   const courier = await user("entregador@delivery.test", "Entregador Teste", ["COURIER"]);
   const customer = await user("cliente@delivery.test", "Cliente Teste", ["CUSTOMER"]);
 
@@ -63,99 +81,127 @@ async function main() {
     });
   }
 
-  const storeAddress = {
-    zipCode: "01414-001",
-    street: "Rua Haddock Lobo",
-    neighborhood: "Cerqueira César",
-    city: "São Paulo",
-    state: "SP",
-  };
-
-  const pizzaria = await prisma.store.upsert({
-    where: { slug: "pizzaria-do-bairro" },
+  // Sem horários cadastrados: a loja vende sempre que não estiver pausada no painel.
+  const store = await prisma.store.upsert({
+    where: { slug: STORE_SLUG },
     update: {},
     create: {
-      ...storeAddress,
-      slug: "pizzaria-do-bairro",
-      name: "Pizzaria do Bairro",
-      description: "Pizzas de longa fermentação no forno a lenha.",
+      slug: STORE_SLUG,
+      name: "Sorveteria do Bairro",
+      description: "Sorvetes artesanais, picolés e açaí feitos todos os dias.",
+      zipCode: "01414-001",
+      street: "Rua Haddock Lobo",
       number: "500",
+      neighborhood: "Cerqueira César",
+      city: "São Paulo",
+      state: "SP",
       latitude: -23.5605,
       longitude: -46.6634,
       status: "ACTIVE",
       isOpen: true,
-      minOrderCents: 3000,
-      prepTimeMinutes: 35,
-      categories: { connect: [{ id: pizza.id }] },
+      minOrderCents: 1500,
+      prepTimeMinutes: 15,
+      categories: { connect: [{ id: sorvetes.id }] },
       members: { create: { userId: merchant.id, role: "OWNER" } },
-      openingHours: {
-        create: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({ dayOfWeek, opensAt: "18:00", closesAt: "23:30" })),
-      },
     },
   });
 
-  if ((await prisma.product.count({ where: { storeId: pizzaria.id } })) === 0) {
-    const pizzas = await prisma.productCategory.create({
-      data: { storeId: pizzaria.id, name: "Pizzas", position: 0 },
-    });
-    const bebidas = await prisma.productCategory.create({
-      data: { storeId: pizzaria.id, name: "Bebidas", position: 1 },
-    });
+  if ((await prisma.product.count({ where: { storeId: store.id } })) === 0) {
+    const category = (name: string, position: number) =>
+      prisma.productCategory.create({ data: { storeId: store.id, name, position } });
+    const [copos, acai, milkshakes, picoles] = [
+      await category("Sorvetes", 0),
+      await category("Açaí", 1),
+      await category("Milkshakes", 2),
+      await category("Picolés", 3),
+    ];
+    const toppings = group(
+      "Coberturas (até 2)",
+      0,
+      2,
+      [
+        ["Calda de chocolate", 200],
+        ["Calda de morango", 200],
+        ["Granulado", 150],
+        ["Paçoca", 200],
+        ["Chantilly", 250],
+      ],
+      2,
+    );
 
-    const sizes = {
-      name: "Tamanho",
-      minSelect: 1,
-      maxSelect: 1,
-      options: {
-        create: [
-          { name: "Média (6 fatias)", priceCents: 0, position: 0 },
-          { name: "Grande (8 fatias)", priceCents: 1000, position: 1 },
-        ],
-      },
-    };
-
-    await prisma.product.create({
-      data: {
-        storeId: pizzaria.id,
-        categoryId: pizzas.id,
-        name: "Margherita",
-        description: "Molho de tomate, muçarela de búfala e manjericão.",
-        priceCents: 4990,
+    const products = [
+      {
+        categoryId: copos.id,
+        name: "Sorvete no copo",
+        description: "Sorvete artesanal no copo. Escolha o tamanho, até 3 sabores e coberturas.",
+        priceCents: 1200,
         optionGroups: {
           create: [
-            sizes,
-            {
-              name: "Borda recheada",
-              minSelect: 0,
-              maxSelect: 1,
-              position: 1,
-              options: { create: [{ name: "Catupiry", priceCents: 800 }, { name: "Cheddar", priceCents: 800 }] },
-            },
+            group("Tamanho", 1, 1, [["Pequeno (1 bola)"], ["Médio (2 bolas)", 600], ["Grande (3 bolas)", 1100]]),
+            flavors(3),
+            toppings,
           ],
         },
       },
-    });
-    await prisma.product.create({
-      data: {
-        storeId: pizzaria.id,
-        categoryId: pizzas.id,
-        name: "Calabresa",
-        description: "Calabresa artesanal, cebola roxa e azeitonas.",
-        priceCents: 4590,
-        position: 1,
-        optionGroups: { create: [sizes] },
+      {
+        categoryId: copos.id,
+        name: "Casquinha",
+        description: "Uma bola na casquinha crocante.",
+        priceCents: 900,
+        optionGroups: { create: [flavors(1, 0), group("Casquinha", 1, 1, [["Tradicional"], ["Banhada no chocolate", 300]], 1)] },
       },
-    });
-    await prisma.product.create({
-      data: { storeId: pizzaria.id, categoryId: bebidas.id, name: "Refrigerante lata", priceCents: 700 },
-    });
+      {
+        categoryId: acai.id,
+        name: "Açaí na tigela",
+        description: "Açaí cremoso batido na hora.",
+        priceCents: 1800,
+        optionGroups: {
+          create: [
+            group("Tamanho", 1, 1, [["300 ml"], ["500 ml", 800], ["700 ml", 1400]]),
+            group(
+              "Acompanhamentos (até 4)",
+              0,
+              4,
+              [["Banana"], ["Morango"], ["Granola"], ["Leite condensado", 200], ["Leite em pó", 200], ["Paçoca", 200]],
+              1,
+            ),
+          ],
+        },
+      },
+      {
+        categoryId: milkshakes.id,
+        name: "Milkshake",
+        description: "400 ml, cremoso e gelado.",
+        priceCents: 1700,
+        optionGroups: {
+          create: [group("Sabor", 1, 1, [["Chocolate"], ["Morango"], ["Baunilha"], ["Ovomaltine", 300], ["Nutella", 400]])],
+        },
+      },
+      {
+        categoryId: picoles.id,
+        name: "Picolé de fruta",
+        description: "Feito com fruta de verdade.",
+        priceCents: 600,
+        optionGroups: { create: [group("Sabor", 1, 1, [["Limão"], ["Uva"], ["Maracujá"], ["Coco"], ["Manga"]])] },
+      },
+      {
+        categoryId: picoles.id,
+        name: "Picolé cremoso",
+        description: "Cremoso, com cobertura.",
+        priceCents: 900,
+        optionGroups: { create: [group("Sabor", 1, 1, [["Chocolate"], ["Morango"], ["Leite condensado"], ["Doce de leite"]])] },
+      },
+    ];
+    for (const [position, product] of products.entries()) {
+      await prisma.product.create({ data: { ...product, storeId: store.id, position } });
+    }
   }
 
-  // O app é de loja única (STORE_SLUG=pizzaria-do-bairro). O admin também entra no painel dela.
+  // O admin também entra no painel da loja.
   await prisma.storeMember.upsert({
-    where: { storeId_userId: { storeId: pizzaria.id, userId: admin.id } },
+    where: { storeId_userId: { storeId: store.id, userId: admin.id } },
     update: {},
-    create: { storeId: pizzaria.id, userId: admin.id, role: "MANAGER" },
+    create: { storeId: store.id, userId: admin.id, role: "MANAGER" },
   });
 
   console.log("Seed concluído.");

@@ -2,48 +2,59 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Tokens no formato do shadcn/ui. Troque --primary pela cor da sua marca. */
+/*
+ * Identidade visual da sorveteria (tokens no formato do shadcn/ui).
+ * Morango (primária), menta (sucesso/aberto), casquinha (destaques) e chocolate (texto)
+ * sobre um fundo creme de baunilha. Para trocar a marca, mude só estes valores e o logo
+ * em components/brand.
+ */
 :root {
-  --radius: 0.75rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.18 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0 0);
-  --primary: oklch(0.62 0.21 33);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0 0);
-  --secondary-foreground: oklch(0.2 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.5 0 0);
-  --accent: oklch(0.96 0.02 40);
-  --accent-foreground: oklch(0.2 0 0);
-  --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.92 0 0);
-  --input: oklch(0.92 0 0);
-  --ring: oklch(0.62 0.21 33);
+  --radius: 1.1rem;
+  --background: oklch(0.985 0.012 90);
+  --foreground: oklch(0.3 0.045 40);
+  --card: oklch(1 0.004 90);
+  --card-foreground: oklch(0.3 0.045 40);
+  --popover: oklch(1 0.004 90);
+  --popover-foreground: oklch(0.3 0.045 40);
+  --primary: oklch(0.6 0.19 0);
+  --primary-foreground: oklch(0.99 0.008 0);
+  --secondary: oklch(0.95 0.035 175);
+  --secondary-foreground: oklch(0.32 0.06 175);
+  --muted: oklch(0.96 0.015 70);
+  --muted-foreground: oklch(0.52 0.035 40);
+  --accent: oklch(0.95 0.035 355);
+  --accent-foreground: oklch(0.35 0.08 0);
+  --destructive: oklch(0.55 0.21 25);
+  --success: oklch(0.55 0.11 172);
+  --success-foreground: oklch(0.99 0.01 172);
+  --cone: oklch(0.76 0.11 70);
+  --border: oklch(0.9 0.025 20);
+  --input: oklch(0.88 0.03 20);
+  --ring: oklch(0.6 0.19 0);
 }
 
 .dark {
-  --background: oklch(0.15 0 0);
-  --foreground: oklch(0.97 0 0);
-  --card: oklch(0.2 0 0);
-  --card-foreground: oklch(0.97 0 0);
-  --popover: oklch(0.2 0 0);
-  --popover-foreground: oklch(0.97 0 0);
-  --primary: oklch(0.68 0.19 35);
-  --primary-foreground: oklch(0.15 0 0);
-  --secondary: oklch(0.27 0 0);
-  --secondary-foreground: oklch(0.97 0 0);
-  --muted: oklch(0.27 0 0);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.3 0.03 40);
-  --accent-foreground: oklch(0.97 0 0);
-  --destructive: oklch(0.65 0.2 25);
+  --background: oklch(0.2 0.025 35);
+  --foreground: oklch(0.96 0.015 90);
+  --card: oklch(0.24 0.028 35);
+  --card-foreground: oklch(0.96 0.015 90);
+  --popover: oklch(0.24 0.028 35);
+  --popover-foreground: oklch(0.96 0.015 90);
+  --primary: oklch(0.72 0.15 0);
+  --primary-foreground: oklch(0.2 0.03 0);
+  --secondary: oklch(0.3 0.04 175);
+  --secondary-foreground: oklch(0.95 0.02 175);
+  --muted: oklch(0.29 0.025 35);
+  --muted-foreground: oklch(0.74 0.025 60);
+  --accent: oklch(0.32 0.05 355);
+  --accent-foreground: oklch(0.96 0.015 90);
+  --destructive: oklch(0.64 0.2 25);
+  --success: oklch(0.7 0.11 172);
+  --success-foreground: oklch(0.18 0.03 172);
+  --cone: oklch(0.78 0.1 70);
   --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.68 0.19 35);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.72 0.15 0);
 }
 
 @theme inline {
@@ -62,6 +73,11 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-cone: var(--cone);
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-heading), ui-serif, Georgia, serif;
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -78,4 +94,18 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+  h1,
+  h2 {
+    @apply font-display;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Faixa de "calda escorrendo" (bolinhas penduradas), usada no topo da página inicial. */
+.bg-drip {
+  height: 26px;
+  background:
+    linear-gradient(var(--primary), var(--primary)) top / 100% 10px no-repeat,
+    radial-gradient(circle at 50% 10px, var(--primary) 9px, transparent 10px) 0 0 / 34px 26px repeat-x,
+    radial-gradient(circle at 50% 8px, var(--primary) 5px, transparent 6px) 17px 6px / 34px 26px repeat-x;
 }

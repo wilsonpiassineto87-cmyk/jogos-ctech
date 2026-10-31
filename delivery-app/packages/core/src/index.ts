@@ -7,3 +7,4 @@ export * from "./order-state-machine";
 export * from "./opening-hours";
 export * from "./codes";
 export * from "./password";
+export * from "./documents";

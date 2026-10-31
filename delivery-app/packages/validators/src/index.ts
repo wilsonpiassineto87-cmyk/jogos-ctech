@@ -1,4 +1,5 @@
 // Schemas compartilhados entre formulários (client) e handlers/actions (server).
+import { isValidBrazilPhone, isValidCPF, normalizePhone, onlyDigits } from "@delivery/core";
 import { z } from "zod";
 
 const id = z.string().min(1).max(64);
@@ -8,13 +9,41 @@ const cents = z.number().int().min(0);
 
 // --- Auth --------------------------------------------------------------------
 
+/** Celular com DDD em qualquer formato; grava só os dígitos ("11999990000"). */
+const phone = z
+  .string()
+  .trim()
+  .refine(isValidBrazilPhone, "Telefone inválido: use o DDD e o número, ex.: (11) 99999-0000")
+  .transform(normalizePhone);
+
 export const registerSchema = z.object({
-  name: z.string().trim().min(2).max(100),
-  email: z.email().toLowerCase(),
-  phone: z.string().regex(/^\+?\d{10,13}$/, "Telefone inválido").optional(),
-  password: z.string().min(8, "Mínimo de 8 caracteres").max(128),
+  name: z.string().trim().min(2, "Informe seu nome").max(100),
+  email: z.email("E-mail inválido").trim().toLowerCase(),
+  phone,
+  password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres").max(128),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
+
+export const VEHICLE_TYPES = ["MOTORCYCLE", "BICYCLE", "CAR", "ON_FOOT"] as const;
+
+/** Cadastro de entregador: fica em análise até o admin aprovar. */
+export const courierSignupSchema = registerSchema
+  .extend({
+    taxId: z.string().trim().refine(isValidCPF, "CPF inválido").transform(onlyDigits),
+    vehicleType: z.enum(VEHICLE_TYPES, "Escolha o veículo"),
+    licensePlate: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .transform((v) => v.replace(/[\s-]/g, "") || undefined)
+      .pipe(z.string().regex(/^[A-Z]{3}\d[A-Z0-9]\d{2}$/, "Placa inválida (ex.: ABC1D23)").optional())
+      .optional(),
+  })
+  .refine((c) => !(c.vehicleType === "MOTORCYCLE" || c.vehicleType === "CAR") || c.licensePlate, {
+    message: "Informe a placa da moto ou do carro",
+    path: ["licensePlate"],
+  });
+export type CourierSignupInput = z.infer<typeof courierSignupSchema>;
 
 export const loginSchema = z.object({
   email: z.email().toLowerCase(),
