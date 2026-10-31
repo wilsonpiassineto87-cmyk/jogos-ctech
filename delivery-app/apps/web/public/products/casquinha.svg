@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><title>Casquinha</title>
+<rect width="240" height="240" rx="36" fill="#FFF3DC"/>
+<circle cx="120" cy="124" r="92" fill="#FCE6BE"/>
+<path d="M82 112h76l-32 104a6.5 6.5 0 0 1-12 0z" fill="#E1AE6A"/>
+<path d="M90 128l52 40M98 112l50 38M86 150l40 30M150 128l-52 40M142 112l-50 38M154 150l-40 30" stroke="#C48C45" stroke-width="5" stroke-linecap="round"/>
+<path d="M76 108c0-26 20-46 44-46s44 20 44 46c-6 8-14 4-18 10-6-6-12 2-18-2-6 6-14 0-18 6-6-6-12 4-18-4-8 4-14-2-16-10z" fill="#F38BA8"/>
+<circle cx="104" cy="82" r="8" fill="#fff" opacity=".5"/>
+<circle cx="120" cy="54" r="10" fill="#E0457B"/>
+<path d="M120 44c2-10 10-14 16-14" stroke="#3FA391" stroke-width="5" stroke-linecap="round" fill="none"/>
+</svg>

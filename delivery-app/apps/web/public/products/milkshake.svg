@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><title>Milkshake</title>
+<rect width="240" height="240" rx="36" fill="#E3F4F0"/>
+<circle cx="120" cy="128" r="92" fill="#CBEAE2"/>
+<rect x="128" y="22" width="10" height="72" rx="5" transform="rotate(14 133 58)" fill="#E0457B"/>
+<path d="M78 92c-6-20 12-34 26-28 4-16 28-18 34-2 16-4 28 12 22 30z" fill="#FFFDF7"/>
+<circle cx="120" cy="58" r="10" fill="#D7263D"/>
+<path d="M120 48c0-8 6-12 12-12" stroke="#3FA391" stroke-width="4" stroke-linecap="round" fill="none"/>
+<path d="M74 92h92l-12 108a10 10 0 0 1-10 9H96a10 10 0 0 1-10-9z" fill="#F7E3B5"/>
+<path d="M78 128h84l-6 54H84z" fill="#F38BA8"/>
+<path d="M74 92h92l-1.5 12h-89z" fill="#E8CC92"/>
+<path d="M98 140v32" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".55"/>
+</svg>

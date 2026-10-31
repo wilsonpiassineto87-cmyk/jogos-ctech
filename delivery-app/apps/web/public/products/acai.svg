@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><title>Açaí na tigela</title>
+<rect width="240" height="240" rx="36" fill="#EFE3F5"/>
+<circle cx="120" cy="128" r="92" fill="#E2CDEE"/>
+<ellipse cx="120" cy="116" rx="80" ry="22" fill="#4A1F5C"/>
+<path d="M50 112c8-22 40-34 70-34s62 12 70 34c-20 10-120 10-140 0z" fill="#5B2A6E"/>
+<circle cx="92" cy="96" r="13" fill="#FFF1B8"/><circle cx="92" cy="96" r="5" fill="#F0D77A"/>
+<circle cx="120" cy="90" r="13" fill="#FFF1B8"/><circle cx="120" cy="90" r="5" fill="#F0D77A"/>
+<circle cx="148" cy="98" r="13" fill="#FFF1B8"/><circle cx="148" cy="98" r="5" fill="#F0D77A"/>
+<g fill="#D79A52"><circle cx="76" cy="108" r="4"/><circle cx="106" cy="108" r="4"/><circle cx="136" cy="110" r="4"/><circle cx="164" cy="108" r="4"/><circle cx="84" cy="100" r="3"/><circle cx="158" cy="90" r="3"/></g>
+<circle cx="134" cy="76" r="8" fill="#E0457B"/>
+<path d="M40 116h160c-4 50-38 82-80 82s-76-32-80-82z" fill="#3FA391"/>
+<path d="M40 116h160l-1 8H41z" fill="#2E8574"/>
+<path d="M78 150c14 18 70 18 84 0" stroke="#fff" stroke-width="7" stroke-linecap="round" fill="none" opacity=".5"/>
+</svg>

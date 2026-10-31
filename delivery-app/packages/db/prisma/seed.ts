@@ -133,6 +133,7 @@ async function main() {
       {
         categoryId: copos.id,
         name: "Sorvete no copo",
+        imageUrl: "/products/sorvete-copo.svg",
         description: "Sorvete artesanal no copo. Escolha o tamanho, até 3 sabores e coberturas.",
         priceCents: 1200,
         optionGroups: {
@@ -146,6 +147,7 @@ async function main() {
       {
         categoryId: copos.id,
         name: "Casquinha",
+        imageUrl: "/products/casquinha.svg",
         description: "Uma bola na casquinha crocante.",
         priceCents: 900,
         optionGroups: { create: [flavors(1, 0), group("Casquinha", 1, 1, [["Tradicional"], ["Banhada no chocolate", 300]], 1)] },
@@ -153,6 +155,7 @@ async function main() {
       {
         categoryId: acai.id,
         name: "Açaí na tigela",
+        imageUrl: "/products/acai.svg",
         description: "Açaí cremoso batido na hora.",
         priceCents: 1800,
         optionGroups: {
@@ -171,6 +174,7 @@ async function main() {
       {
         categoryId: milkshakes.id,
         name: "Milkshake",
+        imageUrl: "/products/milkshake.svg",
         description: "400 ml, cremoso e gelado.",
         priceCents: 1700,
         optionGroups: {
@@ -180,6 +184,7 @@ async function main() {
       {
         categoryId: picoles.id,
         name: "Picolé de fruta",
+        imageUrl: "/products/picole-fruta.svg",
         description: "Feito com fruta de verdade.",
         priceCents: 600,
         optionGroups: { create: [group("Sabor", 1, 1, [["Limão"], ["Uva"], ["Maracujá"], ["Coco"], ["Manga"]])] },
@@ -187,6 +192,7 @@ async function main() {
       {
         categoryId: picoles.id,
         name: "Picolé cremoso",
+        imageUrl: "/products/picole-cremoso.svg",
         description: "Cremoso, com cobertura.",
         priceCents: 900,
         optionGroups: { create: [group("Sabor", 1, 1, [["Chocolate"], ["Morango"], ["Leite condensado"], ["Doce de leite"]])] },

@@ -36,7 +36,7 @@ export function ProductCard({ product, store, storeOpen }: { product: MenuProduc
         <div className="flex shrink-0 flex-col items-end gap-2">
           {product.imageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.imageUrl} alt="" className="size-20 rounded-lg object-cover" />
+            <img src={product.imageUrl} alt="" loading="lazy" decoding="async" className="size-20 rounded-lg object-cover" />
           )}
           {!product.isAvailable && <Badge variant="secondary">Esgotado</Badge>}
         </div>
@@ -103,6 +103,10 @@ function ProductDialog({ product, store, onClose }: { product: MenuProduct; stor
         </div>
       }
     >
+      {product.imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={product.imageUrl} alt="" className="mb-4 aspect-[4/3] w-full rounded-xl bg-muted object-cover" />
+      )}
       {product.description && <p className="text-sm text-muted-foreground">{product.description}</p>}
 
       {product.optionGroups.map((group) => (

@@ -161,7 +161,12 @@ export const productFormSchema = z.object({
     .transform((v) => v || null)
     .nullable()
     .optional(),
-  imageUrl: z.union([z.literal(""), z.url("URL de imagem inválida")]).transform((v) => v || undefined).optional(),
+  // Vazio = sem foto. Aceita link externo ou caminho do próprio site (ilustração pronta
+  // em /products/... ou foto enviada em /api/v1/images/...).
+  imageUrl: z
+    .union([z.literal(""), z.url("URL de imagem inválida"), z.string().regex(/^\/[\w\-./]+$/, "Imagem inválida")])
+    .transform((v) => v || null)
+    .optional(),
   priceCents: cents,
 });
 export type ProductFormInput = z.infer<typeof productFormSchema>;

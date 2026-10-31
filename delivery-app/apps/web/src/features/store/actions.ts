@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import { runAction } from "@/lib/action";
 import { requireStoreMember } from "@/lib/authz";
 import { prisma } from "@/lib/db";
+import { refreshPublicMenu } from "@/lib/menu";
+import { UPLOAD_MAX_BYTES, UPLOAD_TYPES, UPLOADED_IMAGE_PREFIX } from "@/lib/product-images";
 import { forgetStore, getStore } from "@/lib/store";
 import { acceptOrder, transitionOrder } from "@/features/orders/status";
 
@@ -68,7 +70,7 @@ export async function createCategoryAction(form: FormData) {
     data: { storeId: store.id, name: parsed.data.name, position: (last._max.position ?? -1) + 1 },
   });
   revalidatePath(`${base}/menu`);
-  revalidatePath("/");
+  refreshPublicMenu(store.id);
 }
 
 export async function deleteCategoryAction(categoryId: string) {
@@ -76,7 +78,7 @@ export async function deleteCategoryAction(categoryId: string) {
   // Produtos da categoria ficam "sem categoria" (onDelete: SetNull), não somem.
   await prisma.productCategory.deleteMany({ where: { id: categoryId, storeId: store.id } });
   revalidatePath(`${base}/menu`);
-  revalidatePath("/");
+  refreshPublicMenu(store.id);
 }
 
 function parseProduct(form: FormData, path: string) {
@@ -99,22 +101,47 @@ async function assertCategory(storeId: string, categoryId: string | null | undef
   if (!exists) fail(path, "Categoria inválida");
 }
 
+/** Foto enviada do aparelho (campo "image"): grava no banco e devolve o endereço dela. */
+async function saveUploadedImage(storeId: string, form: FormData, path: string) {
+  const file = form.get("image");
+  if (!(file instanceof File) || file.size === 0) return undefined;
+  if (!UPLOAD_TYPES.includes(file.type)) fail(path, "Formato de foto não aceito. Use JPG, PNG ou WebP.");
+  if (file.size > UPLOAD_MAX_BYTES) fail(path, "Foto muito grande. Escolha outra foto.");
+  const image = await prisma.productImage.create({
+    data: { storeId, contentType: file.type, data: new Uint8Array(await file.arrayBuffer()) },
+    select: { id: true },
+  });
+  return `${UPLOADED_IMAGE_PREFIX}${image.id}`;
+}
+
+/** Apaga do banco uma foto enviada que deixou de ser usada (ilustrações e links ficam como estão). */
+async function deleteUploadedImage(storeId: string, url: string | null | undefined) {
+  if (!url?.startsWith(UPLOADED_IMAGE_PREFIX)) return;
+  await prisma.productImage.deleteMany({ where: { id: url.slice(UPLOADED_IMAGE_PREFIX.length), storeId } });
+}
+
 export async function createProductAction(form: FormData) {
   const { store, base } = await member("MANAGER");
   const data = parseProduct(form, `${base}/menu`);
   await assertCategory(store.id, data.categoryId, `${base}/menu`);
-  await prisma.product.create({ data: { ...data, storeId: store.id } });
+  const uploaded = await saveUploadedImage(store.id, form, `${base}/menu`);
+  await prisma.product.create({ data: { ...data, imageUrl: uploaded ?? data.imageUrl, storeId: store.id } });
   revalidatePath(`${base}/menu`);
-  revalidatePath("/");
+  refreshPublicMenu(store.id);
 }
 
 export async function updateProductAction(productId: string, form: FormData) {
   const { store, base } = await member("MANAGER");
   const data = parseProduct(form, `${base}/menu`);
   await assertCategory(store.id, data.categoryId, `${base}/menu`);
-  await prisma.product.updateMany({ where: { id: productId, storeId: store.id }, data });
+  const current = await prisma.product.findFirst({ where: { id: productId, storeId: store.id }, select: { imageUrl: true } });
+  if (!current) fail(`${base}/menu`, "Produto não encontrado");
+  const uploaded = await saveUploadedImage(store.id, form, `${base}/menu`);
+  const imageUrl = uploaded ?? data.imageUrl;
+  await prisma.product.updateMany({ where: { id: productId, storeId: store.id }, data: { ...data, imageUrl } });
+  if (imageUrl !== undefined && imageUrl !== current.imageUrl) await deleteUploadedImage(store.id, current.imageUrl);
   revalidatePath(`${base}/menu`);
-  revalidatePath("/");
+  refreshPublicMenu(store.id);
 }
 
 export async function toggleProductAction(productId: string) {
@@ -123,7 +150,7 @@ export async function toggleProductAction(productId: string) {
   if (!product) return;
   await prisma.product.updateMany({ where: { id: productId, storeId: store.id }, data: { isAvailable: !product.isAvailable } });
   revalidatePath(`${base}/menu`);
-  revalidatePath("/");
+  refreshPublicMenu(store.id);
 }
 
 export async function deleteProductAction(productId: string) {
@@ -131,7 +158,7 @@ export async function deleteProductAction(productId: string) {
   // Exclusão lógica: pedidos antigos continuam apontando para o produto.
   await prisma.product.updateMany({ where: { id: productId, storeId: store.id }, data: { deletedAt: new Date() } });
   revalidatePath(`${base}/menu`);
-  revalidatePath("/");
+  refreshPublicMenu(store.id);
 }
 
 // --- Configurações -------------------------------------------------------------

@@ -5,6 +5,7 @@ import { optionFormSchema, optionGroupFormSchema } from "@delivery/validators";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { refreshPublicMenu } from "@/lib/menu";
 import { failTo, formText, storeMember } from "./member";
 
 // Complementos de um produto: grupos (Tamanho, Sabores...) com opções e preço adicional.
@@ -25,9 +26,9 @@ async function groupOfStore(groupId: string, storeId: string) {
   });
 }
 
-function done(path: string): never {
+function done(path: string, storeId: string): never {
   revalidatePath(path);
-  revalidatePath("/");
+  refreshPublicMenu(storeId);
   redirect(path);
 }
 
@@ -50,11 +51,11 @@ function parseOption(form: FormData, path: string) {
 }
 
 export async function createOptionGroupAction(productId: string, form: FormData) {
-  const { path } = await productContext(productId);
+  const { store, path } = await productContext(productId);
   const data = parseGroup(form, path);
   const last = await prisma.productOptionGroup.aggregate({ where: { productId }, _max: { position: true } });
   await prisma.productOptionGroup.create({ data: { ...data, productId, position: (last._max.position ?? -1) + 1 } });
-  done(path);
+  done(path, store.id);
 }
 
 export async function updateOptionGroupAction(productId: string, groupId: string, form: FormData) {
@@ -62,7 +63,7 @@ export async function updateOptionGroupAction(productId: string, groupId: string
   const data = parseGroup(form, path);
   if (!(await groupOfStore(groupId, store.id))) failTo(path, "Grupo não encontrado");
   await prisma.productOptionGroup.update({ where: { id: groupId }, data });
-  done(path);
+  done(path, store.id);
 }
 
 export async function deleteOptionGroupAction(productId: string, groupId: string) {
@@ -70,7 +71,7 @@ export async function deleteOptionGroupAction(productId: string, groupId: string
   if (!(await groupOfStore(groupId, store.id))) failTo(path, "Grupo não encontrado");
   // Pedidos antigos guardam uma cópia dos complementos escolhidos, então dá para apagar.
   await prisma.productOptionGroup.delete({ where: { id: groupId } });
-  done(path);
+  done(path, store.id);
 }
 
 export async function createOptionAction(productId: string, groupId: string, form: FormData) {
@@ -79,7 +80,7 @@ export async function createOptionAction(productId: string, groupId: string, for
   if (!(await groupOfStore(groupId, store.id))) failTo(path, "Grupo não encontrado");
   const last = await prisma.productOption.aggregate({ where: { groupId }, _max: { position: true } });
   await prisma.productOption.create({ data: { ...data, groupId, position: (last._max.position ?? -1) + 1 } });
-  done(path);
+  done(path, store.id);
 }
 
 async function optionOfStore(optionId: string, storeId: string) {
@@ -94,7 +95,7 @@ export async function updateOptionAction(productId: string, optionId: string, fo
   const data = parseOption(form, path);
   if (!(await optionOfStore(optionId, store.id))) failTo(path, "Opção não encontrada");
   await prisma.productOption.update({ where: { id: optionId }, data });
-  done(path);
+  done(path, store.id);
 }
 
 export async function toggleOptionAction(productId: string, optionId: string) {
@@ -102,12 +103,12 @@ export async function toggleOptionAction(productId: string, optionId: string) {
   const option = await optionOfStore(optionId, store.id);
   if (!option) failTo(path, "Opção não encontrada");
   await prisma.productOption.update({ where: { id: optionId }, data: { isAvailable: !option.isAvailable } });
-  done(path);
+  done(path, store.id);
 }
 
 export async function deleteOptionAction(productId: string, optionId: string) {
   const { store, path } = await productContext(productId);
   if (!(await optionOfStore(optionId, store.id))) failTo(path, "Opção não encontrada");
   await prisma.productOption.delete({ where: { id: optionId } });
-  done(path);
+  done(path, store.id);
 }

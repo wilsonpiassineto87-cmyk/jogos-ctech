@@ -265,6 +265,7 @@ model Store {
   openingHours      OpeningHour[]
   productCategories ProductCategory[]
   products          Product[]
+  productImages     ProductImage[]
   orders            Order[]
   reviews           Review[]
 
@@ -349,6 +350,21 @@ model Product {
 
   @@index([storeId, categoryId, position])
   @@index([storeId, isAvailable])
+}
+
+// Fotos enviadas pelo painel (do celular ou computador). Ficam no próprio banco, já
+// reduzidas no aparelho (~100 KB), e são servidas em /api/v1/images/<id>. O produto
+// guarda só o endereço em Product.imageUrl.
+model ProductImage {
+  id          String   @id @default(cuid())
+  storeId     String
+  contentType String
+  data        Bytes
+  createdAt   DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
 }
 
 // Complementos: "Tamanho" (min 1, max 1), "Adicionais" (min 0, max 5)...

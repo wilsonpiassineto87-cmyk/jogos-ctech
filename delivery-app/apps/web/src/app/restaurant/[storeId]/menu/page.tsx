@@ -10,6 +10,7 @@ import {
   toggleProductAction,
   updateProductAction,
 } from "@/features/store/actions";
+import { ProductImageField } from "@/components/restaurant/product-image-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -90,6 +91,10 @@ export default async function StoreMenuPage({ searchParams }: { searchParams: Pr
               {group.products.map((product) => (
                 <li key={product.id} className="p-4">
                   <div className="flex flex-wrap items-center gap-3">
+                    {product.imageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={product.imageUrl} alt="" loading="lazy" className="size-12 shrink-0 rounded-lg object-cover" />
+                    )}
                     <div className="mr-auto min-w-0">
                       <p className="font-medium">
                         {product.name}{" "}
@@ -164,7 +169,7 @@ function ProductFields({ categories, product }: { categories: Category[]; produc
           ))}
         </select>
       </div>
-      <input name="imageUrl" type="url" defaultValue={product?.imageUrl ?? ""} placeholder="URL da foto (opcional)" className={input} />
+      <ProductImageField current={product?.imageUrl} />
     </>
   );
 }

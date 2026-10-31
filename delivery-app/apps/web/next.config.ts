@@ -30,6 +30,9 @@ const nextConfig: NextConfig = {
   // O runtime do Prisma fica fora do bundle do webpack (o OpenNext o empacota para o Workers).
   serverExternalPackages: ["@prisma/client"],
   poweredByHeader: false,
+  // Fotos de produto vão pelo formulário do painel. O aparelho já reduz para ~100 KB,
+  // mas uma foto grande que não deu para reduzir ainda passa do limite padrão de 1 MB.
+  experimental: { serverActions: { bodySizeLimit: "2mb" } },
   // Client gerado pelo Prisma (packages/db/generated/client), inclusive a variante wasm.
   outputFileTracingIncludes: {
     "*": ["../../packages/db/generated/client/**/*"],

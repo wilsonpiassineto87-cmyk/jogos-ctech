@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><title>Sorvete no copo</title>
+<rect width="240" height="240" rx="36" fill="#FDE7EF"/>
+<circle cx="120" cy="128" r="92" fill="#FBD3E1"/>
+<circle cx="92" cy="104" r="34" fill="#F7E3B5"/>
+<circle cx="148" cy="104" r="34" fill="#7A4A35"/>
+<circle cx="120" cy="80" r="36" fill="#F38BA8"/>
+<circle cx="108" cy="68" r="8" fill="#fff" opacity=".5"/>
+<circle cx="80" cy="94" r="6" fill="#fff" opacity=".5"/>
+<path d="M70 120h100l-14 82a10 10 0 0 1-10 8H94a10 10 0 0 1-10-8z" fill="#E0457B"/>
+<path d="M70 120h100l-2.5 14H72.5z" fill="#C2346A"/>
+<path d="M98 150h44M102 172h36" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".55"/>
+<rect x="132" y="38" width="8" height="40" rx="4" transform="rotate(20 136 58)" fill="#3FA391"/>
+</svg>
