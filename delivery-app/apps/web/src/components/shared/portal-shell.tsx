@@ -1,6 +1,7 @@
 import Link from "@/components/shared/link";
 import { signOut } from "@/lib/auth";
 import { LogoMark } from "@/components/brand/logo";
+import { PortalNav } from "@/components/shared/portal-nav";
 import { StoreTheme } from "@/components/brand/store-theme";
 import { Button } from "@/components/ui/button";
 
@@ -28,13 +29,7 @@ export function PortalShell({
             <LogoMark className="size-8 shrink-0" />
             <span className="truncate font-display text-lg font-semibold">{title}</span>
           </Link>
-          <nav className="order-last -mx-3 flex w-full flex-wrap gap-1 text-sm sm:order-none sm:mx-0 sm:w-auto sm:flex-1 sm:flex-nowrap sm:overflow-x-auto">
-            {nav.map((item) => (
-              <Link key={item.href} href={item.href} className="rounded-md px-3 py-1.5 hover:bg-accent">
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <PortalNav items={nav} />
           <span className="hidden text-sm text-muted-foreground sm:inline">{userName}</span>
           <form
             action={async () => {
