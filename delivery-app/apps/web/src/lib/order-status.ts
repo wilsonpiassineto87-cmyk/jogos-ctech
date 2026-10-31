@@ -24,6 +24,11 @@ export const PAYMENT_LABEL: Record<string, string> = {
   PIX: "Pix",
 };
 
+/** Só o horário (ex.: "14:41"), no fuso da loja. */
+export function formatTime(date: Date): string {
+  return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" }).format(date);
+}
+
 export function formatDateTime(date: Date): string {
   return new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",

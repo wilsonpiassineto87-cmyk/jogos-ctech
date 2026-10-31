@@ -1,8 +1,11 @@
 import { formatCents, formatPhone, type OrderStatus } from "@delivery/core";
 import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";
-import { ORDER_STATUS_LABEL, PAYMENT_LABEL, formatDateTime } from "@/lib/order-status";
+import { ORDER_STATUS_LABEL, PAYMENT_LABEL, formatDateTime, formatTime } from "@/lib/order-status";
+import { getPrintPreferences } from "@/lib/receipt";
 import { acceptOrderAction, advanceOrderAction, rejectOrderAction, toggleOpenAction } from "@/features/store/actions";
+import Link from "@/components/shared/link";
+import { AcceptOrderButton, PrintOrderButtons } from "@/components/receipt/print-buttons";
 import { NewOrderAlert } from "@/components/restaurant/new-order-alert";
 import { AutoRefresh } from "@/components/shared/auto-refresh";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +56,7 @@ export default async function StoreOrdersPage({ searchParams }: { searchParams: 
   const { error } = await searchParams;
   const store = await getStore();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [orders, finishedToday] = await Promise.all([
+  const [orders, finishedToday, { printOnAccept }] = await Promise.all([
     prisma.order.findMany({
       where: { storeId: store.id, status: { in: COLUMNS.flatMap((c) => c.statuses) } },
       orderBy: { createdAt: "asc" },
@@ -74,8 +77,10 @@ export default async function StoreOrdersPage({ searchParams }: { searchParams: 
       },
     }),
     prisma.order.count({ where: { storeId: store.id, status: "DELIVERED", deliveredAt: { gte: since } } }),
+    getPrintPreferences(),
   ]);
-  const pending = orders.filter((o) => o.status === "PLACED").length;
+  const placed = orders.filter((o) => o.status === "PLACED");
+  const newest = placed.at(-1);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
@@ -83,7 +88,13 @@ export default async function StoreOrdersPage({ searchParams }: { searchParams: 
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="mr-auto text-2xl font-bold tracking-tight">Pedidos</h1>
         <span className="text-sm text-muted-foreground">{finishedToday} entregues nas últimas 24h</span>
-        <NewOrderAlert pendingCount={pending} />
+        <Link href={`/restaurant/${store.id}/orders/history`} className="text-sm font-medium text-primary hover:underline">
+          Histórico
+        </Link>
+        <NewOrderAlert
+          pendingCount={placed.length}
+          latest={newest ? { id: newest.id, code: newest.code, time: formatTime(newest.createdAt) } : null}
+        />
         <form action={toggleOpenAction.bind(null, "orders")}>
           <SubmitButton variant={store.isOpen ? "outline" : "destructive"} size="sm">
             {store.isOpen ? "Loja aberta · pausar" : "Loja pausada · abrir"}
@@ -153,7 +164,7 @@ export default async function StoreOrdersPage({ searchParams }: { searchParams: 
                         {order.status === "PLACED" && (
                           <>
                             <form action={acceptOrderAction.bind(null, order.id)}>
-                              <SubmitButton size="sm">Aceitar</SubmitButton>
+                              <AcceptOrderButton orderId={order.id} printOnAccept={printOnAccept} />
                             </form>
                             <form action={rejectOrderAction.bind(null, order.id)} className="flex gap-1">
                               <select name="reason" className="h-8 rounded-md border bg-background px-2 text-xs">
@@ -184,6 +195,9 @@ export default async function StoreOrdersPage({ searchParams }: { searchParams: 
                               : "Aguardando entregador"}
                           </Badge>
                         )}
+                      </div>
+                      <div className="mt-3 border-t pt-3">
+                        <PrintOrderButtons orderId={order.id} />
                       </div>
                     </article>
                   );

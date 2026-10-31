@@ -9,6 +9,8 @@ import {
   saveOpeningHoursAction,
   saveThemeAction,
 } from "@/features/store/customize-actions";
+import { getPrintPreferences } from "@/lib/receipt";
+import { PrintSettings } from "@/components/receipt/print-settings";
 import { SubmitButton } from "@/components/shared/submit-button";
 
 export const metadata = { title: "Configurações" };
@@ -24,6 +26,10 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
   const theme = parseTheme(store.theme) ?? DEFAULT_THEME;
   const hasSchedule = store.openingHours.length > 0;
   const hoursByDay = new Map(store.openingHours.map((h) => [h.dayOfWeek, h]));
+  const [printPrefs, sampleOrder] = await Promise.all([
+    getPrintPreferences(),
+    prisma.order.findFirst({ where: { storeId: store.id, status: { not: "PENDING_PAYMENT" } }, orderBy: { createdAt: "desc" }, select: { id: true } }),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-6">
@@ -109,6 +115,14 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
         </p>
         <SubmitButton pendingText="Salvando...">Salvar horários</SubmitButton>
       </form>
+
+      <section id="impressao" className="scroll-mt-20 space-y-4 rounded-xl border p-4 text-sm">
+        <div>
+          <h2 className="text-base font-semibold">Impressão de pedidos</h2>
+          <p className="text-muted-foreground">Comprovante para impressora térmica (58 ou 80 mm) ou comum (A4).</p>
+        </div>
+        <PrintSettings paper={printPrefs.paper} printOnAccept={printPrefs.printOnAccept} sampleOrderId={sampleOrder?.id ?? null} />
+      </section>
 
       <section id="cores" className="scroll-mt-20 space-y-4 rounded-xl border p-4 text-sm">
         <div>
