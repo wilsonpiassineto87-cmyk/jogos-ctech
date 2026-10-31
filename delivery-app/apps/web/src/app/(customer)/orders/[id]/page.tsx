@@ -8,6 +8,7 @@ import { FINAL_ORDER_STATUSES, ORDER_STATUS_LABEL, ORDER_STEPS, PAYMENT_LABEL, f
 import { cancelOrderAction } from "@/features/orders/customer-actions";
 import { AutoRefresh } from "@/components/shared/auto-refresh";
 import { SubmitButton } from "@/components/shared/submit-button";
+import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "Acompanhar pedido" };
@@ -168,6 +169,9 @@ export default async function OrderTrackingPage({
             </SubmitButton>
           </form>
         )}
+        <WhatsAppButton phone={order.store.phone} message={`Olá! Sobre o meu pedido #${order.code}:`}>
+          WhatsApp da loja
+        </WhatsAppButton>
         {order.store.phone && (
           <Button asChild variant="ghost">
             <a href={`tel:${order.store.phone}`}>Ligar para a loja</a>

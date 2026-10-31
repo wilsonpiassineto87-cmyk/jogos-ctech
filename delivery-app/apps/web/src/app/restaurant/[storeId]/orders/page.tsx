@@ -1,4 +1,4 @@
-import { formatCents, type OrderStatus } from "@delivery/core";
+import { formatCents, formatPhone, type OrderStatus } from "@delivery/core";
 import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";
 import { ORDER_STATUS_LABEL, PAYMENT_LABEL, formatDateTime } from "@/lib/order-status";
@@ -7,6 +7,7 @@ import { NewOrderAlert } from "@/components/restaurant/new-order-alert";
 import { AutoRefresh } from "@/components/shared/auto-refresh";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/shared/submit-button";
+import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 
 export const metadata = { title: "Pedidos" };
 
@@ -17,6 +18,36 @@ const COLUMNS: { title: string; statuses: OrderStatus[] }[] = [
 ];
 
 const REJECT_REASONS = ["Item em falta", "Loja muito cheia", "Fora da área de entrega", "Loja fechando"];
+
+const WHATSAPP_STATUS_LINE: Partial<Record<OrderStatus, string>> = {
+  PLACED: "Já vamos confirmar.",
+  ACCEPTED: "Pedido confirmado, já vai para o preparo!",
+  PREPARING: "Já estamos preparando!",
+  READY_FOR_PICKUP: "Está pronto e sai para entrega em instantes.",
+  OUT_FOR_DELIVERY: "Saiu para entrega!",
+};
+
+/** Mensagem pronta para a loja mandar ao cliente: resumo do pedido + situação atual. */
+function customerMessage(
+  storeName: string,
+  order: {
+    code: string;
+    status: OrderStatus;
+    totalCents: number;
+    paymentMethod: string;
+    customer: { name: string };
+    items: { productName: string; quantity: number }[];
+  },
+) {
+  return [
+    `Olá, ${order.customer.name.split(" ")[0]}! Aqui é da ${storeName}. Sobre o seu pedido #${order.code}:`,
+    ...order.items.map((i) => `${i.quantity}× ${i.productName}`),
+    `Total: ${formatCents(order.totalCents)} (${PAYMENT_LABEL[order.paymentMethod]})`,
+    WHATSAPP_STATUS_LINE[order.status] ?? "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
 
 export default async function StoreOrdersPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
@@ -87,10 +118,15 @@ export default async function StoreOrdersPage({ searchParams }: { searchParams: 
                         <span className="font-semibold">#{order.code}</span>
                         <span className="text-xs text-muted-foreground">{formatDateTime(order.createdAt)}</span>
                       </div>
-                      <p className="mt-1 text-muted-foreground">
-                        {order.customer.name}
-                        {order.customer.phone ? ` · ${order.customer.phone}` : ""}
-                      </p>
+                      <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-muted-foreground">
+                          {order.customer.name}
+                          {order.customer.phone ? ` · ${formatPhone(order.customer.phone)}` : ""}
+                        </p>
+                        <WhatsAppButton phone={order.customer.phone} message={customerMessage(store.name, order)} size="sm">
+                          WhatsApp
+                        </WhatsAppButton>
+                      </div>
                       <ul className="mt-3 space-y-1">
                         {order.items.map((item) => {
                           const options = (item.options as { name: string }[] | null) ?? [];

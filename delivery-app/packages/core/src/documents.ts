@@ -37,3 +37,13 @@ export function maskCPF(value: string): string {
   const cpf = onlyDigits(value);
   return cpf.length === 11 ? `***.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-**` : "***";
 }
+
+/**
+ * Link "clique para conversar" do WhatsApp (wa.me), com a mensagem já escrita.
+ * Nulo quando o telefone não é um número brasileiro válido.
+ */
+export function whatsappLink(phone: string | null | undefined, message?: string): string | null {
+  if (!phone || !isValidBrazilPhone(phone)) return null;
+  const text = message ? `?text=${encodeURIComponent(message)}` : "";
+  return `https://wa.me/55${normalizePhone(phone)}${text}`;
+}

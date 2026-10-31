@@ -7,6 +7,7 @@ import { LogoMark } from "@/components/brand/logo";
 import { CartBar } from "@/components/customer/cart-bar";
 import { ProductCard } from "@/components/customer/product-card";
 import { InstallBanner } from "@/components/pwa/install-banner";
+import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,9 @@ export default async function MenuPage() {
             )}
             {store.minOrderCents > 0 && <span>Pedido mínimo {formatCents(store.minOrderCents)}</span>}
           </div>
+          <WhatsAppButton phone={store.phone} message={`Olá! Vim pelo site da ${store.name}.`} className="mt-4">
+            Falar no WhatsApp
+          </WhatsAppButton>
           {!open && store.openingHours.length > 0 && (
             <p className="mt-4 text-sm">
               <span className="font-medium">Horários: </span>

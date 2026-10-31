@@ -171,7 +171,13 @@ export const categoryFormSchema = z.object({ name: z.string().trim().min(2, "Nom
 export const storeSettingsSchema = z.object({
   name: z.string().trim().min(2).max(80),
   description: optionalText(300),
-  phone: optionalText(20),
+  // Vazio = sem telefone; preenchido precisa ser válido, pois vira o WhatsApp da loja.
+  phone: z
+    .string()
+    .trim()
+    .transform((v) => v || undefined)
+    .pipe(phone.optional())
+    .optional(),
   minOrderCents: cents,
   prepTimeMinutes: z.number().int().min(5).max(180),
   deliveryRadiusKm: z.number().min(0.5).max(50),

@@ -8,6 +8,7 @@ import { ORDER_STATUS_LABEL, PAYMENT_LABEL } from "@/lib/order-status";
 import { arrivedAction, completeDeliveryAction, pickedUpAction } from "@/features/courier/actions";
 import { AutoRefresh } from "@/components/shared/auto-refresh";
 import { SubmitButton } from "@/components/shared/submit-button";
+import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "Corrida" };
@@ -123,6 +124,16 @@ export default async function CourierDeliveryPage({
             </a>
           )}
         </div>
+        {!done && (
+          <WhatsAppButton
+            phone={order.customer.phone}
+            message={`Olá, ${order.customer.name.split(" ")[0]}! Sou o entregador da ${order.store.name} e estou a caminho com o seu pedido #${order.code}.`}
+            size="sm"
+            className="mt-3"
+          >
+            Avisar o cliente no WhatsApp
+          </WhatsAppButton>
+        )}
         <p className="mt-3 font-medium">
           {collect
             ? `Cobrar ${formatCents(order.totalCents)} · ${PAYMENT_LABEL[order.paymentMethod]}${

@@ -1,4 +1,4 @@
-import { centsToInput } from "@delivery/core";
+import { centsToInput, formatPhone } from "@delivery/core";
 import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";
 import { DEFAULT_THEME, THEME_PRESETS, parseTheme } from "@/lib/theme";
@@ -49,7 +49,8 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
           <textarea name="description" rows={2} defaultValue={store.description ?? ""} className={`${input} h-auto py-2`} />
         </Field>
         <Field label="Telefone / WhatsApp">
-          <input name="phone" defaultValue={store.phone ?? ""} placeholder="11999999999" className={input} />
+          <input name="phone" inputMode="tel" defaultValue={store.phone ? formatPhone(store.phone) : ""} placeholder="(11) 99999-0000" className={input} />
+          <span className="text-xs font-normal text-muted-foreground">Com DDD. Vira o botão "Falar no WhatsApp" do site.</span>
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Pedido mínimo (R$)">

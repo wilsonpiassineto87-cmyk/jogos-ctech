@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPhone, isValidBrazilPhone, isValidCPF, maskCPF, normalizePhone } from "../src";
+import { formatPhone, isValidBrazilPhone, isValidCPF, maskCPF, normalizePhone, whatsappLink } from "../src";
 
 describe("CPF", () => {
   it("aceita CPFs válidos com ou sem pontuação", () => {
@@ -29,5 +29,19 @@ describe("telefone", () => {
   it("normaliza e formata", () => {
     expect(normalizePhone("+55 (11) 99999-0000")).toBe("11999990000");
     expect(formatPhone("11999990000")).toBe("(11) 99999-0000");
+  });
+});
+
+describe("WhatsApp", () => {
+  it("monta o link wa.me com o 55 e a mensagem codificada", () => {
+    expect(whatsappLink("(11) 99999-0000")).toBe("https://wa.me/5511999990000");
+    expect(whatsappLink("+55 11 99999-0000", "Olá! Pedido #A1")).toBe(
+      "https://wa.me/5511999990000?text=Ol%C3%A1!%20Pedido%20%23A1",
+    );
+  });
+
+  it("devolve nulo sem telefone válido", () => {
+    expect(whatsappLink(null)).toBeNull();
+    expect(whatsappLink("123")).toBeNull();
   });
 });
