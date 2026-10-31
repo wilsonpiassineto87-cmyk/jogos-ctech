@@ -14,7 +14,15 @@ export const metadata: Metadata = {
   description: "Peça online e receba em casa.",
   // iPhone: "Adicionar à Tela de Início" usa este ícone e abre em tela cheia.
   appleWebApp: { capable: true, title: "Sorveteria", statusBarStyle: "default" },
-  icons: { apple: "/icons/apple-touch-icon.png" },
+  // Ícone da aba: o logo da sorveteria. Sem isso o navegador pede /favicon.ico e a Netlify
+  // devolve o dela; o public/favicon.ico (gerado do logo) cobre esse pedido também.
+  icons: {
+    icon: [
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "48x48" },
+    ],
+    apple: "/icons/apple-touch-icon.png",
+  },
   // Arquivo fixo em public/ (servido sem processamento no Worker; antes era app/manifest.ts).
   manifest: "/manifest.webmanifest",
 };
