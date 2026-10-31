@@ -9,6 +9,9 @@
  * em components/brand.
  */
 :root {
+  /* Faixa no rodapé reservada para o selo "Powered by Netlify" (canto inferior direito,
+     ~60px de altura, obrigatório no plano grátis): botões fixos e o fim da página ficam acima dele. */
+  --badge-space: 4rem;
   --radius: 1.1rem;
   --background: oklch(0.985 0.012 90);
   --foreground: oklch(0.3 0.045 40);
@@ -93,6 +96,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    padding-bottom: var(--badge-space);
   }
   h1,
   h2 {
