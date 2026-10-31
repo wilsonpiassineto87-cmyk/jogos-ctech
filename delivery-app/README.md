@@ -57,8 +57,7 @@ No site publicado, a senha é outra, aleatória, guardada em `SEED_PASSWORD` no 
 ## Deploy (Netlify, plano grátis)
 
 - Build e deploy automáticos pela Netlify a cada push na branch `delivery-app`.
-  Configuração em `apps/web/netlify.toml`; no painel: Base directory `delivery-app`,
-  Package directory `delivery-app/apps/web`.
+  Configuração em `netlify.toml`; no painel: Base directory `delivery-app`.
 - Variáveis no painel da Netlify (Environment variables): `DATABASE_URL` (pooler do Supabase,
   porta 6543, com a senha), `AUTH_SECRET`, `AUTH_URL` (endereço do site), `AUTH_TRUST_HOST=true`
   e `STORE_SLUG=sorveteria-do-bairro`. Mudou uma variável? Faça um novo deploy.

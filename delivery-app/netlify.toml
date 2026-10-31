@@ -1,0 +1,13 @@
+# Deploy na Netlify (plano grátis). No painel: Base directory = delivery-app.
+# Segredos (DATABASE_URL, AUTH_SECRET) ficam no painel, em Environment variables.
+[build]
+  # Gera o client do Prisma e compila o app web.
+  command = "pnpm --filter @delivery/db db:generate && pnpm --filter @delivery/web build"
+  publish = "apps/web/.next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# O app Next.js fica em apps/web, então a Netlify não o detecta sozinha na raiz.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
