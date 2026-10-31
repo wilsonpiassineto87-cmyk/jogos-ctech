@@ -1,6 +1,6 @@
 import { centsToInput, formatCents } from "@delivery/core";
 import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";

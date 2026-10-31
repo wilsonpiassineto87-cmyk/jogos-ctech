@@ -1,6 +1,6 @@
 import { formatCents } from "@delivery/core";
 import { ExternalLink } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { notFound } from "next/navigation";
 import { requireCourier } from "@/lib/authz";
 import { prisma } from "@/lib/db";
@@ -68,7 +68,7 @@ export default async function CourierDeliveryPage({
 
   return (
     <div className="mx-auto max-w-xl space-y-5 px-4 py-6">
-      {!done && <AutoRefresh intervalMs={10_000} />}
+      {!done && <AutoRefresh intervalMs={15_000} />}
       <div>
         <p className="text-sm text-muted-foreground">
           Pedido #{order.code} · ganho {formatCents(delivery.courierFeeCents)}

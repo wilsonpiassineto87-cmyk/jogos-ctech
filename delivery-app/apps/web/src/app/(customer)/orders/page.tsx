@@ -1,5 +1,5 @@
 import { formatCents } from "@delivery/core";
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { guard, requireUser } from "@/lib/authz";
 import { prisma } from "@/lib/db";
 import { FINAL_ORDER_STATUSES, ORDER_STATUS_LABEL, formatDateTime } from "@/lib/order-status";

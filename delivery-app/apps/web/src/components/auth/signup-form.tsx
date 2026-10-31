@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { registerCourierAction, registerCustomerAction, type SignupState } from "@/features/auth/actions";

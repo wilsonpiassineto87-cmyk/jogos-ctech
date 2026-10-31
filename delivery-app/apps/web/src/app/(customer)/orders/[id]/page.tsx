@@ -1,6 +1,6 @@
 import { canTransition, formatCents } from "@delivery/core";
 import { Check } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { notFound } from "next/navigation";
 import { guard, requireUser } from "@/lib/authz";
 import { prisma } from "@/lib/db";
@@ -60,7 +60,7 @@ export default async function OrderTrackingPage({
 
   return (
     <div className="mx-auto max-w-xl space-y-6 px-4 py-6">
-      {!isFinal && <AutoRefresh intervalMs={10_000} />}
+      {!isFinal && <AutoRefresh intervalMs={20_000} />}
 
       <div>
         <p className="text-sm text-muted-foreground">

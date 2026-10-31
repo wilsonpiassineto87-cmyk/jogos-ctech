@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { runAction } from "@/lib/action";
 import { requireStoreMember } from "@/lib/authz";
 import { prisma } from "@/lib/db";
-import { getStore } from "@/lib/store";
+import { forgetStore, getStore } from "@/lib/store";
 import { acceptOrder, transitionOrder } from "@/features/orders/status";
 
 // Toda ação confere se o usuário é membro da loja; o storeId vem do servidor, nunca do form.
@@ -50,7 +50,10 @@ export async function toggleOpenAction(from: "orders" | "settings") {
   const { store, base } = await member();
   revalidatePath("/");
   await runAction(`${base}/${from}`, async () => {
-    await prisma.store.update({ where: { id: store.id }, data: { isOpen: !store.isOpen } });
+    // Lê do banco, não da loja guardada em memória: inverte o estado real.
+    const { isOpen } = await prisma.store.findUniqueOrThrow({ where: { id: store.id }, select: { isOpen: true } });
+    await prisma.store.update({ where: { id: store.id }, data: { isOpen: !isOpen } });
+    forgetStore();
   });
 }
 
@@ -177,6 +180,7 @@ export async function saveSettingsAction(form: FormData) {
       },
     }),
   ]);
+  forgetStore();
   revalidatePath(base, "layout");
   revalidatePath("/");
   redirect(`${path}?saved=1`);

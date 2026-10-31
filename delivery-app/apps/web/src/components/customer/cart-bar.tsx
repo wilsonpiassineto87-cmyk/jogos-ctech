@@ -2,7 +2,7 @@
 
 import { formatCents } from "@delivery/core";
 import { ShoppingBag } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { useEffect, useState } from "react";
 import { selectCartCount, selectCartSubtotal, useCart } from "@/stores/cart-store";
 

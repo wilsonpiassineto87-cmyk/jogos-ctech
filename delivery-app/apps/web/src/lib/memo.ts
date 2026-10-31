@@ -14,3 +14,8 @@ export function memo<T>(key: string, ttlMs: number, load: () => Promise<T>): Pro
   value.catch(() => entries.delete(key));
   return value;
 }
+
+/** Apaga uma entrada (neste isolate) para a próxima leitura ir ao banco. */
+export function forget(key: string) {
+  entries.delete(key);
+}

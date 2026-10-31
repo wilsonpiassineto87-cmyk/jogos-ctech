@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { signOut } from "@/lib/auth";
 import { LogoMark } from "@/components/brand/logo";
 import { StoreTheme } from "@/components/brand/store-theme";

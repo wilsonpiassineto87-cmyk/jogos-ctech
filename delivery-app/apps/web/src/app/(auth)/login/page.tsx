@@ -1,5 +1,5 @@
 import { AuthError } from "next-auth";
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { redirect } from "next/navigation";
 import { signIn } from "@/lib/auth";
 import { env } from "@/lib/env";

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { Button } from "@/components/ui/button";
 
 // Tela de erro dos portais (loja, entregador, admin, login), no lugar do "Application error".

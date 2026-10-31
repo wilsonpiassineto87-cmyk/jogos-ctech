@@ -1,5 +1,5 @@
 import { Clock, XCircle } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { guard, requireRole } from "@/lib/authz";
 import { prisma } from "@/lib/db";
 import { PortalShell } from "@/components/shared/portal-shell";

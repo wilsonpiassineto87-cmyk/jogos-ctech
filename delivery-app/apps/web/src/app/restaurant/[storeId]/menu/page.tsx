@@ -1,5 +1,5 @@
 import { centsToInput, formatCents } from "@delivery/core";
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";
 import {

@@ -4,3 +4,11 @@
 # O service worker precisa ser sempre revalidado para as atualizações chegarem aos apps instalados.
 /sw.js
   Cache-Control: no-cache
+
+# App instalável: arquivo fixo servido direto pelo Cloudflare, sem passar pelo Worker.
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: public,max-age=3600
+
+/icons/*
+  Cache-Control: public,max-age=86400

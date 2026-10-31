@@ -3,7 +3,7 @@
 import { formatCents, parseBRL } from "@delivery/core";
 import type { AddressFormInput } from "@delivery/validators";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createAddressAction, type SavedAddress } from "@/features/addresses/actions";

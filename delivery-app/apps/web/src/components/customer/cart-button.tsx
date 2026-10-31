@@ -1,7 +1,7 @@
 "use client";
 
 import { ShoppingBag } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { selectCartCount, useCart } from "@/stores/cart-store";

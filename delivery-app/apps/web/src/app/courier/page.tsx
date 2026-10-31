@@ -1,5 +1,5 @@
 import { formatCents } from "@delivery/core";
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { requireCourier } from "@/lib/authz";
 import { prisma } from "@/lib/db";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
@@ -34,7 +34,7 @@ export default async function CourierHomePage({ searchParams }: { searchParams: 
 
   return (
     <div className="mx-auto max-w-xl space-y-6 px-4 py-6">
-      <AutoRefresh intervalMs={10_000} />
+      <AutoRefresh intervalMs={15_000} />
       <InstallBanner appName="Sorveteria do Bairro" />
       {error && <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
 

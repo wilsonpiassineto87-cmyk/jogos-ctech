@@ -5,6 +5,7 @@ import { openingHourSchema, storeThemeSchema, type OpeningHourInput } from "@del
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { forgetStore } from "@/lib/store";
 import { THEME_PRESETS } from "@/lib/theme";
 import { failTo, formText, storeMember } from "./member";
 
@@ -21,6 +22,7 @@ async function saveTheme(theme: unknown) {
     // DbNull = volta para as cores padrão (globals.css).
     data: { theme: parsed ? parsed.data : Prisma.DbNull },
   });
+  forgetStore();
   revalidatePath("/", "layout");
   redirect(`${path}?saved=cores#cores`);
 }
@@ -65,6 +67,7 @@ export async function saveOpeningHoursAction(form: FormData) {
     prisma.openingHour.deleteMany({ where: { storeId: store.id } }),
     prisma.openingHour.createMany({ data: hours.map((h) => ({ ...h, storeId: store.id })) }),
   ]);
+  forgetStore();
   revalidatePath("/", "layout");
   redirect(`${path}?saved=horarios#horarios`);
 }

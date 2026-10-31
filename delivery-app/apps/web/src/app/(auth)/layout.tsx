@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { getStore } from "@/lib/store";
 import { Logo } from "@/components/brand/logo";
 import { StoreTheme } from "@/components/brand/store-theme";

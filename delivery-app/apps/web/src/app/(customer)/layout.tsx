@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/shared/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";

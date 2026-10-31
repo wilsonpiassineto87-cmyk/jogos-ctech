@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   // iPhone: "Adicionar à Tela de Início" usa este ícone e abre em tela cheia.
   appleWebApp: { capable: true, title: "Sorveteria", statusBarStyle: "default" },
   icons: { apple: "/icons/apple-touch-icon.png" },
+  // Arquivo fixo em public/ (servido sem processamento no Worker; antes era app/manifest.ts).
+  manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
