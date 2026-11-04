@@ -8,6 +8,18 @@ describe("máquina de estados do pedido", () => {
     expect(canTransition("READY_FOR_PICKUP", "OUT_FOR_DELIVERY", "COURIER")).toBe(true);
   });
 
+  it("a loja pode fazer a própria entrega", () => {
+    expect(canTransition("READY_FOR_PICKUP", "OUT_FOR_DELIVERY", "STORE")).toBe(true);
+    expect(canTransition("OUT_FOR_DELIVERY", "DELIVERED", "STORE")).toBe(true);
+    expect(canTransition("OUT_FOR_DELIVERY", "DELIVERED", "CUSTOMER")).toBe(false);
+  });
+
+  it("a loja cancela pedido aceito só até ele sair para entrega", () => {
+    expect(canTransition("ACCEPTED", "CANCELLED", "STORE")).toBe(true);
+    expect(canTransition("READY_FOR_PICKUP", "CANCELLED", "STORE")).toBe(true);
+    expect(canTransition("OUT_FOR_DELIVERY", "CANCELLED", "STORE")).toBe(false);
+  });
+
   it("bloqueia ator errado e estados finais", () => {
     expect(canTransition("PLACED", "ACCEPTED", "CUSTOMER")).toBe(false);
     expect(canTransition("PENDING_PAYMENT", "PLACED", "CUSTOMER")).toBe(false); // só o webhook confirma

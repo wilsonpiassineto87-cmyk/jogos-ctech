@@ -1,9 +1,16 @@
 import { formatCents, formatPhone, type OrderStatus } from "@delivery/core";
 import { prisma } from "@/lib/db";
-import { getStore } from "@/lib/store";
+import { getFreshStore } from "@/lib/store";
 import { ORDER_STATUS_LABEL, PAYMENT_LABEL, formatDateTime, formatTime } from "@/lib/order-status";
 import { getPrintPreferences } from "@/lib/receipt";
-import { acceptOrderAction, advanceOrderAction, rejectOrderAction, toggleOpenAction } from "@/features/store/actions";
+import {
+  acceptOrderAction,
+  advanceOrderAction,
+  cancelOrderByStoreAction,
+  rejectOrderAction,
+  storeDeliveryAction,
+  toggleOpenAction,
+} from "@/features/store/actions";
 import Link from "@/components/shared/link";
 import { AcceptOrderButton, PrintOrderButtons } from "@/components/receipt/print-buttons";
 import { NewOrderAlert } from "@/components/restaurant/new-order-alert";
@@ -21,6 +28,9 @@ const COLUMNS: { title: string; statuses: OrderStatus[] }[] = [
 ];
 
 const REJECT_REASONS = ["Item em falta", "Loja muito cheia", "Fora da área de entrega", "Loja fechando"];
+const CANCEL_REASONS = ["Cliente desistiu", "Item em falta", "Não conseguimos entregar", "Pedido duplicado"];
+// A loja cancela até o pedido sair; depois disso, só o administrador.
+const CANCELLABLE: OrderStatus[] = ["ACCEPTED", "PREPARING", "READY_FOR_PICKUP"];
 
 const WHATSAPP_STATUS_LINE: Partial<Record<OrderStatus, string>> = {
   PLACED: "Já vamos confirmar.",
@@ -54,7 +64,7 @@ function customerMessage(
 
 export default async function StoreOrdersPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
-  const store = await getStore();
+  const store = await getFreshStore();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const [orders, finishedToday, { printOnAccept }] = await Promise.all([
     prisma.order.findMany({
@@ -73,7 +83,7 @@ export default async function StoreOrdersPage({ searchParams }: { searchParams: 
         customer: { select: { name: true, phone: true } },
         items: { select: { id: true, productName: true, quantity: true, options: true, notes: true } },
         payments: { orderBy: { createdAt: "desc" }, take: 1, select: { provider: true } },
-        delivery: { select: { status: true, courier: { select: { name: true } } } },
+        delivery: { select: { status: true, courierId: true, courier: { select: { name: true } } } },
       },
     }),
     prisma.order.count({ where: { storeId: store.id, status: "DELIVERED", deliveredAt: { gte: since } } }),
@@ -84,10 +94,12 @@ export default async function StoreOrdersPage({ searchParams }: { searchParams: 
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
-      <AutoRefresh intervalMs={12_000} />
+      <AutoRefresh intervalMs={12_000} background />
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="mr-auto text-2xl font-bold tracking-tight">Pedidos</h1>
-        <span className="text-sm text-muted-foreground">{finishedToday} entregues nas últimas 24h</span>
+        <span className="text-sm text-muted-foreground">
+          {finishedToday} {finishedToday === 1 ? "entregue" : "entregues"} nas últimas 24h
+        </span>
         <Link href={`/restaurant/${store.id}/orders/history`} className="text-sm font-medium text-primary hover:underline">
           Histórico
         </Link>
@@ -188,14 +200,52 @@ export default async function StoreOrdersPage({ searchParams }: { searchParams: 
                             <SubmitButton size="sm">Pedido pronto</SubmitButton>
                           </form>
                         )}
-                        {(order.status === "READY_FOR_PICKUP" || order.status === "OUT_FOR_DELIVERY") && (
-                          <Badge variant="outline">
-                            {order.delivery?.courier
-                              ? `${ORDER_STATUS_LABEL[order.status]} · ${order.delivery.courier.name}`
-                              : "Aguardando entregador"}
-                          </Badge>
-                        )}
+                        {(order.status === "READY_FOR_PICKUP" || order.status === "OUT_FOR_DELIVERY") &&
+                          (order.delivery?.courier && order.delivery.status !== "CANCELLED" ? (
+                            <>
+                              <Badge variant="outline">
+                                {ORDER_STATUS_LABEL[order.status]} · {order.delivery.courier.name}
+                              </Badge>
+                              {order.status === "OUT_FOR_DELIVERY" && (
+                                // Plano B se o cliente não tiver o código ou o PIN travar.
+                                <form action={storeDeliveryAction.bind(null, order.id, "DELIVERED")}>
+                                  <SubmitButton size="sm" variant="outline">
+                                    Marcar como entregue
+                                  </SubmitButton>
+                                </form>
+                              )}
+                            </>
+                          ) : order.status === "READY_FOR_PICKUP" ? (
+                            // Sem entregador: a própria loja leva o pedido.
+                            <>
+                              <form action={storeDeliveryAction.bind(null, order.id, "OUT_FOR_DELIVERY")}>
+                                <SubmitButton size="sm">Saiu para entrega</SubmitButton>
+                              </form>
+                              <Badge variant="outline">ou espere um entregador</Badge>
+                            </>
+                          ) : (
+                            <form action={storeDeliveryAction.bind(null, order.id, "DELIVERED")}>
+                              <SubmitButton size="sm">Marcar como entregue</SubmitButton>
+                            </form>
+                          ))}
                       </div>
+                      {CANCELLABLE.includes(order.status) && (
+                        // Fechado por padrão: cancelar exige dois cliques e um motivo.
+                        <details className="mt-3 text-xs">
+                          <summary className="cursor-pointer text-muted-foreground hover:text-destructive">Cancelar pedido</summary>
+                          <form action={cancelOrderByStoreAction.bind(null, order.id)} className="mt-2 flex flex-wrap gap-1">
+                            <select name="reason" className="h-8 rounded-md border bg-background px-2 text-xs">
+                              {CANCEL_REASONS.map((r) => (
+                                <option key={r}>{r}</option>
+                              ))}
+                            </select>
+                            <SubmitButton size="sm" variant="destructive" pendingText="Cancelando...">
+                              Confirmar cancelamento
+                            </SubmitButton>
+                          </form>
+                          {paid && <p className="mt-1 text-muted-foreground">Pago online: devolva o valor ao cliente pelo Mercado Pago.</p>}
+                        </details>
+                      )}
                       <div className="mt-3 border-t pt-3">
                         <PrintOrderButtons orderId={order.id} />
                       </div>

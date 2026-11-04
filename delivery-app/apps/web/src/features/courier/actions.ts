@@ -3,6 +3,7 @@
 import { completeDeliverySchema } from "@delivery/validators";
 import { redirect } from "next/navigation";
 import { runAction } from "@/lib/action";
+import { HttpError } from "@/lib/api";
 import { requireCourier } from "@/lib/authz";
 import { prisma } from "@/lib/db";
 import { acceptDelivery, completeDelivery, markArrived, markPickedUp } from "./service";
@@ -21,7 +22,14 @@ export async function toggleOnlineAction() {
 
 export async function acceptDeliveryAction(deliveryId: string) {
   const courier = await requireCourier();
-  await runAction("/courier", () => acceptDelivery(courier, deliveryId), `/courier/delivery/${deliveryId}`);
+  await runAction(
+    "/courier",
+    async () => {
+      if (!courier.courier.isOnline) throw new HttpError(409, "Fique online para aceitar corridas", "COURIER_OFFLINE");
+      await acceptDelivery(courier, deliveryId);
+    },
+    `/courier/delivery/${deliveryId}`,
+  );
 }
 
 export async function arrivedAction(deliveryId: string) {

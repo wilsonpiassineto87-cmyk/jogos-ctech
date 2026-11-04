@@ -4,7 +4,7 @@ import Link from "@/components/shared/link";
 import { notFound } from "next/navigation";
 import { guard, requireUser } from "@/lib/authz";
 import { prisma } from "@/lib/db";
-import { FINAL_ORDER_STATUSES, ORDER_STATUS_LABEL, ORDER_STEPS, PAYMENT_LABEL, formatDateTime } from "@/lib/order-status";
+import { FINAL_ORDER_STATUSES, ORDER_STATUS_LABEL, ORDER_STEPS, PAYMENT_LABEL, formatDateTime, formatTime } from "@/lib/order-status";
 import { cancelOrderAction } from "@/features/orders/customer-actions";
 import { AutoRefresh } from "@/components/shared/auto-refresh";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -68,7 +68,7 @@ export default async function OrderTrackingPage({
         </p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">{ORDER_STATUS_LABEL[order.status]}</h1>
         {!isFinal && order.estimatedDeliveryAt && (
-          <p className="mt-1 text-muted-foreground">Previsão de entrega: {formatDateTime(order.estimatedDeliveryAt).split(" ")[1]}</p>
+          <p className="mt-1 text-muted-foreground">Previsão de entrega: {formatTime(order.estimatedDeliveryAt)}</p>
         )}
         {order.cancelReason && <p className="mt-2 text-sm text-destructive">Motivo: {order.cancelReason}</p>}
       </div>
@@ -107,7 +107,7 @@ export default async function OrderTrackingPage({
                 </span>
                 <span className={done ? "font-medium" : "text-muted-foreground"}>{ORDER_STATUS_LABEL[step]}</span>
                 {reached.get(step) && (
-                  <span className="ml-auto text-xs text-muted-foreground">{formatDateTime(reached.get(step)!).split(" ")[1]}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">{formatTime(reached.get(step)!)}</span>
                 )}
               </li>
             );
@@ -141,6 +141,18 @@ export default async function OrderTrackingPage({
             <span>Entrega</span>
             <span>{order.deliveryFeeCents === 0 ? "Grátis" : formatCents(order.deliveryFeeCents)}</span>
           </div>
+          {order.serviceFeeCents > 0 && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>Taxa de serviço</span>
+              <span>{formatCents(order.serviceFeeCents)}</span>
+            </div>
+          )}
+          {order.discountCents > 0 && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>Desconto</span>
+              <span>−{formatCents(order.discountCents)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-semibold">
             <span>Total</span>
             <span>{formatCents(order.totalCents)}</span>

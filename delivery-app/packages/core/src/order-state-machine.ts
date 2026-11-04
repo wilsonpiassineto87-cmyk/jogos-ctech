@@ -24,20 +24,22 @@ const TRANSITIONS: Record<OrderStatus, Transition[]> = {
     { to: "REJECTED", by: ["STORE"] },
     { to: "CANCELLED", by: ["CUSTOMER", "SYSTEM", "ADMIN"] }, // timeout de aceite
   ],
+  // STORE cancela até o pedido sair (cliente desistiu, item acabou...).
   ACCEPTED: [
     { to: "PREPARING", by: ["STORE"] },
-    { to: "CANCELLED", by: ["ADMIN"] },
+    { to: "CANCELLED", by: ["STORE", "ADMIN"] },
   ],
   PREPARING: [
     { to: "READY_FOR_PICKUP", by: ["STORE"] },
-    { to: "CANCELLED", by: ["ADMIN"] },
+    { to: "CANCELLED", by: ["STORE", "ADMIN"] },
   ],
   READY_FOR_PICKUP: [
-    { to: "OUT_FOR_DELIVERY", by: ["COURIER"] },
-    { to: "CANCELLED", by: ["ADMIN"] },
+    // STORE: a própria loja entrega (sem entregador cadastrado na corrida).
+    { to: "OUT_FOR_DELIVERY", by: ["COURIER", "STORE"] },
+    { to: "CANCELLED", by: ["STORE", "ADMIN"] },
   ],
   OUT_FOR_DELIVERY: [
-    { to: "DELIVERED", by: ["COURIER", "ADMIN"] },
+    { to: "DELIVERED", by: ["COURIER", "STORE", "ADMIN"] },
     { to: "CANCELLED", by: ["ADMIN"] },
   ],
   DELIVERED: [],

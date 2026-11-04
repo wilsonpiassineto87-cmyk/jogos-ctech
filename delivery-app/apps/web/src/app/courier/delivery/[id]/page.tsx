@@ -65,6 +65,24 @@ export default async function CourierDeliveryPage({
   };
   const collect = order.payments[0]?.provider === "OFFLINE";
   const done = delivery.status === "DELIVERED";
+  const cancelled = delivery.status === "CANCELLED";
+
+  if (cancelled) {
+    return (
+      <div className="mx-auto max-w-xl space-y-5 px-4 py-6">
+        <div>
+          <p className="text-sm text-muted-foreground">Pedido #{order.code}</p>
+          <h1 className="text-2xl font-bold tracking-tight">Corrida cancelada</h1>
+          <p className="mt-2 text-muted-foreground">
+            A loja cancelou este pedido. Se você já pegou o pedido, devolva na {order.store.name}.
+          </p>
+        </div>
+        <Button asChild size="lg" className="w-full">
+          <Link href="/courier">Ver novas corridas</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-xl space-y-5 px-4 py-6">

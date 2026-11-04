@@ -60,8 +60,30 @@ export async function markPickedUp(courierId: string, deliveryId: string) {
 export async function completeDelivery(courierId: string, deliveryId: string, pin: string) {
   const d = await ownDelivery(courierId, deliveryId);
   if (d.status !== "PICKED_UP") throw new HttpError(409, "Colete o pedido antes de finalizar", "INVALID_STEP");
-  // TODO: limitar tentativas de PIN (rate limit) antes de produção.
-  if (pin !== d.confirmationCode) throw new HttpError(422, "Código incorreto. Peça ao cliente o código de 4 dígitos.", "WRONG_PIN");
+
+  // Só 10 mil códigos possíveis: cada erro fica registrado e, depois de alguns, a corrida trava
+  // por um tempo (sem isso dava para chutar todos). A loja pode marcar como entregue no painel.
+  const since = new Date(Date.now() - PIN_LOCK_MINUTES * 60_000);
+  const wrong = await prisma.auditLog.count({
+    where: { action: "delivery.wrong_pin", entityType: "Delivery", entityId: d.id, createdAt: { gte: since } },
+  });
+  if (wrong >= PIN_MAX_TRIES) {
+    throw new HttpError(429, `Muitos códigos errados. Espere ${PIN_LOCK_MINUTES} minutos ou fale com a loja.`, "PIN_LOCKED");
+  }
+  if (pin !== d.confirmationCode) {
+    await prisma.auditLog.create({ data: { actorId: courierId, action: "delivery.wrong_pin", entityType: "Delivery", entityId: d.id } });
+    const left = PIN_MAX_TRIES - wrong - 1;
+    throw new HttpError(
+      422,
+      left > 0
+        ? `Código incorreto. Peça ao cliente o código de 4 dígitos (${left} ${left === 1 ? "tentativa restante" : "tentativas restantes"}).`
+        : `Código incorreto. Espere ${PIN_LOCK_MINUTES} minutos ou fale com a loja.`,
+      "WRONG_PIN",
+    );
+  }
+  // transitionOrder também marca a corrida como entregue.
   await transitionOrder({ orderId: d.orderId, to: "DELIVERED", actor: "COURIER", userId: courierId });
-  await prisma.delivery.update({ where: { id: d.id }, data: { status: "DELIVERED", deliveredAt: new Date() } });
 }
+
+const PIN_MAX_TRIES = 5;
+const PIN_LOCK_MINUTES = 15;

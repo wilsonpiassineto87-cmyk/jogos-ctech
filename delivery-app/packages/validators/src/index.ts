@@ -18,7 +18,7 @@ const phone = z
 
 export const registerSchema = z.object({
   name: z.string().trim().min(2, "Informe seu nome").max(100),
-  email: z.email("E-mail inválido").trim().toLowerCase(),
+  email: z.string().trim().toLowerCase().pipe(z.email("E-mail inválido")),
   phone,
   password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres").max(128),
 });
@@ -46,22 +46,22 @@ export const courierSignupSchema = registerSchema
 export type CourierSignupInput = z.infer<typeof courierSignupSchema>;
 
 export const loginSchema = z.object({
-  email: z.email().toLowerCase(),
+  email: z.string().trim().toLowerCase().pipe(z.email()),
   password: z.string().min(1).max(128),
 });
 
 // --- Endereço ----------------------------------------------------------------
 
 export const addressSchema = z.object({
-  label: z.string().max(40).optional(),
-  zipCode: z.string().regex(/^\d{5}-?\d{3}$/, "CEP inválido"),
-  street: z.string().min(2).max(120),
-  number: z.string().min(1).max(10),
-  complement: z.string().max(60).optional(),
-  neighborhood: z.string().min(2).max(80),
-  city: z.string().min(2).max(80),
-  state: z.string().length(2).toUpperCase(),
-  reference: z.string().max(120).optional(),
+  label: z.string().trim().max(40).optional(),
+  zipCode: z.string().trim().regex(/^\d{5}-?\d{3}$/, "CEP inválido"),
+  street: z.string().trim().min(2, "Informe a rua").max(120),
+  number: z.string().trim().min(1, "Informe o número").max(10),
+  complement: z.string().trim().max(60).optional(),
+  neighborhood: z.string().trim().min(2, "Informe o bairro").max(80),
+  city: z.string().trim().min(2, "Informe a cidade").max(80),
+  state: z.string().trim().length(2, "UF com 2 letras (ex.: SP)").toUpperCase(),
+  reference: z.string().trim().max(120).optional(),
   latitude,
   longitude,
   isDefault: z.boolean().default(false),

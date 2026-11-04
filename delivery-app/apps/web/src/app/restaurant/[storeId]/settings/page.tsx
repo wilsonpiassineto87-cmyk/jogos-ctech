@@ -1,6 +1,6 @@
 import { centsToInput, formatPhone } from "@delivery/core";
 import { prisma } from "@/lib/db";
-import { getStore } from "@/lib/store";
+import { getFreshStore } from "@/lib/store";
 import { DEFAULT_THEME, THEME_PRESETS, parseTheme } from "@/lib/theme";
 import { saveSettingsAction, saveStoreAddressAction, toggleOpenAction } from "@/features/store/actions";
 import { getServedCities } from "@/lib/service-area";
@@ -22,7 +22,7 @@ const input =
 
 export default async function StoreSettingsPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const { error, saved } = await searchParams;
-  const store = await getStore();
+  const store = await getFreshStore();
   const fee = await prisma.deliveryFeeRule.findFirst({ where: { isActive: true }, orderBy: { priority: "desc" } });
   const theme = parseTheme(store.theme) ?? DEFAULT_THEME;
   const hasSchedule = store.openingHours.length > 0;
@@ -196,7 +196,8 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
           })}
         </div>
 
-        <form action={saveThemeAction} className="space-y-3 rounded-xl bg-muted/50 p-3">
+        {/* key: depois de salvar ou escolher um tema pronto, os seletores mostram as cores novas. */}
+        <form key={JSON.stringify(theme)} action={saveThemeAction} className="space-y-3 rounded-xl bg-muted/50 p-3">
           <p className="font-medium">Ou escolha cada cor</p>
           <div className="grid grid-cols-3 gap-3">
             <ColorField name="primary" label="Principal" value={theme.primary} hint="botões e destaques" />

@@ -5,6 +5,7 @@ import { addressFormSchema, categoryFormSchema, productFormSchema, storeSettings
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { runAction } from "@/lib/action";
+import { HttpError } from "@/lib/api";
 import { requireStoreMember } from "@/lib/authz";
 import { prisma } from "@/lib/db";
 import { geocodeAddress, geocodeCity } from "@/lib/geocode";
@@ -42,11 +43,59 @@ export async function rejectOrderAction(orderId: string, form: FormData) {
   );
 }
 
-export async function advanceOrderAction(orderId: string, to: OrderStatus) {
+/** Etapas da cozinha. Saída e entrega passam por storeDeliveryAction, que confere o entregador. */
+export async function advanceOrderAction(orderId: string, to: Extract<OrderStatus, "PREPARING" | "READY_FOR_PICKUP">) {
   const { store, user, base } = await member();
+  await runAction(`${base}/orders`, async () => {
+    if (to !== "PREPARING" && to !== "READY_FOR_PICKUP") throw new HttpError(400, "Etapa inválida", "INVALID_STEP");
+    await transitionOrder({ orderId, to, actor: "STORE", userId: user.id, scope: { storeId: store.id } });
+  });
+}
+
+/** A loja cancela um pedido já aceito (cliente desistiu, item acabou...) antes de sair para entrega. */
+export async function cancelOrderByStoreAction(orderId: string, form: FormData) {
+  const { store, user, base } = await member();
+  const reason = text(form, "reason").trim() || "Cancelado pela loja";
   await runAction(`${base}/orders`, () =>
-    transitionOrder({ orderId, to, actor: "STORE", userId: user.id, scope: { storeId: store.id } }),
+    transitionOrder({ orderId, to: "CANCELLED", actor: "STORE", userId: user.id, scope: { storeId: store.id }, note: reason }),
   );
+}
+
+/**
+ * A loja faz a entrega ela mesma: "Saiu para entrega" (só se nenhum entregador pegou a corrida;
+ * ao sair, ela some da lista dos entregadores) e depois "Entregue".
+ */
+export async function storeDeliveryAction(orderId: string, to: "OUT_FOR_DELIVERY" | "DELIVERED") {
+  const { store, user, base } = await member();
+  await runAction(`${base}/orders`, async () => {
+    if (to !== "OUT_FOR_DELIVERY" && to !== "DELIVERED") throw new HttpError(400, "Etapa inválida", "INVALID_STEP");
+    // Tira a corrida da lista ANTES de conferir: um entregador aceitando no mesmo segundo
+    // não fica com um pedido que a loja já levou.
+    const { count: claimed } =
+      to === "OUT_FOR_DELIVERY"
+        ? await prisma.delivery.updateMany({
+            where: { orderId, courierId: null, status: "WAITING_COURIER", order: { storeId: store.id } },
+            data: { status: "CANCELLED" },
+          })
+        : { count: 0 };
+    const delivery = await prisma.delivery.findFirst({
+      where: { orderId, order: { storeId: store.id } },
+      select: { courierId: true, status: true },
+    });
+    // "Entregue" a loja pode marcar mesmo com entregador (cliente sem o código, PIN travado).
+    if (to === "OUT_FOR_DELIVERY" && delivery?.courierId && delivery.status !== "CANCELLED") {
+      throw new HttpError(409, "Um entregador já pegou este pedido: ele é quem finaliza a entrega.", "COURIER_ASSIGNED");
+    }
+    try {
+      await transitionOrder({ orderId, to, actor: "STORE", userId: user.id, scope: { storeId: store.id } });
+    } catch (error) {
+      // Não saiu: a corrida volta para os entregadores.
+      if (claimed > 0) {
+        await prisma.delivery.updateMany({ where: { orderId, courierId: null, status: "CANCELLED" }, data: { status: "WAITING_COURIER" } });
+      }
+      throw error;
+    }
+  });
 }
 
 /** `from`: tela de onde veio o clique (pedidos ou configurações), para voltar a ela. */

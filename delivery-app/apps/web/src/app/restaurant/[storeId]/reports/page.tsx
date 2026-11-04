@@ -1,7 +1,7 @@
 import { isStoreOpenNow } from "@/features/stores/queries";
 import { toggleOpenAction } from "@/features/store/actions";
 import { getDashboard, parsePeriod, type Period } from "@/lib/dashboard";
-import { getStore } from "@/lib/store";
+import { getFreshStore } from "@/lib/store";
 import { StoreDashboard } from "@/components/dashboard/store-dashboard";
 import { AutoRefresh } from "@/components/shared/auto-refresh";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -12,7 +12,7 @@ export const metadata = { title: "Painel" };
 export default async function StoreDashboardPage({ searchParams }: { searchParams: Promise<{ periodo?: string }> }) {
   const { periodo } = await searchParams;
   const period = parsePeriod(periodo);
-  const store = await getStore();
+  const store = await getFreshStore();
   const data = await getDashboard(store.id, period);
   const base = `/restaurant/${store.id}`;
   const open = isStoreOpenNow(store.isOpen, store.openingHours, store.timezone);

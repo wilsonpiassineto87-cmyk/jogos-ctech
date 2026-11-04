@@ -54,11 +54,19 @@ export async function transitionOrder(args: {
     await tx.orderStatusHistory.create({
       data: { orderId: args.orderId, fromStatus: order.status, toStatus: args.to, changedById: args.userId, note: args.note },
     });
-    // Pedido encerrado antes da entrega: a corrida deixa de estar disponível.
+    // Pedido encerrado antes da entrega: a corrida acaba também, senão o entregador fica
+    // preso a ela (inclusive se já tinha coletado) e não consegue aceitar outra.
     if (args.to === "CANCELLED" || args.to === "REJECTED") {
       await tx.delivery.updateMany({
-        where: { orderId: args.orderId, status: { in: ["WAITING_COURIER", "ASSIGNED", "AT_STORE"] } },
+        where: { orderId: args.orderId, status: { in: ["WAITING_COURIER", "ASSIGNED", "AT_STORE", "PICKED_UP"] } },
         data: { status: "CANCELLED" },
+      });
+    }
+    // Entregue por outra pessoa (loja ou admin): a corrida também fica concluída.
+    if (args.to === "DELIVERED") {
+      await tx.delivery.updateMany({
+        where: { orderId: args.orderId, status: "PICKED_UP" },
+        data: { status: "DELIVERED", deliveredAt: new Date() },
       });
     }
   });

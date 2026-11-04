@@ -15,11 +15,28 @@ export const getStore = cache(() => memo(STORE_KEY, 10_000, loadStore));
 /** Chamar depois de salvar qualquer dado da loja (nome, aberta/pausada, horários, cores). */
 export const forgetStore = () => forget(STORE_KEY);
 
+/**
+ * Loja lida direto do banco. No site publicado há várias cópias do servidor e forgetStore()
+ * só limpa a memória de uma delas: as telas do painel, que mostram o que acabou de ser salvo,
+ * usam esta para não exibir o valor antigo por alguns segundos.
+ */
+export const getFreshStore = cache(loadStore);
+
+/** Só as cores, sempre do banco: consulta pequena, e a cor nova vale na hora em todas as cópias. */
+export const getStoreTheme = cache(async () => {
+  const store = await prisma.store.findFirst({ ...storeQuery(), select: { theme: true } });
+  return store?.theme ?? null;
+});
+
+function storeQuery() {
+  const slug = process.env.STORE_SLUG;
+  return { where: { deletedAt: null, ...(slug ? { slug } : {}) }, orderBy: { createdAt: "asc" as const } };
+}
+
 async function loadStore() {
   const slug = process.env.STORE_SLUG;
   const store = await prisma.store.findFirst({
-    where: { deletedAt: null, ...(slug ? { slug } : {}) },
-    orderBy: { createdAt: "asc" },
+    ...storeQuery(),
     select: {
       id: true,
       slug: true,

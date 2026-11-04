@@ -3,9 +3,11 @@
 import type { CourierStatus, Prisma } from "@delivery/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { runAction } from "@/lib/action";
 import { requireRole } from "@/lib/authz";
 import { prisma } from "@/lib/db";
 import { getStore } from "@/lib/store";
+import { transitionOrder } from "@/features/orders/status";
 
 // Toda ação do admin fica registrada no AuditLog.
 async function audit(actorId: string, action: string, entityType: string, entityId: string, metadata?: Prisma.InputJsonValue) {
@@ -77,6 +79,16 @@ export async function revokeStoreAccessAction(userId: string) {
   await prisma.storeMember.delete({ where: { storeId_userId: { storeId: store.id, userId } } });
   await audit(admin.id, "user.revoke_store_access", "User", userId, { storeId: store.id });
   revalidatePath("/admin/users");
+}
+
+/** Admin cancela qualquer pedido em andamento (inclusive já a caminho). */
+export async function cancelOrderByAdminAction(orderId: string, form: FormData) {
+  const admin = await requireRole("ADMIN");
+  const reason = String(form.get("reason") ?? "").trim() || "Cancelado pelo administrador";
+  await runAction("/admin/orders", async () => {
+    await transitionOrder({ orderId, to: "CANCELLED", actor: "ADMIN", userId: admin.id, note: reason });
+    await audit(admin.id, "order.cancel", "Order", orderId, { reason });
+  });
 }
 
 export async function setUserStatusAction(userId: string, status: "ACTIVE" | "SUSPENDED") {

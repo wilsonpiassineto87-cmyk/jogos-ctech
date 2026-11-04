@@ -40,7 +40,11 @@ export function CheckoutClient({
   const cart = useCart();
   const [mounted, setMounted] = useState(false);
   const [addresses, setAddresses] = useState(initialAddresses);
-  const [addressId, setAddressId] = useState(initialAddresses[0]?.id ?? "");
+  // Começa por um endereço dentro da área de entrega (um antigo de outra cidade pode ser o padrão).
+  const [addressId, setAddressId] = useState(
+    () =>
+      (initialAddresses.find((a) => serviceArea.cities.some((c) => sameCity(c, a.city))) ?? initialAddresses[0])?.id ?? "",
+  );
   const [showForm, setShowForm] = useState(initialAddresses.length === 0);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
@@ -64,6 +68,8 @@ export function CheckoutClient({
     if (!mounted || !addressId || cart.items.length === 0 || wrongStore) return;
     idempotencyKey.current = "";
     const controller = new AbortController();
+    // Some o total antigo enquanto recalcula: não dá para pedir com o valor de outro endereço.
+    setQuote(null);
     setQuoteError(null);
     fetch("/api/v1/checkout/quote", {
       method: "POST",

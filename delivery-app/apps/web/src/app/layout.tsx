@@ -28,10 +28,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#E0457B" },
-    { media: "(prefers-color-scheme: dark)", color: "#2E211D" },
-  ],
+  // A cor da barra do navegador/app (theme-color) vem das cores da loja: components/brand/store-theme.tsx.
   width: "device-width",
   initialScale: 1,
   // Ocupa a tela toda no iPhone; as barras fixas de baixo usam env(safe-area-inset-bottom).
