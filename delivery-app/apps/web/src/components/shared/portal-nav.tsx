@@ -25,7 +25,7 @@ export function PortalNav({ items }: { items: NavItem[] }) {
             href={item.href}
             aria-current={current ? "page" : undefined}
             className={cn(
-              "shrink-0 rounded-md px-3 py-1.5 transition-colors",
+              "shrink-0 rounded-lg px-3 py-1.5 transition-colors",
               current ? "bg-primary font-semibold text-primary-foreground" : "hover:bg-accent",
             )}
           >

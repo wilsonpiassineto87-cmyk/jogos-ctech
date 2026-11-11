@@ -40,14 +40,14 @@
 }
 .receipt-logo {
   display: block;
-  width: 14mm;
-  height: 14mm;
+  width: 28mm;
+  height: 16mm;
   margin: 0 auto 1mm;
   object-fit: contain;
 }
 .receipt--a4 .receipt-logo {
-  width: 20mm;
-  height: 20mm;
+  width: 40mm;
+  height: 23mm;
 }
 .receipt-store {
   font-size: 1.35em;

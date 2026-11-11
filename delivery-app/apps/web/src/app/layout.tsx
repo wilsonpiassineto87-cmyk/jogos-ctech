@@ -1,24 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Fredoka, Nunito } from "next/font/google";
+import { Inter, Poppins } from "next/font/google";
 import { Suspense } from "react";
 import { NavigationProgress } from "@/components/shared/navigation-progress";
 import "./globals.css";
 
-// Fontes da marca: Fredoka (títulos, arredondada e alegre) e Nunito (textos).
-const heading = Fredoka({ subsets: ["latin"], variable: "--font-heading", display: "swap" });
-const body = Nunito({ subsets: ["latin"], variable: "--font-body", display: "swap" });
+// Fontes: Poppins (títulos) e Inter (textos). O nome da loja aparece no logo (components/brand/logo.tsx).
+const heading = Poppins({ weight: ["500", "600", "700"], subsets: ["latin"], variable: "--font-heading", display: "swap" });
+const body = Inter({ subsets: ["latin"], variable: "--font-body", display: "swap" });
 
 export const metadata: Metadata = {
   // A área do cliente troca pelo nome da loja (app/(customer)/layout.tsx).
   title: { default: "Delivery", template: "%s · Delivery" },
   description: "Peça online e receba em casa.",
   // iPhone: "Adicionar à Tela de Início" usa este ícone e abre em tela cheia.
-  appleWebApp: { capable: true, title: "Sorveteria", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Gelyart", statusBarStyle: "default" },
   // Ícone da aba: o logo da sorveteria. Sem isso o navegador pede /favicon.ico e a Netlify
   // devolve o dela; o public/favicon.ico (gerado do logo) cobre esse pedido também.
   icons: {
     icon: [
-      { url: "/icons/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
       { url: "/favicon.ico", sizes: "48x48" },
     ],
     apple: "/icons/apple-touch-icon.png",

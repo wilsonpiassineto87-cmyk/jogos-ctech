@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><title>Açaí na tigela</title>
-<rect width="240" height="240" rx="36" fill="#EFE3F5"/>
-<circle cx="120" cy="128" r="92" fill="#E2CDEE"/>
+<rect width="240" height="240" rx="36" fill="#FFF3CF"/>
+<circle cx="120" cy="128" r="92" fill="#FBE4A0"/>
 <ellipse cx="120" cy="116" rx="80" ry="22" fill="#4A1F5C"/>
 <path d="M50 112c8-22 40-34 70-34s62 12 70 34c-20 10-120 10-140 0z" fill="#5B2A6E"/>
 <circle cx="92" cy="96" r="13" fill="#FFF1B8"/><circle cx="92" cy="96" r="5" fill="#F0D77A"/>

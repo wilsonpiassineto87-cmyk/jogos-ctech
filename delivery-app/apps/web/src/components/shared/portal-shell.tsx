@@ -1,6 +1,6 @@
 import Link from "@/components/shared/link";
 import { signOut } from "@/lib/auth";
-import { LogoMark } from "@/components/brand/logo";
+import { Logo } from "@/components/brand/logo";
 import { PortalNav } from "@/components/shared/portal-nav";
 import { StoreTheme } from "@/components/brand/store-theme";
 import { Button } from "@/components/ui/button";
@@ -22,12 +22,12 @@ export function PortalShell({
   return (
     <div className="flex min-h-dvh flex-col">
       <StoreTheme />
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-10 border-b bg-card/95 shadow-xs backdrop-blur">
         {/* No celular o menu desce para uma segunda linha e quebra, para nenhum item ficar escondido. */}
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 sm:h-14 sm:flex-nowrap sm:py-0">
           <Link href="/" className="mr-auto flex min-w-0 items-center gap-2 sm:mr-0 sm:shrink-0" aria-label="Página inicial">
-            <LogoMark className="size-8 shrink-0" />
-            <span className="truncate font-display text-lg font-semibold">{title}</span>
+            <Logo className="h-9" />
+            <span className="truncate font-display font-semibold">{title}</span>
           </Link>
           <PortalNav items={nav} />
           <span className="hidden text-sm text-muted-foreground sm:inline">{userName}</span>

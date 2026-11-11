@@ -2,6 +2,7 @@ import { formatCents } from "@delivery/core";
 import Link from "@/components/shared/link";
 import { requireCourier } from "@/lib/authz";
 import { prisma } from "@/lib/db";
+import { getStore } from "@/lib/store";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
 import { acceptDeliveryAction, toggleOnlineAction } from "@/features/courier/actions";
 import { getActiveDelivery } from "@/features/courier/service";
@@ -15,6 +16,7 @@ export const metadata = { title: "Corridas" };
 export default async function CourierHomePage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
   const courier = await requireCourier();
+  const store = await getStore();
   const [active, available] = await Promise.all([
     getActiveDelivery(courier.id),
     courier.courier.isOnline
@@ -35,7 +37,7 @@ export default async function CourierHomePage({ searchParams }: { searchParams: 
   return (
     <div className="mx-auto max-w-xl space-y-6 px-4 py-6">
       <AutoRefresh intervalMs={15_000} />
-      <InstallBanner appName="Sorveteria do Bairro" />
+      <InstallBanner appName={store.name} />
       {error && <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
 
       <section className="flex items-center justify-between gap-4 rounded-xl border p-4">

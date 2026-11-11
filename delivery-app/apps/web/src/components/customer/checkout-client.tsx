@@ -140,7 +140,13 @@ export function CheckoutClient({
         }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error ?? "Não foi possível enviar o pedido");
+      if (!res.ok) {
+        // O servidor recusou (troco inválido, loja fechada, Pix fora do ar...): a próxima tentativa
+        // é um pedido novo. Com a chave antiga, trocar de Pix para dinheiro devolveria o pedido que
+        // falhou. Em erro interno (500) a chave fica, para um pedido já gravado não sair em dobro.
+        if (res.status !== 500) idempotencyKey.current = "";
+        throw new Error(body.error ?? "Não foi possível enviar o pedido");
+      }
       setPlacedOrderId(body.id);
       cart.clear();
       router.push(`/orders/${body.id}`);

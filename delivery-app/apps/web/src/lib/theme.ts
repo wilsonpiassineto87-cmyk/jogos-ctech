@@ -3,12 +3,14 @@ import { storeThemeSchema, type StoreTheme } from "@delivery/validators";
 // Cores da marca escolhidas no painel. Os tokens padrão ficam em app/globals.css; aqui só
 // sobrescrevemos os que dependem da marca (e derivamos tons suaves a partir deles).
 
-export const DEFAULT_THEME: StoreTheme = { primary: "#E0457B", success: "#3FA391", highlight: "#E1AE6A" };
+export const DEFAULT_THEME: StoreTheme = { primary: "#1B4F9C", success: "#2E7D4F", highlight: "#F0C544" };
 
 export const THEME_PRESETS: { name: string; theme: StoreTheme }[] = [
-  { name: "Morango", theme: DEFAULT_THEME },
+  { name: "Clássico azul", theme: DEFAULT_THEME },
+  { name: "Açaí com limão", theme: { primary: "#8B1FA2", success: "#43800D", highlight: "#B8E62E" } },
+  { name: "Morango", theme: { primary: "#E0457B", success: "#3FA391", highlight: "#E1AE6A" } },
   { name: "Chocolate", theme: { primary: "#8B5A3C", success: "#5E9E6B", highlight: "#E1AE6A" } },
-  { name: "Açaí", theme: { primary: "#6D2E8C", success: "#4FA36A", highlight: "#F2B84B" } },
+  { name: "Uva", theme: { primary: "#6D2E8C", success: "#4FA36A", highlight: "#F2B84B" } },
   { name: "Limão", theme: { primary: "#2F8F4E", success: "#2A8C80", highlight: "#F4D35E" } },
   { name: "Mirtilo", theme: { primary: "#3B6FD4", success: "#2FA07B", highlight: "#F2B84B" } },
   { name: "Tangerina", theme: { primary: "#E8612C", success: "#3FA391", highlight: "#F4C04E" } },
@@ -28,7 +30,7 @@ function luminance(hex: string): number {
   return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
 }
 
-const DARK_TEXT = "#2B1B16";
+const DARK_TEXT = "#14213D";
 
 /** Texto branco ou escuro, o que tiver mais contraste (WCAG) sobre a cor. */
 export function readableOn(hex: string): string {
@@ -46,7 +48,8 @@ export function themeCss(theme: StoreTheme | null): string | null {
   if (!theme) return null;
   const { primary, success, highlight } = theme;
   return `:root{--primary:${primary};--ring:${primary};--primary-foreground:${readableOn(primary)};` +
-    `--success:${success};--success-foreground:${readableOn(success)};--cone:${highlight};` +
+    `--success:${success};--success-foreground:${readableOn(success)};` +
+    `--cone:${highlight};--cone-foreground:${readableOn(highlight)};` +
     `--accent:color-mix(in oklch, ${primary} 10%, white);` +
     `--accent-foreground:color-mix(in oklch, ${primary} 70%, black);` +
     `--secondary:color-mix(in oklch, ${success} 12%, white);` +

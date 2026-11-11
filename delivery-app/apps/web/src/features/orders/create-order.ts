@@ -132,10 +132,21 @@ export async function createOrder(customer: Customer, input: CreateOrderInput, i
       },
     });
   } catch (error) {
-    await prisma.payment.update({
-      where: { id: order.paymentId },
-      data: { status: "FAILED", failureReason: error instanceof Error ? error.message : "erro desconhecido" },
-    });
+    // O pagamento nem começou: o pedido é encerrado, senão ficaria para sempre em
+    // "Aguardando pagamento" (o cliente tenta de novo e isso vira um pedido novo).
+    await prisma.$transaction([
+      prisma.payment.update({
+        where: { id: order.paymentId },
+        data: { status: "FAILED", failureReason: error instanceof Error ? error.message : "erro desconhecido" },
+      }),
+      prisma.order.updateMany({
+        where: { id: order.id, status: "PENDING_PAYMENT" },
+        data: { status: "CANCELLED", cancelledAt: new Date(), cancelReason: "Não foi possível iniciar o pagamento" },
+      }),
+      prisma.orderStatusHistory.create({
+        data: { orderId: order.id, fromStatus: "PENDING_PAYMENT", toStatus: "CANCELLED", note: "Falha ao iniciar o pagamento" },
+      }),
+    ]);
     throw error;
   }
 

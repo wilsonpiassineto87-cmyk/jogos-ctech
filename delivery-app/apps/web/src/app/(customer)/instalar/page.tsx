@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getStore } from "@/lib/store";
-import { LogoMark } from "@/components/brand/logo";
+import { Logo } from "@/components/brand/logo";
 import { InstallPanel } from "@/components/pwa/install-panel";
 
 // Link para mandar no WhatsApp: entreg.netlify.app/instalar
@@ -32,7 +32,7 @@ export default async function InstallPage() {
   return (
     <div className="mx-auto w-full max-w-md px-4 py-10">
       <div className="text-center">
-        <LogoMark className="mx-auto size-20 drop-shadow-sm" />
+        <Logo name={store.name} className="mx-auto h-24" />
         <h1 className="mt-4 font-display text-2xl font-semibold">Instale o app da {store.name}</h1>
         <p className="mt-2 text-muted-foreground">Peça direto da tela inicial do celular, sem digitar endereço.</p>
       </div>

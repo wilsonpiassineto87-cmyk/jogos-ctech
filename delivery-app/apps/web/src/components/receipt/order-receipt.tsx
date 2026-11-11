@@ -1,5 +1,5 @@
 import { formatCents, formatPhone } from "@delivery/core";
-import { LogoMark } from "@/components/brand/logo";
+import { Logo } from "@/components/brand/logo";
 import { ORDER_STATUS_LABEL, PAYMENT_LABEL } from "@/lib/order-status";
 import type { ReceiptOrder } from "@/lib/receipt";
 import type { Paper } from "@/lib/receipt-settings";
@@ -48,7 +48,7 @@ export function OrderReceipt({ order, paper, copy }: { order: ReceiptOrder; pape
           // eslint-disable-next-line @next/next/no-img-element
           <img src={order.store.logoUrl} alt="" className="receipt-logo" />
         ) : (
-          <LogoMark className="receipt-logo" />
+          <Logo className="receipt-logo" />
         )}
         <p className="receipt-store">{order.store.name}</p>
         <p className="receipt-small">{storeAddress.join(" · ")}</p>

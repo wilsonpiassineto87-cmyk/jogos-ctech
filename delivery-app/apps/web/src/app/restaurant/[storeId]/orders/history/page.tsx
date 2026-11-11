@@ -42,7 +42,8 @@ export default async function OrderHistoryPage({
       OR: [
         { code: { contains: q.replace(/^#/, ""), mode: "insensitive" } },
         { customer: { name: { contains: q, mode: "insensitive" } } },
-        { customer: { phone: { contains: q.replace(/\D/g, "") || q } } },
+        // Telefone só quando a busca é um número (com ou sem parênteses, espaço e traço).
+        ...(/^[\d\s()+-]{4,}$/.test(q) ? [{ customer: { phone: { contains: q.replace(/\D/g, "") } } }] : []),
       ],
     }),
     // Dia no horário de Brasília (UTC-3).

@@ -2,7 +2,7 @@
 
 import { Share, SquarePlus, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { LogoMark } from "@/components/brand/logo";
+import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 
@@ -89,7 +89,7 @@ export function InstallBanner({ appName }: { appName: string }) {
   return (
     <>
       <div className="mx-auto mt-4 flex max-w-3xl items-center gap-3 rounded-2xl border bg-card p-3 shadow-sm sm:p-4">
-        <LogoMark className="size-11" />
+        <Logo className="h-11" />
         <div className="min-w-0 flex-1">
           <p className="font-display font-semibold leading-tight">Instale o app da {appName}</p>
           <p className="text-sm text-muted-foreground">Peça direto da tela inicial do celular, sem digitar endereço.</p>

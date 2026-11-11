@@ -87,7 +87,7 @@ async function main() {
     update: {},
     create: {
       slug: STORE_SLUG,
-      name: "Sorveteria do Bairro",
+      name: "Sorvetes Gelyart",
       description: "Sorvetes artesanais, picolés e açaí feitos todos os dias.",
       zipCode: "14775-000",
       street: "Rua Inácio Máximo Diniz Junqueira",

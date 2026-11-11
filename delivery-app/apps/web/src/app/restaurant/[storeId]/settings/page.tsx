@@ -202,7 +202,7 @@ export default async function StoreSettingsPage({ searchParams }: { searchParams
           <div className="grid grid-cols-3 gap-3">
             <ColorField name="primary" label="Principal" value={theme.primary} hint="botões e destaques" />
             <ColorField name="success" label="Secundária" value={theme.success} hint="selo de aberto" />
-            <ColorField name="highlight" label="Detalhe" value={theme.highlight} hint="casquinha do logo" />
+            <ColorField name="highlight" label="Detalhe" value={theme.highlight} hint="frisos e detalhes" />
           </div>
           <div className="flex flex-wrap gap-2">
             <SubmitButton pendingText="Salvando...">Salvar cores</SubmitButton>

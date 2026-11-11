@@ -4,6 +4,7 @@ import { formatCents } from "@delivery/core";
 import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import type { MenuProduct } from "@/features/stores/queries";
+import { cn } from "@/lib/utils";
 import { useCart } from "@/stores/cart-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,24 +22,39 @@ export function ProductCard({ product, store, storeOpen }: { product: MenuProduc
         type="button"
         disabled={disabled}
         onClick={() => setOpen(true)}
-        className="flex w-full items-start justify-between gap-4 p-4 text-left transition-colors enabled:hover:bg-accent/60 disabled:opacity-60"
+        className="flex h-full w-full items-stretch justify-between gap-4 rounded-2xl border bg-card p-4 text-left shadow-xs transition enabled:hover:-translate-y-0.5 enabled:hover:border-primary/40 enabled:hover:shadow-md disabled:opacity-60"
       >
-        <div className="min-w-0">
-          <p className="font-medium">{product.name}</p>
+        <div className="flex min-w-0 flex-col">
+          <p className="leading-snug font-semibold">{product.name}</p>
           {product.description && (
-            <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
           )}
-          <p className="mt-2 font-semibold text-primary">
+          <p className="mt-auto pt-3 font-semibold text-primary">
             {product.optionGroups.length > 0 && <span className="text-xs font-normal text-muted-foreground">a partir de </span>}
             {formatCents(product.priceCents)}
           </p>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-2">
+        <div className="relative flex shrink-0 flex-col items-end justify-end gap-2">
           {product.imageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.imageUrl} alt="" loading="lazy" decoding="async" className="size-20 rounded-lg object-cover" />
+            <img src={product.imageUrl} alt="" loading="lazy" decoding="async" className="size-24 rounded-xl bg-muted object-cover" />
           )}
-          {!product.isAvailable && <Badge variant="secondary">Esgotado</Badge>}
+          {!product.isAvailable ? (
+            <Badge variant="secondary">Esgotado</Badge>
+          ) : (
+            !disabled && (
+              // Só um sinal de "toque para adicionar": o cartão inteiro é o botão.
+              <span
+                aria-hidden
+                className={cn(
+                  "grid size-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm",
+                  product.imageUrl && "absolute -right-1.5 -bottom-1.5 ring-2 ring-card",
+                )}
+              >
+                <Plus className="size-4" />
+              </span>
+            )
+          )}
         </div>
       </button>
       {open && <ProductDialog product={product} store={store} onClose={() => setOpen(false)} />}
@@ -148,7 +164,7 @@ function ProductDialog({ product, store, onClose }: { product: MenuProduct; stor
           onChange={(e) => setNotes(e.target.value)}
           maxLength={140}
           rows={2}
-          placeholder="Ex.: sem cebola"
+          placeholder="Ex.: sem cobertura"
           className="rounded-md border bg-background px-3 py-2 font-normal outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
         />
       </label>

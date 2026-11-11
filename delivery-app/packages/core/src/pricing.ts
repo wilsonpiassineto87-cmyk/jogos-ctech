@@ -1,4 +1,4 @@
-import { applyBps } from "./money";
+import { applyBps, formatCents } from "./money";
 
 // O preço SEMPRE é recalculado no servidor a partir do cardápio do banco.
 // O cliente envia apenas ids e quantidades.
@@ -164,7 +164,7 @@ export function quoteOrder(input: QuoteInput): Quote {
   const subtotalCents = lines.reduce((sum, l) => sum + l.totalCents, 0);
 
   if (subtotalCents < input.minOrderCents) {
-    throw new PricingError("BELOW_MIN_ORDER", "Pedido abaixo do valor mínimo da loja");
+    throw new PricingError("BELOW_MIN_ORDER", `O pedido mínimo é de ${formatCents(input.minOrderCents)} (sem a entrega)`);
   }
 
   const discountCents = Math.min(input.discountCents ?? 0, subtotalCents);

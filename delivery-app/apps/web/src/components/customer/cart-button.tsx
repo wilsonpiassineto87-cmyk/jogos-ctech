@@ -13,7 +13,7 @@ export function CartButton() {
   useEffect(() => setMounted(true), []);
 
   return (
-    <Button asChild variant="outline" size="sm">
+    <Button asChild size="sm">
       <Link href="/checkout" aria-label="Carrinho">
         <ShoppingBag />
         {mounted && count > 0 ? count : null}

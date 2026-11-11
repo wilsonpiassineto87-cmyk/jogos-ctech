@@ -3,61 +3,64 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Identidade visual da sorveteria (tokens no formato do shadcn/ui).
- * Morango (primária), menta (sucesso/aberto), casquinha (destaques) e chocolate (texto)
- * sobre um fundo creme de baunilha. Para trocar a marca, mude só estes valores e o logo
- * em components/brand.
+ * Identidade visual da loja (tokens no formato do shadcn/ui).
+ * Cores tiradas do logo da marca (public/brand/logo.png): azul-royal (primária), dourado
+ * (destaque) e creme (fundo). Poucas cores, bastante respiro e cartões brancos.
+ * As cores da marca (--primary, --success, --cone) podem ser trocadas no painel: lib/theme.ts.
  */
 :root {
   /* Faixa no rodapé reservada para o selo "Powered by Netlify" (canto inferior direito,
      ~60px de altura, obrigatório no plano grátis): botões fixos e o fim da página ficam acima dele. */
   --badge-space: 4rem;
-  --radius: 1.1rem;
-  --background: oklch(0.985 0.012 90);
-  --foreground: oklch(0.3 0.045 40);
-  --card: oklch(1 0.004 90);
-  --card-foreground: oklch(0.3 0.045 40);
-  --popover: oklch(1 0.004 90);
-  --popover-foreground: oklch(0.3 0.045 40);
-  --primary: oklch(0.6 0.19 0);
-  --primary-foreground: oklch(0.99 0.008 0);
-  --secondary: oklch(0.95 0.035 175);
-  --secondary-foreground: oklch(0.32 0.06 175);
-  --muted: oklch(0.96 0.015 70);
-  --muted-foreground: oklch(0.52 0.035 40);
-  --accent: oklch(0.95 0.035 355);
-  --accent-foreground: oklch(0.35 0.08 0);
+  --radius: 0.75rem;
+  --background: oklch(0.985 0.012 92);
+  --foreground: oklch(0.24 0.045 262);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.045 262);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.045 262);
+  --primary: #1b4f9c;
+  --primary-foreground: #ffffff;
+  --secondary: oklch(0.955 0.03 155);
+  --secondary-foreground: oklch(0.36 0.08 155);
+  --muted: oklch(0.96 0.012 92);
+  --muted-foreground: oklch(0.48 0.03 262);
+  --accent: oklch(0.95 0.025 262);
+  --accent-foreground: oklch(0.34 0.11 262);
   --destructive: oklch(0.55 0.21 25);
-  --success: oklch(0.55 0.11 172);
-  --success-foreground: oklch(0.99 0.01 172);
-  --cone: oklch(0.76 0.11 70);
-  --border: oklch(0.9 0.025 20);
-  --input: oklch(0.88 0.03 20);
-  --ring: oklch(0.6 0.19 0);
+  --success: #2e7d4f;
+  --success-foreground: #ffffff;
+  /* Cor de destaque (dourado). O nome "cone" vem da primeira marca: era a casquinha do logo. */
+  --cone: #f0c544;
+  --cone-foreground: #14213d;
+  --border: oklch(0.91 0.015 92);
+  --input: oklch(0.87 0.02 92);
+  --ring: #1b4f9c;
 }
 
 .dark {
-  --background: oklch(0.2 0.025 35);
-  --foreground: oklch(0.96 0.015 90);
-  --card: oklch(0.24 0.028 35);
-  --card-foreground: oklch(0.96 0.015 90);
-  --popover: oklch(0.24 0.028 35);
-  --popover-foreground: oklch(0.96 0.015 90);
-  --primary: oklch(0.72 0.15 0);
-  --primary-foreground: oklch(0.2 0.03 0);
-  --secondary: oklch(0.3 0.04 175);
-  --secondary-foreground: oklch(0.95 0.02 175);
-  --muted: oklch(0.29 0.025 35);
-  --muted-foreground: oklch(0.74 0.025 60);
-  --accent: oklch(0.32 0.05 355);
-  --accent-foreground: oklch(0.96 0.015 90);
+  --background: oklch(0.2 0.035 262);
+  --foreground: oklch(0.96 0.01 92);
+  --card: oklch(0.24 0.04 262);
+  --card-foreground: oklch(0.96 0.01 92);
+  --popover: oklch(0.24 0.04 262);
+  --popover-foreground: oklch(0.96 0.01 92);
+  --primary: oklch(0.68 0.14 258);
+  --primary-foreground: oklch(0.18 0.04 262);
+  --secondary: oklch(0.32 0.05 155);
+  --secondary-foreground: oklch(0.94 0.04 155);
+  --muted: oklch(0.29 0.035 262);
+  --muted-foreground: oklch(0.76 0.03 262);
+  --accent: oklch(0.33 0.07 262);
+  --accent-foreground: oklch(0.96 0.01 92);
   --destructive: oklch(0.64 0.2 25);
-  --success: oklch(0.7 0.11 172);
-  --success-foreground: oklch(0.18 0.03 172);
-  --cone: oklch(0.78 0.1 70);
+  --success: oklch(0.72 0.14 155);
+  --success-foreground: oklch(0.18 0.04 155);
+  --cone: oklch(0.85 0.14 90);
+  --cone-foreground: oklch(0.2 0.04 262);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.72 0.15 0);
+  --ring: oklch(0.68 0.14 258);
 }
 
 @theme inline {
@@ -79,8 +82,9 @@
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-cone: var(--cone);
+  --color-cone-foreground: var(--cone-foreground);
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-heading), ui-serif, Georgia, serif;
+  --font-display: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -101,17 +105,17 @@
   h1,
   h2 {
     @apply font-display;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 }
 
-/* Faixa de "calda escorrendo" (bolinhas penduradas), usada no topo da página inicial. */
-.bg-drip {
-  height: 26px;
-  background:
-    linear-gradient(var(--primary), var(--primary)) top / 100% 10px no-repeat,
-    radial-gradient(circle at 50% 10px, var(--primary) 9px, transparent 10px) 0 0 / 34px 26px repeat-x,
-    radial-gradient(circle at 50% 8px, var(--primary) 5px, transparent 6px) 17px 6px / 34px 26px repeat-x;
+/* Fundo dos blocos da marca (topo da página inicial e das telas de entrar): a cor
+   principal com uma luz suave no canto, para não ficar chapado. */
+.bg-brand {
+  background-color: var(--primary);
+  background-image:
+    radial-gradient(90% 130% at 88% -30%, color-mix(in oklch, var(--primary) 72%, white) 0%, transparent 60%),
+    linear-gradient(180deg, transparent 40%, color-mix(in oklch, var(--primary) 82%, black) 100%);
 }
 
 /* Barra de carregamento ao trocar de página (components/shared/navigation-progress.tsx). */

@@ -19,11 +19,16 @@ export function CartBar() {
     <div className="fixed inset-x-0 bottom-0 z-20 px-4 pt-4 pb-[max(var(--badge-space),env(safe-area-inset-bottom))]">
       <Link
         href="/checkout"
-        className="mx-auto flex max-w-3xl items-center justify-between rounded-xl bg-primary px-5 py-4 font-medium text-primary-foreground shadow-lg hover:bg-primary/90"
+        className="mx-auto flex max-w-3xl items-center justify-between gap-3 rounded-2xl bg-primary py-3 pr-5 pl-3 font-semibold text-primary-foreground shadow-xl ring-1 ring-black/5 transition-colors hover:bg-primary/92"
       >
-        <span className="flex items-center gap-2">
-          <ShoppingBag className="size-5" />
-          Ver carrinho · {count} {count === 1 ? "item" : "itens"}
+        <span className="flex items-center gap-3">
+          <span className="relative grid size-10 place-items-center rounded-xl bg-primary-foreground/12">
+            <ShoppingBag className="size-5" />
+            <span className="absolute -top-1.5 -right-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-cone px-1 text-xs font-bold text-cone-foreground tabular-nums">
+              {count}
+            </span>
+          </span>
+          Ver carrinho
         </span>
         <span className="tabular-nums">{formatCents(subtotal)}</span>
       </Link>
