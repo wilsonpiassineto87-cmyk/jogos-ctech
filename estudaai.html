@@ -743,7 +743,7 @@ const YT_DEFAULT=[
 {q:'sistema solar',ic:'🪐',title:'Sistema Solar',cat:'Ciências'}];
 
 const DEF={user:null,streak:{count:0,last:'',best:0},events:[],tasks:[],notes:[],flashcards:[],
-grades:{target:6,subjects:[]},notif:false,aiProvider:'free',aiKeys:{},aiModels:{},aiHistory:[],goals:[],
+grades:{target:6,subjects:[]},notif:false,aiProvider:'',aiKeys:{},aiModels:{},aiHistory:[],goals:[],
 xp:0,xpTotal:0,customUnlocked:false,achievements:[],skins:['default'],activeSkin:'default',skills:[],
 friends:[],myCode:'',videosWatched:0,pomosCompleted:0,cardsStudied:0,
 theme:'neon',custom:{accent:'#39FF14',bgA:'#020602',bgB:'#000000',card:'#141414',radius:14,grid:true,glow:true},
@@ -763,7 +763,9 @@ S.customVideos.forEach(v=>v.custom=true);
 if(!S.aiKeys||typeof S.aiKeys!=='object')S.aiKeys={};
 if(S.grokKey&&!S.aiKeys.xai){S.aiKeys.xai=S.grokKey;S.aiProvider='xai';if(S.aiModel)S.aiModels.xai=S.aiModel}
 delete S.grokKey;delete S.aiModel;
-if(!S.aiProvider)S.aiProvider='free';
+const IS_FILE=location.protocol==='file:';
+if(!S.aiProvider)S.aiProvider=IS_FILE?'free':'site';
+if(!IS_FILE&&S.aiProvider==='free'&&!String((S.aiKeys||{}).free||'').trim())S.aiProvider='site';
 if(!S.aiModels||typeof S.aiModels!=='object')S.aiModels={};
 function save(){try{localStorage.setItem('estudaai5',JSON.stringify(S))}catch(e){}}
 function toast(title,body,ms){ms=ms||4200;const t=document.createElement('div');t.className='toast';t.innerHTML='<b>'+esc(title)+'</b>'+(body?'<div style="color:var(--text2);font-weight:500;margin-top:2px">'+esc(body)+'</div>':'');$('#toasts').appendChild(t);setTimeout(()=>{t.style.transition='.4s';t.style.opacity=0;t.style.transform='translateX(120%)';setTimeout(()=>t.remove(),400)},ms)}
@@ -1156,6 +1158,7 @@ save();$('#ytUrl').value='';$('#ytTitle').value='';renderLibrary();toast('📺 V
 
 /* ===== IA de estudos (multi-provedor, com opção GRÁTIS sem chave) ===== */
 const AI_PROVIDERS={
+site:{name:'IA do site — sem chave (recomendado)',short:'IA do site',url:'/api/ia',key:false,models:['gemini-flash-latest','gemini-flash-lite-latest'],vision:true,info:'Já vem pronta e é grátis: o servidor do site fala com a IA por você. Ninguém precisa de chave. (Só funciona com a página aberta pelo endereço do site.)'},
 free:{name:'Grátis — sem chave (Pollinations)',short:'IA grátis',url:'https://text.pollinations.ai/openai',keyedUrl:'https://gen.pollinations.ai/v1/chat/completions',key:false,optKey:true,keyUrl:'https://enter.pollinations.ai/',keyHint:'opcional: pk_... ou sk_...',models:['openai'],info:'Sem cadastro quando você abre o arquivo .html direto no navegador (duplo clique). Limite: ~1 resposta a cada 45 s — o app espera sozinho. Se a página estiver hospedada num site, o serviço pede uma chave grátis (opcional abaixo) — ou use o Gemini.'},
 gemini:{name:'Google Gemini — chave grátis',short:'Gemini',url:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',key:true,keyUrl:'https://aistudio.google.com/apikey',keyHint:'AIza...',models:['gemini-flash-latest','gemini-flash-lite-latest'],vision:true,info:'Chave gratuita no Google AI Studio (só precisa de conta Google). Rápido, sem espera e entende imagens anexadas.'},
 groq:{name:'Groq — chave grátis',short:'Groq',url:'https://api.groq.com/openai/v1/chat/completions',key:true,keyUrl:'https://console.groq.com/keys',keyHint:'gsk_...',models:['llama-3.3-70b-versatile','openai/gpt-oss-120b','openai/gpt-oss-20b'],info:'Chave gratuita no console da Groq. Respostas muito rápidas.'},
@@ -1166,7 +1169,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function aiProvId(){return AI_PROVIDERS[S.aiProvider]?S.aiProvider:'free'}
 function aiModel(id){id=id||aiProvId();return String(S.aiModels[id]||'').trim()||AI_PROVIDERS[id].models[0]}
 function aiKey(id){return String(S.aiKeys[id]||'').trim()}
-function aiReady(id){id=id||aiProvId();const p=AI_PROVIDERS[id];return !!p&&(!p.key||!!aiKey(id))}
+function aiReady(id){id=id||aiProvId();const p=AI_PROVIDERS[id];if(id==='site'&&IS_FILE)return false;return !!p&&(!p.key||!!aiKey(id))}
 function md(s){
 let h=esc(s);
 h=h.replace(/```[a-zA-Z]*\n?([\s\S]*?)```/g,(m,c)=>'<span class="mono" style="display:block;white-space:pre-wrap;padding:8px;margin:4px 0">'+c.replace(/\n/g,'&#10;')+'</span>');
@@ -1216,6 +1219,7 @@ const m=/retry after (\d+)/i.exec(msg);
 if(id==='free'&&!key&&tries<2&&(m||r.status===503||r.status===429)){
 tries++;const s=Math.min(60,m?+m[1]+1:12);freeNextAt=Date.now()+s*1000;continue;
 }
+if(id==='site'&&tries<1&&(r.status===429||r.status===502)){tries++;if(opt.onWait)opt.onWait(15);await sleep(15000);continue}
 return{ok:false,err:msg,status:r.status};
 }
 let c=j&&j.choices&&j.choices[0]&&j.choices[0].message?j.choices[0].message.content:null;
@@ -1227,12 +1231,13 @@ return c?{ok:true,text:c}:{ok:false,err:'Resposta vazia da IA',status:r.status};
 async function callAIWithFallback(messages,opt){
 const id=aiProvId();
 let r=await callAI(messages,opt);
-if(r.ok||id==='free')return r;
+const backup=IS_FILE?'free':'site';
+if(r.ok||id===backup)return r;
 const first=r;
 const plain=messages.map(m=>Array.isArray(m.content)?{role:m.role,content:m.content.filter(x=>x.type==='text').map(x=>x.text).join('\n')}:m);
-r=await callAI(plain,Object.assign({},opt,{provider:'free',key:aiKey('free'),model:''}));
-if(r.ok)r.note='⚠️ '+AI_PROVIDERS[id].short+' falhou ('+first.err+'). Respondi com a **IA grátis** de reserva.'+(errHint(first.err,first.status)?' 💡 '+errHint(first.err,first.status):'');
-else{r={ok:false,err:first.err+' — e a IA grátis de reserva também falhou ('+r.err+')',status:first.status}}
+r=await callAI(backup==='site'?messages:plain,Object.assign({},opt,{provider:backup,key:backup==='free'?aiKey('free'):'',model:''}));
+if(r.ok)r.note='⚠️ '+AI_PROVIDERS[id].short+' falhou ('+first.err+'). Respondi com a **'+AI_PROVIDERS[backup].short+'** de reserva.'+(errHint(first.err,first.status)?' 💡 '+errHint(first.err,first.status):'');
+else{r={ok:false,err:first.err+' — e a reserva ('+AI_PROVIDERS[backup].short+') também falhou ('+r.err+')',status:first.status}}
 return r;
 }
 function buildContext(){
@@ -1311,7 +1316,7 @@ const lower=msg.toLowerCase();
 if(/f[óo]rmul/.test(lower))return '**Fórmulas essenciais** 🧮\n\n• Bhaskara: x = (−b ± √Δ)/2a, Δ = b²−4ac\n• Pitágoras: a² = b² + c²\n• Área círculo: A = π·r²\n• Velocidade: v = Δs/Δt\n• Porcentagem: x% de V = (x/100)·V\n\n💡 Com a IA ligada eu explico qualquer tema!';
 if(/dica|foco|estud/.test(lower)){const d=['🍅 **Pomodoro:** 25 min foco + 5 pausa','✍️ **Escreva à mão** pra fixar melhor','🔁 **Revisão espaçada:** 1 dia, 1 semana, 1 mês','📢 **Ensine alguém** — quem explica, entende','😴 **Durma bem:** memória se consolida no sono'];return '**Dicas de estudo** 💡\n\n'+d.sort(()=>Math.random()-.5).slice(0,3).join('\n\n')}
 if(msg.length>250)return resumirTexto(msg);
-return '🤔 Pra essa resposta eu preciso da IA ligada! Vá em ⚙️ Configurações e escolha **Grátis — sem chave** (ou cole uma chave grátis do Gemini/Groq).\n\nEnquanto isso posso: **resumir** textos, **gerar questões**, **criar flashcards**, mostrar **fórmulas** e responder sobre **suas notas**!';
+return '🤔 Pra essa resposta eu preciso da IA ligada! Vá em ⚙️ Configurações e escolha **IA do site** (no endereço do site) ou **Grátis — sem chave** (com o arquivo aberto no computador).\n\nEnquanto isso posso: **resumir** textos, **gerar questões**, **criar flashcards**, mostrar **fórmulas** e responder sobre **suas notas**!';
 }
 const STOPW=new Set('a o e é de da do das dos em um uma uns umas para com por que não sim eu tu ele ela nós vocês eles elas seu sua seus suas meu minha este esta isso isto aquilo como mais menos muito pouco também já ao à às no na nos nas pelo pela se mas ou quando onde quem qual quais foi ser está são era tem têm ter há pode deve só lá aqui cada entre sobre até após antes depois tudo todo toda todos todas'.split(' '));
 function resumirTexto(txt){
@@ -1396,7 +1401,7 @@ aiAttachments=[];renderAiAttach();
 aiBusy=true;const sendBtn=$('#aiForm button[type=submit]');sendBtn.disabled=true;
 const t=document.createElement('div');t.className='msg ai typing';t.innerHTML='<span></span><span></span><span></span><small class="wait"></small>';$('#aiMsgs').appendChild(t);$('#aiMsgs').scrollTop=1e6;
 let cd=null;
-const ui={wait(s){clearInterval(cd);const w=t.querySelector('.wait');let n=s;const paint=()=>{w.textContent=n>0?' IA grátis na fila… '+n+'s':' pensando…'};paint();cd=setInterval(()=>{n--;paint();if(n<=0)clearInterval(cd)},1000)}};
+const ui={wait(s){clearInterval(cd);const w=t.querySelector('.wait');let n=s;const paint=()=>{w.textContent=n>0?' IA na fila… '+n+'s':' pensando…'};paint();cd=setInterval(()=>{n--;paint();if(n<=0)clearInterval(cd)},1000)}};
 try{
 const resp=await processAI(txt,atts,ui);
 renderAIResult(resp);
@@ -1437,7 +1442,7 @@ e.target.value='';
 function renderAiAttach(){$('#aiAttach').innerHTML=aiAttachments.map((a,i)=>'<span class="att">'+(a.type==='image'?'🖼️':'📄')+' '+esc(a.name.slice(0,20))+'<button type="button" onclick="aiAttachments.splice('+i+',1);renderAiAttach()">✕</button></span>').join('')}
 function aiWelcome(){
 const id=aiProvId(),ok=aiReady();
-aiPush('ai',md(greetText()+'\n\n'+(ok?'🟢 **IA ligada:** '+AI_PROVIDERS[id].short+' ('+aiModel(id)+').'+(id==='free'?' Grátis e sem chave!':''):'⚙️ '+AI_PROVIDERS[id].short+' está sem chave — estou no **modo local**. Abra ⚙️ e escolha **Grátis — sem chave** ou cole sua chave.')+'\n\nO que vamos estudar? 📚'));
+aiPush('ai',md(greetText()+'\n\n'+(ok?'🟢 **IA ligada:** '+AI_PROVIDERS[id].short+' ('+aiModel(id)+').'+(id==='free'||id==='site'?' Grátis e sem chave!':''):'⚙️ '+AI_PROVIDERS[id].short+' está sem chave — estou no **modo local**. Abra ⚙️ e escolha **Grátis — sem chave** ou cole sua chave.')+'\n\nO que vamos estudar? 📚'));
 }
 function checkAchievements(){
 let news=false;
@@ -1583,7 +1588,7 @@ function cfgAIFields(id){
 const p=AI_PROVIDERS[id];
 return '<small style="display:block;margin:-4px 0 10px">'+esc(p.info)+'</small>'+
 (p.key||p.optKey?'<div class="fld"><label class="lb">Chave da API'+(p.optKey?' (opcional)':'')+'</label><div style="display:flex;gap:8px"><input id="cfgKey" class="in" type="password" autocomplete="off" placeholder="'+esc(p.keyHint||'')+'" value="'+esc(aiKey(id))+'" style="flex:1"><button type="button" class="btn sm ghost" onclick="testKey()">🧪 Testar</button></div><small style="display:block;margin-top:6px">Pegue a sua em <a href="'+p.keyUrl+'" target="_blank" rel="noopener" style="color:var(--neon)">'+p.keyUrl.replace('https://','')+'</a></small></div>':
-'<div style="margin-bottom:12px"><button type="button" class="btn sm ghost" onclick="testKey()">🧪 Testar IA grátis</button></div>')+
+'<div style="margin-bottom:12px"><button type="button" class="btn sm ghost" onclick="testKey()">🧪 Testar IA</button></div>')+
 '<div class="fld"><label class="lb">Modelo</label><input class="in" id="cfgModel" list="cfgModels" value="'+esc(aiModel(id))+'"><datalist id="cfgModels">'+p.models.map(m=>'<option value="'+esc(m)+'">').join('')+'</datalist></div>';
 }
 function cfgProvChange(){const id=$('#cfgProv').value;$('#cfgAIBox').innerHTML=cfgAIFields(id)}
@@ -1611,6 +1616,7 @@ async function testKey(){
 const id=$('#cfgProv').value,p=AI_PROVIDERS[id];
 const k=$('#cfgKey')?$('#cfgKey').value.trim():'';
 if(p.key&&!k)return toast('⚠️ Cole uma chave primeiro');
+if(id==='site'&&IS_FILE)return toast('ℹ️ IA do site','Só funciona com a página aberta pelo endereço do site (pages.dev).');
 toast('🔄 Testando '+p.short+'...',id==='free'?'Pode levar até 1 minuto se a fila grátis estiver cheia':'Aguarde alguns segundos');
 const r=await callAI([{role:'user',content:'Responda apenas: ok'}],{provider:id,key:k,model:$('#cfgModel').value.trim()||p.models[0]});
 if(r.ok)toast('✅ Funcionando!',p.short+' respondeu: '+r.text.slice(0,60));
